@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Check, ShieldCheck, ArrowUpRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 
 const STORAGE_KEY = "techgadgets-cookie-consent";
 
@@ -23,34 +23,30 @@ export default function CookieBanner() {
       setState("gone");
       return;
     }
-    // Okamžitě blokuj — overlay se vyrendruje PŘED jakýmkoliv kliknutím
     setState("blocking");
     const t = setTimeout(() => setState("visible"), 50);
     return () => clearTimeout(t);
   }, []);
 
   function accept() {
-    try { localStorage.setItem(STORAGE_KEY, "accepted"); } catch {}
+    try {
+      localStorage.setItem(STORAGE_KEY, "accepted");
+    } catch {}
     setState("leaving");
     setTimeout(() => setState("gone"), 500);
   }
 
   if (state === "idle" || state === "gone") return null;
 
-  const isLeaving  = state === "leaving";
+  const isLeaving = state === "leaving";
   const isBlocking = state === "blocking";
 
   return (
     <>
-      {/*
-        Overlay:
-        - "blocking" → opacity-0 ale pointer-events-auto = neviditelný, klikání zablokováno
-        - "visible"  → opacity-100 + pointer-events-auto = viditelný, klikání zablokováno
-        - "leaving"  → opacity-0 + pointer-events-none = mizí, klikání odblokováno
-      */}
+      {/* Overlay pozadí */}
       <div
         aria-hidden="true"
-        onClick={e => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
         className={`fixed inset-0 z-[199] transition-opacity duration-500 ${
           isLeaving
             ? "opacity-0 pointer-events-none"
@@ -61,58 +57,59 @@ export default function CookieBanner() {
         style={{ background: "rgba(0,0,0,0.4)" }}
       />
 
-      {/* Banner */}
+      {/* Kontajner pro vycentrování banneru na spodu obrazovky */}
       <div
         role="dialog"
         aria-modal="true"
         aria-label="Souhlas s cookies"
-        className={`fixed bottom-0 left-0 right-0 z-[200] transition-all duration-700 ease-out ${
-          isLeaving || isBlocking ? "translate-y-full opacity-0" : "translate-y-0 opacity-100"
+        className={`fixed bottom-6 left-1/2 -translate-x-1/2 w-full max-w-6xl px-4 z-[200] transition-all duration-500 ease-out ${
+          isLeaving || isBlocking
+            ? "translate-y-12 opacity-0"
+            : "translate-y-0 opacity-100"
         }`}
       >
-        <div className="bg-header border-t-2 border-white/5 shadow-[0_-20px_60px_rgba(0,0,0,0.4)]">
-          <div className="max-w-screen-2xl mx-auto px-6 sm:px-10 lg:px-16 py-10 sm:py-12">
-            <div className="flex flex-col lg:flex-row items-center justify-between gap-10 lg:gap-20">
-
-              {/* Vlevo */}
-              <div className="flex items-start md:items-center gap-6 flex-1 min-w-0">
-                <div className="shrink-0 hidden md:flex w-16 h-16 rounded-3xl bg-white/5 border border-white/10 items-center justify-center text-primary transform -rotate-2">
-                  <ShieldCheck size={32} strokeWidth={1.5} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h2 className="text-white font-black text-xl md:text-2xl mb-2 tracking-tight uppercase italic">
-                    Soukromí a funkčnost košíku
-                  </h2>
-                  <p className="text-white/50 text-sm md:text-lg leading-relaxed">
-                    Tento web používá výhradně nezbytné technické cookies pro fungování{" "}
-                    <span className="text-white font-bold">
-                      košíku, zabezpečení relace a dokončení objednávky
-                    </span>
-                    . Bez jejich přijetí není možné v našem obchodě nakupovat. Žádné reklamy, pouze čistý nákupní proces.{" "}
-                    <a
-                      href="/cookies"
-                      className="text-primary hover:text-white inline-flex items-center gap-1 transition-all duration-200 font-bold underline decoration-primary/30 underline-offset-8"
-                    >
-                      Zásady cookies
-                      <ArrowUpRight size={14} />
-                    </a>
-                  </p>
-                </div>
-              </div>
-
-              {/* Vpravo */}
-              <div className="w-full lg:w-auto shrink-0">
-                <button
-                  onClick={accept}
-                  className="w-full lg:w-auto min-w-[300px] inline-flex items-center justify-center gap-3 px-10 py-5 rounded-2xl bg-primary text-dark font-black text-base md:text-xl uppercase italic hover:scale-[1.03] active:scale-[0.97] transition-all duration-200 shadow-[0_15px_40px_rgba(220,20,60,0.3)]"
-                >
-                  <Check size={25} strokeWidth={3} />
-                  <span>Rozumím a přijímám</span>
-                </button>
-              </div>
-
+        {/* Tělo banneru — tmavě šedé, zaoblené s jemným borderem */}
+        <div className="bg-[#121212] border border-white/5 rounded-2xl p-6 md:p-8 shadow-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6 md:gap-12">
+          
+          {/* Levá textová část */}
+          <div className="flex-1 min-w-0 flex flex-col justify-between h-full">
+            <div>
+              <h2 className="text-white font-bold text-base md:text-lg mb-1.5 tracking-wide">
+                Tato webová stránka používá cookies
+              </h2>
+              <p className="text-[#a3a3a3] text-xs md:text-sm leading-relaxed max-w-4xl">
+                K personalizaci obsahu a reklam, poskytování funkcí sociálních médií a analýze naší návštěvnosti využíváme soubory cookie. 
+                Informace o tom, jak náš web používáte, sdílíme se svými partnery pro sociální média, inzerci a analýzy. Partneři tyto údaje 
+                mohou zkombinovat s dalšími informacemi, které jste jim poskytli nebo které získali v důsledku toho, že používáte jejich služby.
+              </p>
+            </div>
+            
+            {/* Odkaz Zobrazit detaily */}
+            <div className="mt-4 md:mt-6">
+              <button className="text-[#dc143c] hover:text-[#ff2e5b] text-xs md:text-sm font-medium inline-flex items-center gap-1.5 transition-colors duration-200 bg-transparent border-none p-0 cursor-pointer">
+                Zobrazit detaily
+                <ChevronRight size={14} className="stroke-[2.5]" />
+              </button>
             </div>
           </div>
+
+          {/* Pravá tlačítková část */}
+          <div className="flex flex-col gap-3 w-full md:w-auto shrink-0 min-w-[200px]">
+            {/* Tlačítko Povolit vše — plná červená */}
+            <button
+              onClick={accept}
+              className="w-full md:w-48 py-3 px-6 rounded-xl bg-[#dc143c] hover:bg-[#b00f2e] text-black font-bold text-sm tracking-wide transition-colors duration-200 cursor-pointer text-center"
+            >
+              Povolit vše
+            </button>
+
+            {/* Tlačítko Upravit — obrysové s šipkou */}
+            <button className="w-full md:w-48 py-3 px-6 rounded-xl border-2 border-[#dc143c] hover:bg-[#dc143c]/10 text-white font-bold text-sm tracking-wide flex items-center justify-center gap-1 transition-colors duration-200 cursor-pointer">
+              <span>Upravit</span>
+              <ChevronRight size={14} className="stroke-[2.5]" />
+            </button>
+          </div>
+
         </div>
       </div>
     </>
