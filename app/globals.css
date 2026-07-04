@@ -9,14 +9,20 @@
   --color-surface: #f7f6f4;
 
   /* Texty */
-  --color-text-base: #0f0f10;      /* hlavní text — místo text-white */
-  --color-text-strong: #fafafa;    /* silný text — místo text-white/80 */
-  --color-text-muted: #6b7280;     /* tlumený — místo text-white/50 */
-  --color-text-subtle: #9ca3af;    /* velmi tlumený — místo text-white/30 */
+  --color-text-base: #0f0f10;
+  --color-text-strong: #fafafa;
+  --color-text-muted: #6b7280;
+  --color-text-subtle: #9ca3af;
 
   /* Bordery */
-  --color-border: #e5e7eb;         /* místo border-white/10 */
-  --color-border-strong: #d1d5db;  /* místo border-white/20 */
+  --color-border: #e5e7eb;
+  --color-border-strong: #d1d5db;
+}
+
+/* ── KLÍČOVÁ OPRAVA PRO SAFARI / NOTCH ── */
+html {
+  /* Nastaví barvu úplného vršku za Dynamic Islandem/notchem podle tvého headeru */
+  background-color: #1c1c1c; 
 }
 
 :root {
@@ -25,6 +31,7 @@
 }
 
 body {
+  /* Tělo webu zůstane bílé, takže zbytek stránky pod headerem bude v pořádku */
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
