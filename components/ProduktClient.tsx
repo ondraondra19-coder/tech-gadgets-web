@@ -606,6 +606,7 @@ export default function ProduktClient({
         priceRaw: priceRawForCart as any,
         img: imgForCart,
         variants: Object.keys(variantInfo).length > 0 ? variantInfo : undefined,
+        stockKey: variantKey, // přesný klíč pro lookup skladu v košíku
       }, currentStock);
     }
     setAdded(true);

@@ -157,18 +157,16 @@ export default function KosikPage() {
     if (mounted) fetchStockForItems();
   }, [mounted, fetchStockForItems]);
 
-  // Vrátí max dostupné množství pro položku v košíku
+  // Vrátí max dostupné množství pro konkrétní variantu — používá stockKey uložený při addItem
   function getMaxQty(item: (typeof items)[0]): number {
     const slugStock = stockMap[item.slug];
     if (!slugStock || Object.keys(slugStock).length === 0) return 999; // fallback dokud nenačte
-    // Zkusíme odvodit variantKey z variant položky
-    if (!item.variants || Object.keys(item.variants).length === 0) {
-      const vals = Object.values(slugStock);
-      return vals.length > 0 ? Math.max(...vals) : 999;
+    if (item.stockKey && slugStock[item.stockKey] !== undefined) {
+      return slugStock[item.stockKey];
     }
-    const vals = Object.values(item.variants);
-    const key = vals.length === 1 ? `${vals[0]}|-` : `${vals[0]}|${vals[1]}`;
-    return slugStock[key] ?? Math.max(...Object.values(slugStock), 0);
+    // Fallback pro starší položky bez stockKey — vezmi součet přes všechny varianty
+    const vals = Object.values(slugStock);
+    return vals.length > 0 ? Math.max(...vals) : 999;
   }
 
   const isEmpty = items.length === 0;
@@ -257,14 +255,13 @@ export default function KosikPage() {
                               <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
                                 <div className="flex items-center gap-1 border border-border rounded-xl overflow-hidden">
                                   <button
-                                    onClick={() => {
-                                      if (item.quantity <= 1) {
-                                        removeItem(item.slug, item.variants);
-                                      } else {
-                                        updateQuantity(item.slug, item.quantity - 1, item.variants);
-                                      }
-                                    }}
-                                    className="w-9 h-9 flex items-center justify-center text-text-muted hover:text-text-base hover:bg-border transition-colors"
+                                    onClick={() => updateQuantity(item.slug, item.quantity - 1, item.variants)}
+                                    disabled={item.quantity <= 1}
+                                    className={`w-9 h-9 flex items-center justify-center transition-colors ${
+                                      item.quantity <= 1
+                                        ? "text-border cursor-not-allowed"
+                                        : "text-text-muted hover:text-text-base hover:bg-border"
+                                    }`}
                                   >
                                     <Minus size={14} />
                                   </button>

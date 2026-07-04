@@ -14,6 +14,7 @@ export type CartItem = {
   img: string;
   variants?: Record<string, string>;
   quantity: number;
+  stockKey?: string; // klíč ve formátu "color|size" pro lookup skladu
 };
 
 type CartContext = {
