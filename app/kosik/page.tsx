@@ -218,12 +218,7 @@ export default function KosikPage() {
       }
     }
 
-    if (anyChanged) {
-      // Upozorni uživatele že košík byl upraven
-      alert("Košík byl upraven — některé produkty mají nižší dostupnost než jste měli vybráno.");
-      return; // nechej uživatele zkontrolovat košík
-    }
-
+    // Ať se cokoli změnilo nebo ne, přejdi na objednávku
     window.location.href = "/objednavka";
   }
 
