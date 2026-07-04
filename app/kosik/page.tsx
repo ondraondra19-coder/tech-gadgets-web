@@ -157,12 +157,23 @@ export default function KosikPage() {
     if (mounted) fetchStockForItems();
   }, [mounted, fetchStockForItems]);
 
+  // Vrátí sklad pro daný stockKey — u vrstvených barev (víc klíčů) vezme minimum z nich
+  function resolveStock(slugStock: Record<string, number>, stockKey: string | string[]): number | undefined {
+    if (Array.isArray(stockKey)) {
+      const vals = stockKey.map(k => slugStock[k]);
+      if (vals.some(v => v === undefined)) return undefined;
+      return Math.min(...(vals as number[]));
+    }
+    return slugStock[stockKey];
+  }
+
   // Vrátí max dostupné množství pro konkrétní variantu — používá stockKey uložený při addItem
   function getMaxQty(item: (typeof items)[0]): number {
     const slugStock = stockMap[item.slug];
     if (!slugStock || Object.keys(slugStock).length === 0) return 999; // fallback dokud nenačte
-    if (item.stockKey && slugStock[item.stockKey] !== undefined) {
-      return slugStock[item.stockKey];
+    if (item.stockKey) {
+      const resolved = resolveStock(slugStock, item.stockKey);
+      if (resolved !== undefined) return resolved;
     }
     // Fallback pro starší položky bez stockKey — vezmi součet přes všechny varianty
     const vals = Object.values(slugStock);
@@ -200,8 +211,9 @@ export default function KosikPage() {
       const slugStock = freshStock[item.slug] ?? {};
       let max = 999;
       if (Object.keys(slugStock).length > 0) {
-        if (item.stockKey && slugStock[item.stockKey] !== undefined) {
-          max = slugStock[item.stockKey];
+        const resolved = item.stockKey ? resolveStock(slugStock, item.stockKey) : undefined;
+        if (resolved !== undefined) {
+          max = resolved;
         } else {
           const vals = Object.values(slugStock);
           max = vals.length > 0 ? Math.max(...vals) : 0;

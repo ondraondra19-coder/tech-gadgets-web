@@ -1,6 +1,6 @@
 // app/api/reviews/route.ts
 import { NextResponse } from "next/server";
-import { getAllReviews, addReview, checkAndSetCooldown } from "@/lib/reviews";
+import { getAllReviews, addReview, deleteReview, checkAndSetCooldown } from "@/lib/reviews";
 
 const MAX_TEXT_LENGTH = 600;
 const MAX_NAME_LENGTH = 80;
@@ -13,6 +13,37 @@ export async function GET() {
   } catch (error) {
     console.error("Reviews GET error:", error);
     return NextResponse.json({ reviews: [], error: "Nepodařilo se načíst recenze." }, { status: 500 });
+  }
+}
+
+// DELETE /api/reviews?id=... — smaže recenzi (jen pro admin, budoucí interní stránka)
+export async function DELETE(req: Request) {
+  const adminSecret = process.env.ADMIN_SECRET;
+  if (!adminSecret) {
+    console.error("❌ CHYBÍ ADMIN_SECRET v env proměnných.");
+    return NextResponse.json({ error: "Mazání není nakonfigurováno." }, { status: 500 });
+  }
+
+  const providedSecret = req.headers.get("x-admin-secret");
+  if (providedSecret !== adminSecret) {
+    return NextResponse.json({ error: "Neautorizováno." }, { status: 401 });
+  }
+
+  const { searchParams } = new URL(req.url);
+  const id = searchParams.get("id");
+  if (!id) {
+    return NextResponse.json({ error: "Chybí id recenze." }, { status: 400 });
+  }
+
+  try {
+    const deleted = await deleteReview(id);
+    if (!deleted) {
+      return NextResponse.json({ error: "Recenze s tímto id nenalezena." }, { status: 404 });
+    }
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Reviews DELETE error:", error);
+    return NextResponse.json({ error: "Nepodařilo se smazat recenzi." }, { status: 500 });
   }
 }
 

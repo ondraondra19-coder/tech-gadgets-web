@@ -455,41 +455,15 @@ export default function ProduktClient({
 
   const hasSheetData = Object.keys(stockData).length > 0;
 
-  function getCurrentStock(): number {
-    if (!hasSheetData) return product.inStock ? product.stock : 0;
-
+  // Klíč(e) ve stejném formátu jako klíče Google Sheets skladu — "color|size".
+  // U vrstvených barev (tělo + hlavička) vrací dva klíče najednou, protože
+  // dostupné množství je omezené tou barvou, které je skladem méně.
+  const stockKeys: string | string[] = (() => {
     if (isLayered) {
       const activeBody = combo ? bodyValue : legacyColor;
       const activeCap  = combo ? capValue  : legacyColor;
       const size = modelId;
-
-      const bodyStock = stockData[`${activeBody}__body|${size}`] ?? 0;
-      const capStock  = stockData[`${activeCap}__cap|${size}`]  ?? 0;
-
-      return Math.min(bodyStock, capStock);
-    }
-
-    const activeColor = hasNewColors ? colorValue
-      : hasModels ? legacyColor
-      : undefined;
-
-    const activeSize = hasNewSizes ? sizeValue
-      : hasModels ? modelId
-      : undefined;
-
-    const key = `${activeColor ?? "-"}|${activeSize ?? "-"}`;
-    return stockData[key] ?? 0;
-  }
-
-  // Polling skladu ze Sheets — jednoduchý, bez Redis, bez rezervací
-  const { stockData: liveStockData, loading: stockLoading } = useStockPolling(product.slug);
-
-  // variantKey ve stejném formátu jako klíče Google Sheets skladu — "color|size"
-  const variantKey = (() => {
-    if (isLayered) {
-      const activeBody = combo ? bodyValue : legacyColor;
-      const size = modelId;
-      return `${activeBody}__body|${size}`;
+      return [`${activeBody}__body|${size}`, `${activeCap}__cap|${size}`];
     }
     const activeColor = hasNewColors ? colorValue
       : hasModels ? legacyColor
@@ -500,17 +474,24 @@ export default function ProduktClient({
     return `${activeColor ?? "-"}|${activeSize ?? "-"}`;
   })();
 
+  function resolveStock(data: Record<string, number>, keys: string | string[]): number {
+    if (Array.isArray(keys)) {
+      return Math.min(...keys.map(k => data[k] ?? 0));
+    }
+    return data[keys] ?? 0;
+  }
+
+  // Polling skladu ze Sheets — jednoduchý, bez Redis, bez rezervací
+  const { stockData: liveStockData, loading: stockLoading } = useStockPolling(product.slug);
+
   // Aktuální sklad pro tuto variantu — po prvním pollu z live dat, jinak server prop
   const currentStock = (() => {
     if (!stockLoading && Object.keys(liveStockData).length > 0) {
-      return liveStockData[variantKey] ?? 0;
+      return resolveStock(liveStockData, stockKeys);
     }
     // Fallback na server-side prop dokud polling nenačte
     if (hasSheetData) {
-      const activeColor = hasNewColors ? colorValue : hasModels ? legacyColor : undefined;
-      const activeSize = hasNewSizes ? sizeValue : hasModels ? modelId : undefined;
-      const key = `${activeColor ?? "-"}|${activeSize ?? "-"}`;
-      return stockData[key] ?? 0;
+      return resolveStock(stockData, stockKeys);
     }
     return product.inStock ? product.stock : 0;
   })();
@@ -606,7 +587,7 @@ export default function ProduktClient({
         priceRaw: priceRawForCart as any,
         img: imgForCart,
         variants: Object.keys(variantInfo).length > 0 ? variantInfo : undefined,
-        stockKey: variantKey, // přesný klíč pro lookup skladu v košíku
+        stockKey: stockKeys, // přesný klíč (nebo dva u vrstvených barev) pro lookup skladu v košíku
       }, currentStock);
     }
     setAdded(true);

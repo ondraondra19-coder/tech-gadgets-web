@@ -66,6 +66,38 @@ export async function addReview(input: NewReviewInput): Promise<Review> {
   return review;
 }
 
+// ── Smazání konkrétní recenze podle id (pro budoucí admin rozhraní) ────────
+export async function deleteReview(id: string): Promise<boolean> {
+  const redis = getRedis();
+  const raw = await redis.lrange<string>(LIST_KEY, 0, -1);
+
+  const remaining: string[] = [];
+  let found = false;
+
+  for (const item of raw) {
+    try {
+      const parsed: Review = typeof item === "string" ? JSON.parse(item) : (item as unknown as Review);
+      if (parsed.id === id) {
+        found = true;
+        continue; // vynecháme mazanou recenzi
+      }
+      remaining.push(typeof item === "string" ? item : JSON.stringify(parsed));
+    } catch {
+      remaining.push(item as unknown as string);
+    }
+  }
+
+  if (!found) return false;
+
+  // Přepíšeme celý list bez smazané položky (pořadí zůstává stejné - nejnovější první).
+  await redis.del(LIST_KEY);
+  if (remaining.length > 0) {
+    await redis.rpush(LIST_KEY, ...remaining);
+  }
+
+  return true;
+}
+
 // ── Základní anti-spam: 1 recenze / IP / 24h ────────────────────────────────
 const COOLDOWN_SECONDS = 24 * 60 * 60;
 
