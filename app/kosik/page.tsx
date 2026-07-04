@@ -179,6 +179,54 @@ export default function KosikPage() {
   const recommendedTitle = singleProduct ? "Hodí se k tomu" : "Naše bestsellery";
   const recommendedSubtitle = singleProduct ? `K produktu ${singleProduct.name}` : "Výběr pro vás";
 
+  // Při přechodu na objednávku ověří sklad a ořízne množství na reálné maximum
+  async function handleCheckout() {
+    // Fetchneme aktuální sklad pro všechny produkty v košíku
+    const slugs = [...new Set(items.map(i => i.slug))];
+    const freshStock: Record<string, Record<string, number>> = {};
+    await Promise.all(slugs.map(async (slug) => {
+      try {
+        const res = await fetch(`/api/stock?slug=${encodeURIComponent(slug)}`, { cache: "no-store" });
+        if (res.ok) {
+          const json = await res.json();
+          freshStock[slug] = json.stockData ?? {};
+        }
+      } catch {}
+    }));
+
+    // Ořízni každou položku na skutečně dostupné množství
+    let anyChanged = false;
+    for (const item of items) {
+      const slugStock = freshStock[item.slug] ?? {};
+      let max = 999;
+      if (Object.keys(slugStock).length > 0) {
+        if (item.stockKey && slugStock[item.stockKey] !== undefined) {
+          max = slugStock[item.stockKey];
+        } else {
+          const vals = Object.values(slugStock);
+          max = vals.length > 0 ? Math.max(...vals) : 0;
+        }
+      }
+      if (max === 0) {
+        // Vyprodáno — odeber z košíku
+        removeItem(item.slug, item.variants);
+        anyChanged = true;
+      } else if (item.quantity > max) {
+        // Více kusů než je na skladě — ořízni
+        updateQuantity(item.slug, max, item.variants);
+        anyChanged = true;
+      }
+    }
+
+    if (anyChanged) {
+      // Upozorni uživatele že košík byl upraven
+      alert("Košík byl upraven — některé produkty mají nižší dostupnost než jste měli vybráno.");
+      return; // nechej uživatele zkontrolovat košík
+    }
+
+    window.location.href = "/objednavka";
+  }
+
   return (
     <>
       <Header />
@@ -335,9 +383,12 @@ export default function KosikPage() {
                         </div>
 
                         <div className="px-6 pb-6">
-                          <a href="/objednavka" className="w-full py-4 rounded-2xl bg-primary text-dark font-bold text-sm hover:brightness-105 active:scale-[0.98] transition-all flex items-center justify-center gap-2">
+                          <button
+                            onClick={handleCheckout}
+                            className="w-full py-4 rounded-2xl bg-primary text-dark font-bold text-sm hover:brightness-105 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                          >
                             Pokračovat k dopravě <ArrowRight size={15} />
-                          </a>
+                          </button>
                           <p className="text-text-subtle text-xs text-center mt-3">Zabezpečená platba · SSL šifrování</p>
                         </div>
                       </div>
