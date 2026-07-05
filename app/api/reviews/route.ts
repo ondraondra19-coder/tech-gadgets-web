@@ -1,15 +1,17 @@
 // app/api/reviews/route.ts
 import { NextResponse } from "next/server";
-import { getAllReviews, addReview, deleteReview, checkAndSetCooldown } from "@/lib/reviews";
+import { getAllReviews, addReview, deleteReview, checkAndSetCooldown, toPublicReview } from "@/lib/reviews";
 
 const MAX_TEXT_LENGTH = 600;
 const MAX_NAME_LENGTH = 80;
+const MAX_EMAIL_LENGTH = 150;
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-// GET /api/reviews — vrátí všechny recenze (veřejné, pro všechny návštěvníky)
+// GET /api/reviews — vrátí všechny recenze (veřejné, jen bezpečná pole)
 export async function GET() {
   try {
     const reviews = await getAllReviews();
-    return NextResponse.json({ reviews });
+    return NextResponse.json({ reviews: reviews.map(toPublicReview) });
   } catch (error) {
     console.error("Reviews GET error:", error);
     return NextResponse.json({ reviews: [], error: "Nepodařilo se načíst recenze." }, { status: 500 });
@@ -51,7 +53,7 @@ export async function DELETE(req: Request) {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { name, rating, text, captchaToken } = body ?? {};
+    const { name, rating, text, email, captchaToken } = body ?? {};
 
     // ── Validace vstupu ────────────────────────────────────────────────────
     if (typeof name !== "string" || !name.trim() || name.trim().length > MAX_NAME_LENGTH) {
@@ -63,6 +65,15 @@ export async function POST(req: Request) {
     const ratingNum = Number(rating);
     if (!Number.isInteger(ratingNum) || ratingNum < 1 || ratingNum > 5) {
       return NextResponse.json({ error: "Neplatné hodnocení." }, { status: 400 });
+    }
+    // Email je nepovinný, ale pokud je vyplněný, musí vypadat jako email
+    let emailValue: string | undefined;
+    if (typeof email === "string" && email.trim()) {
+      const trimmed = email.trim();
+      if (trimmed.length > MAX_EMAIL_LENGTH || !EMAIL_REGEX.test(trimmed)) {
+        return NextResponse.json({ error: "Neplatný email." }, { status: 400 });
+      }
+      emailValue = trimmed;
     }
     if (typeof captchaToken !== "string" || !captchaToken) {
       return NextResponse.json({ error: "Chybí ověření captcha." }, { status: 400 });
@@ -101,9 +112,25 @@ export async function POST(req: Request) {
       );
     }
 
+    // ── Metadata pro admin (Vercel geo headery — lokálně budou prázdné) ────
+    const userAgent = req.headers.get("user-agent") ?? undefined;
+    const country = req.headers.get("x-vercel-ip-country") ?? undefined;
+    const region = req.headers.get("x-vercel-ip-country-region") ?? undefined;
+    const city = req.headers.get("x-vercel-ip-city") ?? undefined;
+
     // ── Uložení ─────────────────────────────────────────────────────────────
-    const review = await addReview({ name, rating: ratingNum, text });
-    return NextResponse.json({ review });
+    const review = await addReview({
+      name,
+      rating: ratingNum,
+      text,
+      email: emailValue,
+      ip: ip !== "unknown" ? ip : undefined,
+      userAgent,
+      country,
+      region,
+      city,
+    });
+    return NextResponse.json({ review: toPublicReview(review) });
   } catch (error) {
     console.error("Reviews POST error:", error);
     return NextResponse.json({ error: "Nepodařilo se uložit recenzi." }, { status: 500 });

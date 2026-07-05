@@ -170,7 +170,7 @@ export default function RecenzePage() {
       const res = await fetch("/api/reviews", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: name.trim(), rating, text: text.trim(), captchaToken }),
+        body: JSON.stringify({ name: name.trim(), rating, text: text.trim(), email: email.trim(), captchaToken }),
       });
       const data = await res.json();
 

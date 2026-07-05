@@ -9,8 +9,22 @@ export type Review = {
   rating: number; // 1-5
   date: string;   // ISO string, formátování na klientu
   text: string;
+  // ── Následující pole jsou VIDITELNÁ JEN V ADMINU (nikdy se nevrací z veřejného GET) ──
+  email?: string;
+  ip?: string;
+  userAgent?: string;
+  country?: string;   // ISO kód země, např. "CZ" (z Vercel geo headerů)
+  region?: string;    // kraj/region
+  city?: string;
 };
 
+// ── Veřejný tvar recenze — bez emailu, IP, zařízení a lokality ─────────────
+export type PublicReview = Pick<Review, "id" | "initials" | "name" | "rating" | "date" | "text">;
+
+export function toPublicReview(review: Review): PublicReview {
+  const { id, initials, name, rating, date, text } = review;
+  return { id, initials, name, rating, date, text };
+}
 const LIST_KEY = "reviews:list";
 const MAX_REVIEWS = 1000; // pojistka proti neomezenému růstu klíče
 
@@ -46,6 +60,12 @@ export type NewReviewInput = {
   name: string;
   rating: number;
   text: string;
+  email?: string;
+  ip?: string;
+  userAgent?: string;
+  country?: string;
+  region?: string;
+  city?: string;
 };
 
 export async function addReview(input: NewReviewInput): Promise<Review> {
@@ -58,6 +78,12 @@ export async function addReview(input: NewReviewInput): Promise<Review> {
     rating: input.rating,
     date: new Date().toISOString(),
     text: input.text.trim(),
+    ...(input.email?.trim() ? { email: input.email.trim() } : {}),
+    ...(input.ip ? { ip: input.ip } : {}),
+    ...(input.userAgent ? { userAgent: input.userAgent } : {}),
+    ...(input.country ? { country: input.country } : {}),
+    ...(input.region ? { region: input.region } : {}),
+    ...(input.city ? { city: input.city } : {}),
   };
 
   await redis.lpush(LIST_KEY, JSON.stringify(review));
