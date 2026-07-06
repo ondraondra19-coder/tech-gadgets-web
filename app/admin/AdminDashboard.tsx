@@ -6,8 +6,10 @@ import type { Review } from '@/lib/reviews';
 import type { PublicAccount } from '@/lib/accounts';
 import type { CurrentSession } from '@/lib/session';
 import type { Permission } from '@/lib/permissions';
+import type { Product } from '@/lib/products';
 import ReviewsAdminList from './recenze/ReviewsAdminList';
 import AccountsAdminPanel from './AccountsAdminPanel';
+import ProductsAdminList from './ProductsAdminList'; // 1. Import komponenty
 
 type Tab = 'dashboard' | 'reservations' | 'products' | 'reviews' | 'messages' | 'settings' | 'analytics' | 'accounts';
 
@@ -20,13 +22,22 @@ function getInitials(name: string): string {
     .join('');
 }
 
+// 2. Rozšíření props o produkty a sklad
 type AdminDashboardProps = {
   session: CurrentSession;
   initialReviews: Review[];
   initialAccounts: PublicAccount[];
+  products: Product[];
+  initialStock: Record<string, number>;
 };
 
-export default function AdminDashboard({ session, initialReviews, initialAccounts }: AdminDashboardProps) {
+export default function AdminDashboard({ 
+  session, 
+  initialReviews, 
+  initialAccounts, 
+  products, 
+  initialStock 
+}: AdminDashboardProps) {
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [reviews, setReviews] = useState(initialReviews);
@@ -42,8 +53,6 @@ export default function AdminDashboard({ session, initialReviews, initialAccount
 
   const hasPermission = (perm: Permission) => session.isMain || session.permissions.includes(perm);
 
-  // "dashboard" vidí každý přihlášený účet vždy. "accounts" vidí jen hlavní účet
-  // (není to grantovatelné oprávnění). Ostatní se řídí session.permissions.
   const allMenuItems: { id: Tab; label: string; icon: React.ReactNode; visible: boolean }[] = [
     {
       id: 'dashboard',
@@ -258,11 +267,9 @@ export default function AdminDashboard({ session, initialReviews, initialAccount
                   </div>
                 )}
 
+                {/* 3. Zde proběhla výměna textu za novou tabulku */}
                 {activeTab === 'products' && (
-                  <div className="space-y-2">
-                    <h3 className="text-base font-bold text-[#0f0f10]">Sklad a úprava produktů</h3>
-                    <p className="text-zinc-500 text-xs leading-relaxed max-w-md">Zobrazení kompletního katalogu (kryty, skla, kabely). Přímo odsud budeš upravovat počet kusů na skladě bez ručního zásahu do databáze.</p>
-                  </div>
+                  <ProductsAdminList products={products} stock={initialStock} />
                 )}
 
                 {activeTab === 'reviews' && (
