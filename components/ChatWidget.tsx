@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { usePathname } from "next/navigation";
 import { MessageCircle, X, Send, Check } from "lucide-react";
 
 const HCAPTCHA_SITE_KEY = "d5505d72-aa1a-4b50-a746-a1b0175c9092";
@@ -9,6 +10,7 @@ declare global {
   interface Window {
     hcaptcha: {
       render: (el: HTMLElement, options: object) => string;
+      execute: (id: string) => void;
       reset: (id: string) => void;
     };
     onChatHcaptchaVerify: (token: string) => void;
@@ -16,6 +18,8 @@ declare global {
 }
 
 export default function ChatWidget() {
+  const pathname = usePathname();
+
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -23,69 +27,32 @@ export default function ChatWidget() {
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [captchaId, setCaptchaId] = useState<string | null>(null);
+
   const captchaRef = useRef<HTMLDivElement>(null);
 
-  // hCaptcha se načte a vykreslí, jakmile se formulář otevře (ne hned při
-  // načtení stránky — ať se zbytečně nenačítá skript, dokud ho nikdo nepotřebuje).
-  useEffect(() => {
-    if (!open) return;
+  // Ref na aktuální hodnoty formuláře — hCaptcha callback běží mimo běžný
+  // React cyklus, takže by jinak viděl "zamrzlé" (stale) hodnoty z okamžiku vykreslení.
+  const formRef = useRef({ name, email, message });
+  formRef.current = { name, email, message };
 
-    window.onChatHcaptchaVerify = (token: string) => setCaptchaToken(token);
-
-    if (document.getElementById("hcaptcha-script")) {
-      initCaptcha();
-      return;
-    }
-    const script = document.createElement("script");
-    script.id = "hcaptcha-script";
-    script.src = "https://js.hcaptcha.com/1/api.js?render=explicit&onload=onChatHcaptchaLoad";
-    script.async = true;
-    script.defer = true;
-    document.body.appendChild(script);
-    (window as any).onChatHcaptchaLoad = () => initCaptcha();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
-
-  function initCaptcha() {
-    if (captchaRef.current && window.hcaptcha && !captchaId) {
-      const id = window.hcaptcha.render(captchaRef.current, {
-        sitekey: HCAPTCHA_SITE_KEY,
-        callback: "onChatHcaptchaVerify",
-        theme: "light",
-        size: "compact",
-      });
-      setCaptchaId(id);
-    }
-  }
-
-  const canSubmit = !!name && !!email && !!message && !!captchaToken && !sending;
-
-  async function handleSubmit() {
-    if (!canSubmit) return;
-
+  const submitWithToken = useCallback(async (token: string) => {
+    const { name, email, message } = formRef.current;
     setSending(true);
     setError(null);
-
     try {
       const res = await fetch("/api/messages", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, text: message, captchaToken }),
+        body: JSON.stringify({ name, email, text: message, captchaToken: token }),
       });
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        setCaptchaToken(null);
-        if (captchaId !== null && window.hcaptcha) window.hcaptcha.reset(captchaId);
         throw new Error(data.error ?? "Nepodařilo se odeslat zprávu.");
       }
 
       setSent(true);
-      setCaptchaToken(null);
-      if (captchaId !== null && window.hcaptcha) window.hcaptcha.reset(captchaId);
       setTimeout(() => {
         setSent(false);
         setName("");
@@ -98,7 +65,59 @@ export default function ChatWidget() {
     } finally {
       setSending(false);
     }
+  }, []);
+
+  // hCaptcha — neviditelný režim, žádný viditelný widget. Spustí se až
+  // při kliknutí na "Odeslat dotaz" (viz handleSubmitClick).
+  useEffect(() => {
+    if (!open) {
+      // Formulář (a s ním i <div ref={captchaRef}>) zmizel z DOM, takže i
+      // vykreslený widget je pryč — při dalším otevření se musí vykreslit znovu.
+      setCaptchaId(null);
+      return;
+    }
+
+    window.onChatHcaptchaVerify = (token: string) => submitWithToken(token);
+
+    function initCaptcha() {
+      if (captchaRef.current && window.hcaptcha) {
+        const id = window.hcaptcha.render(captchaRef.current, {
+          sitekey: HCAPTCHA_SITE_KEY,
+          size: "invisible",
+          callback: "onChatHcaptchaVerify",
+        });
+        setCaptchaId(id);
+      }
+    }
+
+    if (document.getElementById("hcaptcha-script")) {
+      initCaptcha();
+      return;
+    }
+    const script = document.createElement("script");
+    script.id = "hcaptcha-script";
+    script.src = "https://js.hcaptcha.com/1/api.js?render=explicit&onload=onChatHcaptchaLoad";
+    script.async = true;
+    script.defer = true;
+    document.body.appendChild(script);
+    (window as any).onChatHcaptchaLoad = initCaptcha;
+  }, [open, submitWithToken]);
+
+  const canSubmit = !!name && !!email && !!message && !sending;
+
+  function handleSubmitClick() {
+    if (!canSubmit) return;
+    setError(null);
+
+    if (captchaId && window.hcaptcha) {
+      window.hcaptcha.execute(captchaId);
+    } else {
+      setError("Ověření se ještě načítá, zkuste to prosím za chvíli znovu.");
+    }
   }
+
+  // V adminu widget vůbec nevykreslujeme.
+  if (pathname?.startsWith("/admin")) return null;
 
   return (
     <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
@@ -154,11 +173,11 @@ export default function ChatWidget() {
                   className="w-full border border-border rounded-xl px-4 py-3 text-sm text-text-base placeholder-text-subtle focus:outline-none focus:border-primary/50 transition-colors resize-none bg-surface"
                 />
 
-                {/* hCaptcha */}
+                {/* hCaptcha — neviditelný kontejner, nic vizuálně nezabírá */}
                 <div ref={captchaRef} />
 
                 <button
-                  onClick={handleSubmit}
+                  onClick={handleSubmitClick}
                   disabled={!canSubmit}
                   className={`w-full inline-flex items-center justify-center gap-2 py-2.5 rounded-xl font-semibold text-sm transition-all ${
                     !canSubmit
