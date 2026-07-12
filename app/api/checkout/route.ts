@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { getProductsWithPriceOverrides, resolveItemUnitPrice } from '@/lib/priceOverrides';
 import { createPendingOrder, type OrderInput } from '@/lib/orders';
+import { getPostHogClient } from '@/lib/posthog-server';
 
 export async function POST(req: Request) {
   const key = process.env.STRIPE_SECRET_KEY;
@@ -197,6 +198,25 @@ export async function POST(req: Request) {
         pending_order_id: pendingOrderId,
       },
     });
+
+    // Track checkout session creation in PostHog
+    const posthog = getPostHogClient();
+    const distinctId = orderData?.email ?? `anon_${pendingOrderId}`;
+    posthog.capture({
+      distinctId,
+      event: "checkout_session_created",
+      properties: {
+        currency: currencyCode,
+        subtotal,
+        total: subtotal + shippingPrice + dobirkaFee - discountInCurrency,
+        item_count: (items as { quantity: number }[]).reduce((sum, i) => sum + i.quantity, 0),
+        product_slugs: (items as { slug: string }[]).map((i) => i.slug),
+        shipping_method: orderData?.dopravaName ?? null,
+        has_discount: !!orderData?.discountCode,
+        pending_order_id: pendingOrderId,
+      },
+    });
+    await posthog.flush();
 
     return NextResponse.json({ url: session.url });
 

@@ -10,6 +10,7 @@ import { useCurrency } from "@/lib/CurrencyContext";
 import { formatPrice, getPrice } from "@/lib/currency";
 import type { Currency } from "@/lib/currency";
 import DiscountWidget from "@/components/DiscountWidget";
+import posthog from "posthog-js";
 
 const COLOR_LABELS: Record<string, string> = {
   black: "Černá", white: "Bílá", grey: "Šedá", pink: "Růžová",
@@ -296,6 +297,13 @@ export default function KosikPage() {
         }
       }
     }
+
+    posthog.capture("checkout_started", {
+      item_count: items.reduce((sum, i) => sum + i.quantity, 0),
+      total_price_czk: items.reduce((sum, i) => sum + i.priceCZK * i.quantity, 0),
+      product_slugs: items.map((i) => i.slug),
+      has_discount: !!appliedDiscount,
+    });
 
     // Ať se cokoli změnilo nebo ne, přejdi na objednávku
     window.location.href = "/objednavka";

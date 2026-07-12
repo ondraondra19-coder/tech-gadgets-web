@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Star, ChevronRight, Send, Check, AlertCircle, ChevronDown } from "lucide-react";
+import posthog from "posthog-js";
 
 const HCAPTCHA_SITE_KEY = "d5505d72-aa1a-4b50-a746-a1b0175c9092";
 // Poznámka: cooldown se nyní vynucuje na serveru (podle IP) přes Upstash Redis.
@@ -185,6 +186,10 @@ export default function RecenzePage() {
       try {
         localStorage.setItem(LAST_REVIEW_KEY, String(Date.now()));
       } catch {}
+      posthog.capture("review_submitted", {
+        rating,
+        text_length: text.trim().length,
+      });
       setSubmitted(true);
       setCaptchaToken(null);
       if (captchaId !== null && window.hcaptcha) window.hcaptcha.reset(captchaId);

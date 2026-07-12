@@ -18,6 +18,7 @@ import { products } from "@/lib/products";
 import { trackOrder } from "@/lib/analytics";
 import { confirmPendingOrder } from "@/lib/orders";
 import { deductStockForItems } from "@/lib/stock";
+import { getPostHogClient } from "@/lib/posthog-server";
 
 export async function POST(req: Request) {
   const key = process.env.STRIPE_SECRET_KEY;
@@ -70,6 +71,23 @@ export async function POST(req: Request) {
       });
 
       await trackOrder({ currency, amountTotal, items: resolvedItems });
+
+      // Track confirmed payment in PostHog (server-side, most reliable signal)
+      const posthog = getPostHogClient();
+      const customerId = session.customer_details?.email ?? session.id;
+      posthog.capture({
+        distinctId: customerId,
+        event: "order_paid",
+        properties: {
+          currency,
+          amount_total: amountTotal,
+          item_count: resolvedItems.reduce((sum, i) => sum + i.quantity, 0),
+          product_slugs: resolvedItems.map((i) => i.slug),
+          stripe_session_id: session.id,
+          discount_code: session.metadata?.discount_code ?? null,
+        },
+      });
+      await posthog.flush();
 
       // Povýšíme pending objednávku na potvrzenou — pokud ID chybí (starší
       // session bez pending záznamu), objednávka se v admin přehledu prostě

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Suspense, useEffect, useState } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import posthog from "posthog-js";
 import Image from "next/image";
 import {
     CheckCircle2, ShoppingBag, Mail, Clock, Banknote, Package,
@@ -404,6 +405,16 @@ function SuccessContent() {
                         },
                         savedAt: Date.now(),
                     });
+                    posthog.capture("order_completed", {
+                        payment_method: "karta",
+                        stripe_session_id: sessionId,
+                        item_count: o.items.reduce((sum: number, it: any) => sum + it.quantity, 0),
+                        product_slugs: o.items.map((it: any) => it.slug),
+                        shipping_method: o.shippingName ?? null,
+                        discount_code: o.discountCode ?? null,
+                        amount_total: typeof data.amountTotal === "number" ? data.amountTotal : o.total,
+                        currency: o.currency ?? null,
+                    });
                     setHydrated(true);
                 })
                 .catch(() => {
@@ -415,10 +426,23 @@ function SuccessContent() {
 
         // Dobírka / převod — tahle data se zapsala do localStorage jen pár
         // vteřin předtím na téhle stránce, takže jsou spolehlivě aktuální.
+        let parsedSnapshot: Snapshot | null = null;
         try {
             const raw = localStorage.getItem(SNAPSHOT_KEY);
-            if (raw) setSnapshot(JSON.parse(raw));
+            if (raw) {
+                parsedSnapshot = JSON.parse(raw);
+                setSnapshot(parsedSnapshot);
+            }
         } catch {}
+        if (parsedSnapshot) {
+            posthog.capture("order_completed", {
+                payment_method: method,
+                item_count: parsedSnapshot.items.reduce((sum, it) => sum + it.quantity, 0),
+                product_slugs: parsedSnapshot.items.map((it) => it.slug),
+                shipping_method: parsedSnapshot.orderData?.dopravaName ?? null,
+                discount_code: parsedSnapshot.orderData?.discountCode ?? null,
+            });
+        }
         setHydrated(true);
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 

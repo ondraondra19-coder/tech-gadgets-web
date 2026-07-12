@@ -8,6 +8,7 @@ import { ChevronRight, Check, Package, CreditCard, Building2, Truck, MapPin, Ale
 import { useCurrency } from "@/lib/CurrencyContext";
 import { formatPrice, getPrice } from "@/lib/currency";
 import DiscountWidget from "@/components/DiscountWidget";
+import posthog from "posthog-js";
 
 declare global {
   interface Window {
@@ -194,6 +195,10 @@ export default function ObjednavkaPage() {
                           setDoprava(opt.id);
                           setErrors(prev => ({ ...prev, doprava: "", zasilkovna: "" }));
                           if (opt.id !== "zasilkovna") setSelectedZbox(null);
+                          posthog.capture("shipping_method_selected", {
+                            shipping_method: opt.id,
+                            shipping_name: opt.name,
+                          });
                         }}
                         className={`w-full flex items-center gap-4 p-4 rounded-xl border text-left transition-all duration-150 ${
                           doprava === opt.id ? "border-primary bg-primary/5" : "border-border hover:border-border-strong bg-dark"
@@ -255,7 +260,14 @@ export default function ObjednavkaPage() {
                   {platbyOptions.map((opt) => (
                     <button
                       key={opt.id}
-                      onClick={() => { setPlatba(opt.id); setErrors(prev => ({ ...prev, platba: "" })); }}
+                      onClick={() => {
+                        setPlatba(opt.id);
+                        setErrors(prev => ({ ...prev, platba: "" }));
+                        posthog.capture("payment_method_selected", {
+                          payment_method: opt.id,
+                          payment_name: opt.name,
+                        });
+                      }}
                       className={`flex items-center gap-4 p-4 rounded-xl border text-left transition-all duration-150 ${
                         platba === opt.id ? "border-primary bg-primary/5" : "border-border hover:border-border-strong bg-dark"
                       }`}

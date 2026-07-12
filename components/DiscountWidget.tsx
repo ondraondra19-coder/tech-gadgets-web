@@ -8,6 +8,7 @@ import { formatPrice } from "@/lib/currency";
 import { approxConvert, getActiveSlugs } from "@/lib/discounts";
 import { products } from "@/lib/products";
 import { CURRENCIES } from "@/lib/currency";
+import posthog from "posthog-js";
 
 export default function DiscountWidget() {
   const { applyDiscountCode, removeDiscount, appliedDiscount, totalPriceCZK, isDiscountActive } = useCart();
@@ -32,7 +33,12 @@ export default function DiscountWidget() {
     if (!code.trim()) return;
     const result = applyDiscountCode(code);
     setStatus(result);
-    if (result === "ok") setCode("");
+    if (result === "ok") {
+      posthog.capture("discount_code_applied", {
+        discount_code: code.toUpperCase(),
+      });
+      setCode("");
+    }
   }
 
   function handleRemove() {

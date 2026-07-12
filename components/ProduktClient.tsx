@@ -8,6 +8,7 @@ import { useCart } from "@/lib/cart";
 import { useCurrency } from "@/lib/CurrencyContext";
 import { formatPrice, getPrice, CURRENCIES } from "@/lib/currency";
 import { useStockPolling } from "@/lib/useStockPolling";
+import posthog from "posthog-js";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -588,6 +589,10 @@ export default function ProduktClient({
   function handleAddToCart() {
     if (isOutOfStock) {
       setNotifyOpen(true);
+      posthog.capture("out_of_stock_notification_requested", {
+        product_slug: product.slug,
+        product_name: product.name,
+      });
       return;
     }
     if (!canAddToCart) return;
@@ -617,6 +622,14 @@ export default function ProduktClient({
       : hasModels
         ? legacyImgSrc
         : mainImgSrc;
+
+    posthog.capture("product_added_to_cart", {
+      product_slug: product.slug,
+      product_name: product.name,
+      quantity: qty,
+      price_czk: totalPriceCZK,
+      variants: Object.keys(variantInfo).length > 0 ? variantInfo : null,
+    });
 
     // Přidáme qty kusů do košíku, maxQuantity = stockCeiling (skutečný celkový
     // strop pro tuto variantu) jako ochrana — addItem si sám sečte s tím, co
