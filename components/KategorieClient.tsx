@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Image from "next/image";
 import { SlidersHorizontal, ChevronDown, X, Check } from "lucide-react";
 import type { Product } from "@/lib/products";
@@ -83,11 +83,37 @@ function DualRangeSlider({
   onChangeMax: (v: number) => void;
   step?: number;
 }) {
+  const trackRef = useRef<HTMLDivElement>(null);
   const range = Math.max(max - min, 1);
   const pctMin = ((valueMin - min) / range) * 100;
   const pctMax = ((valueMax - min) / range) * 100;
-  // Když jsou úchyty blízko sebe, ať jde nahoru ten, co je dál od svého konce dráhy (jinak by se druhý nedal chytit).
-  const minOnTop = valueMin - min > max - valueMax;
+
+  function valueFromClientX(clientX: number): number {
+    const rect = trackRef.current!.getBoundingClientRect();
+    const frac = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
+    return Math.round((min + frac * range) / step) * step;
+  }
+
+  // Pointer Capture API: jednou zachycený ukazatel posílá move/up eventy přímo
+  // tomuto úchytu bez ohledu na to, co je pod kurzorem nebo jak se mezitím
+  // překreslí okolí — na rozdíl od dvou překrytých native <input type="range">
+  // (viz komentář u .range-slider v globals.css), tady se tah nikdy nepřeruší.
+  function startDrag(onChange: (v: number) => void, clamp: (v: number) => number) {
+    return (e: React.PointerEvent<HTMLDivElement>) => {
+      e.currentTarget.setPointerCapture(e.pointerId);
+      onChange(clamp(valueFromClientX(e.clientX)));
+    };
+  }
+
+  function handleDrag(onChange: (v: number) => void, clamp: (v: number) => number) {
+    return (e: React.PointerEvent<HTMLDivElement>) => {
+      if (!e.currentTarget.hasPointerCapture(e.pointerId)) return;
+      onChange(clamp(valueFromClientX(e.clientX)));
+    };
+  }
+
+  const clampMin = (v: number) => Math.min(v, valueMax - step);
+  const clampMax = (v: number) => Math.max(v, valueMin + step);
 
   return (
     <div>
@@ -95,33 +121,43 @@ function DualRangeSlider({
         <span>{valueMin} Kč</span>
         <span>{valueMax} Kč</span>
       </div>
-      <div className="relative h-4 flex items-center">
+      <div ref={trackRef} className="relative h-4 flex items-center">
         <div className="absolute inset-x-0 h-1.5 rounded-full bg-border" />
         <div
           className="absolute h-1.5 rounded-full bg-primary"
           style={{ left: `${pctMin}%`, right: `${100 - pctMax}%` }}
         />
-        <input
-          type="range"
-          className="range-slider absolute inset-x-0 w-full"
-          style={{ zIndex: minOnTop ? 4 : 3 }}
-          min={min}
-          max={max}
-          step={step}
-          value={valueMin}
-          onChange={e => onChangeMin(Math.min(Number(e.target.value), valueMax - step))}
+        <div
+          role="slider"
+          tabIndex={0}
           aria-label="Minimální cena"
+          aria-valuemin={min}
+          aria-valuemax={max}
+          aria-valuenow={valueMin}
+          className="absolute top-1/2 w-4 h-4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary border-2 border-white shadow cursor-grab active:cursor-grabbing touch-none"
+          style={{ left: `${pctMin}%` }}
+          onPointerDown={startDrag(onChangeMin, clampMin)}
+          onPointerMove={handleDrag(onChangeMin, clampMin)}
+          onKeyDown={e => {
+            if (e.key === "ArrowRight") onChangeMin(clampMin(valueMin + step));
+            if (e.key === "ArrowLeft") onChangeMin(Math.max(valueMin - step, min));
+          }}
         />
-        <input
-          type="range"
-          className="range-slider absolute inset-x-0 w-full"
-          style={{ zIndex: minOnTop ? 3 : 4 }}
-          min={min}
-          max={max}
-          step={step}
-          value={valueMax}
-          onChange={e => onChangeMax(Math.max(Number(e.target.value), valueMin + step))}
+        <div
+          role="slider"
+          tabIndex={0}
           aria-label="Maximální cena"
+          aria-valuemin={min}
+          aria-valuemax={max}
+          aria-valuenow={valueMax}
+          className="absolute top-1/2 w-4 h-4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary border-2 border-white shadow cursor-grab active:cursor-grabbing touch-none"
+          style={{ left: `${pctMax}%` }}
+          onPointerDown={startDrag(onChangeMax, clampMax)}
+          onPointerMove={handleDrag(onChangeMax, clampMax)}
+          onKeyDown={e => {
+            if (e.key === "ArrowLeft") onChangeMax(clampMax(valueMax - step));
+            if (e.key === "ArrowRight") onChangeMax(Math.min(valueMax + step, max));
+          }}
         />
       </div>
     </div>
@@ -307,7 +343,7 @@ export default function KategorieClient({
                   </button>
                 )}
               </div>
-              <FilterContent />
+              {FilterContent()}
             </div>
             <RatingWidget />
           </aside>
@@ -408,7 +444,7 @@ export default function KategorieClient({
               </button>
             </div>
             <div className="rounded-2xl border border-border overflow-hidden bg-surface">
-              <FilterContent />
+              {FilterContent()}
             </div>
             {activeFilters && (
               <button
