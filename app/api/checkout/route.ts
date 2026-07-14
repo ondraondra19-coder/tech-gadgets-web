@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { getProductsWithPriceOverrides, resolveItemUnitPrice } from '@/lib/priceOverrides';
 import { createPendingOrder, type OrderInput } from '@/lib/orders';
-import { resolveDiscountForOrder } from '@/lib/discounts';
+import { resolveDiscountForOrder } from '@/lib/discountsStore';
 import { getShippingPrice } from '@/lib/shipping/pricing';
 import { getDobirkaFee } from '@/lib/fees';
 import { checkRateLimit } from '@/lib/rateLimit';
@@ -135,7 +135,7 @@ export async function POST(req: Request) {
     // Slevu spočítá SERVER z KÓDU (orderData.discountCode) — klientova
     // discountAmountCZK se pro cenu vůbec nečte, jinak by šlo poslat libovolnou
     // částku. Z výsledku vytvoříme jednorázový Stripe coupon (amount_off v centech).
-    const resolvedDiscount = resolveDiscountForOrder(
+    const resolvedDiscount = await resolveDiscountForOrder(
       orderData?.discountCode,
       items,
       (i) => {

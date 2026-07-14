@@ -9,8 +9,10 @@ import type { CurrentSession } from '@/lib/session';
 import type { Permission } from '@/lib/permissions';
 import type { Product } from '@/lib/products';
 import type { Message } from '@/lib/messages';
+import type { Discount } from '@/lib/discounts';
 import ReviewsAdminList from './recenze/ReviewsAdminList';
 import AccountsAdminPanel from './AccountsAdminPanel';
+import DiscountsAdminPanel from './DiscountsAdminPanel';
 import ProductsAdminList from './ProductsAdminList';
 import MessagesAdminList from './MessagesAdminList';
 import AnalyticsPanel from './AnalyticsPanel';
@@ -19,7 +21,7 @@ import MagazinAdminList from './MagazinAdminList';
 import DashboardHome from './DashboardHome';
 import AdminSearch from './AdminSearch';
 
-export type Tab = 'dashboard' | 'reservations' | 'products' | 'reviews' | 'messages' | 'settings' | 'analytics' | 'accounts';
+export type Tab = 'dashboard' | 'reservations' | 'products' | 'reviews' | 'messages' | 'settings' | 'analytics' | 'discounts' | 'accounts';
 
 function getInitials(name: string): string {
   return name
@@ -34,6 +36,7 @@ type AdminDashboardProps = {
   session: CurrentSession;
   initialReviews: Review[];
   initialAccounts: PublicAccount[];
+  initialDiscounts: Discount[];
   products: Product[];
   initialStock: Record<string, number>;
 };
@@ -42,6 +45,7 @@ export default function AdminDashboard({
   session,
   initialReviews,
   initialAccounts,
+  initialDiscounts,
   products,
   initialStock
 }: AdminDashboardProps) {
@@ -52,6 +56,7 @@ export default function AdminDashboard({
   const [ordersFocusId, setOrdersFocusId] = useState<string | undefined>(undefined);
   const [reviews, setReviews] = useState(initialReviews);
   const [accounts, setAccounts] = useState(initialAccounts);
+  const [discounts, setDiscounts] = useState(initialDiscounts);
   const [messages, setMessages] = useState<Message[]>([]);
   const router = useRouter();
 
@@ -154,6 +159,14 @@ export default function AdminDashboard({
       ),
     },
     {
+      id: 'discounts',
+      label: 'Slevové kódy',
+      visible: hasPermission('discounts'),
+      icon: (
+        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" /><path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6z" /></svg>
+      ),
+    },
+    {
       id: 'accounts',
       label: 'Správa účtů',
       visible: session.isMain,
@@ -233,6 +246,15 @@ export default function AdminDashboard({
                       }`}
                     >
                       {unreadMessagesCount}
+                    </span>
+                  )}
+                  {item.id === 'discounts' && discounts.length > 0 && (
+                    <span
+                      className={`ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded-md ${
+                        isActive ? 'bg-white/20 text-white' : 'bg-white/[0.06] text-zinc-400'
+                      }`}
+                    >
+                      {discounts.length}
                     </span>
                   )}
                   {item.id === 'accounts' && accounts.length > 0 && (
@@ -323,7 +345,7 @@ export default function AdminDashboard({
 
             <div className="bg-white border border-[#e5e7eb] rounded-2xl p-6 min-h-[400px] flex flex-col justify-between shadow-sm relative overflow-hidden">
 
-              <div className={activeTab === 'reviews' || activeTab === 'accounts' || activeTab === 'messages' ? 'w-full' : undefined}>
+              <div className={activeTab === 'reviews' || activeTab === 'accounts' || activeTab === 'discounts' || activeTab === 'messages' ? 'w-full' : undefined}>
                 {activeTab === 'dashboard' && (
                   <DashboardHome
                     products={products}
@@ -378,6 +400,16 @@ export default function AdminDashboard({
                   <div className="space-y-4">
                     <h3 className="text-base font-bold text-[#0f0f10]">Magazín</h3>
                     <MagazinAdminList />
+                  </div>
+                )}
+
+                {activeTab === 'discounts' && hasPermission('discounts') && (
+                  <div className="space-y-4">
+                    <p className="text-zinc-500 text-xs leading-relaxed max-w-lg">
+                      Vytvářej slevové kódy pro zákazníky — procentuální nebo pevnou částku, s volitelným
+                      minimem objednávky a datem platnosti.
+                    </p>
+                    <DiscountsAdminPanel discounts={discounts} onChange={setDiscounts} />
                   </div>
                 )}
 

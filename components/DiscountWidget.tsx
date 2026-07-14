@@ -14,6 +14,7 @@ export default function DiscountWidget() {
   const { currency } = useCurrency();
   const [code, setCode] = useState("");
   const [status, setStatus] = useState<"idle" | "ok" | "invalid">("idle");
+  const [checking, setChecking] = useState(false);
 
   const active = isDiscountActive();
 
@@ -28,9 +29,11 @@ export default function DiscountWidget() {
     ? approxConvert(missingCZK, currency.code)
     : 0;
 
-  function handleApply() {
-    if (!code.trim()) return;
-    const result = applyDiscountCode(code);
+  async function handleApply() {
+    if (!code.trim() || checking) return;
+    setChecking(true);
+    const result = await applyDiscountCode(code);
+    setChecking(false);
     setStatus(result);
     if (result === "ok") setCode("");
   }
@@ -125,10 +128,10 @@ export default function DiscountWidget() {
         </div>
         <button
           onClick={handleApply}
-          disabled={!code.trim()}
+          disabled={!code.trim() || checking}
           className="px-4 py-2.5 rounded-xl bg-primary text-dark font-bold text-sm hover:brightness-105 active:scale-[0.98] transition-all disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
         >
-          Uplatnit
+          {checking ? "Ověřuji…" : "Uplatnit"}
         </button>
       </div>
       {status === "invalid" && (

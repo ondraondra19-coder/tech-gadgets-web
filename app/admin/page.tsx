@@ -4,6 +4,7 @@ import { getAllAccounts, toPublicAccount } from "@/lib/accounts";
 import { getCurrentSession } from "@/lib/session";
 import { getProductsWithPriceOverrides } from "@/lib/priceOverrides";
 import { getStockMap } from "@/lib/stock";
+import { getAllDiscounts } from "@/lib/discountsStore";
 import AdminDashboard from "./AdminDashboard";
 
 export const dynamic = "force-dynamic"; // vždy čerstvá data, žádné cachování
@@ -18,6 +19,9 @@ export default async function AdminPage() {
   const reviews = canSeeReviews ? await getAllReviews() : [];
   const accounts = session.isMain ? (await getAllAccounts()).map(toPublicAccount) : [];
 
+  const canSeeDiscounts = session.isMain || session.permissions.includes("discounts");
+  const discounts = canSeeDiscounts ? await getAllDiscounts() : [];
+
   // Katalog s aplikovanými přepisy cen z admina — ProductsAdminList tak
   // rovnou vidí aktuální (ne jen katalogovou) cenu.
   const products = await getProductsWithPriceOverrides();
@@ -27,10 +31,11 @@ export default async function AdminPage() {
   const serializedStock = Object.fromEntries(stockMap.entries());
 
   return (
-    <AdminDashboard 
-      session={session} 
-      initialReviews={reviews} 
-      initialAccounts={accounts} 
+    <AdminDashboard
+      session={session}
+      initialReviews={reviews}
+      initialAccounts={accounts}
+      initialDiscounts={discounts}
       products={products}
       initialStock={serializedStock}
     />

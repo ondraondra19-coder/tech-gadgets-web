@@ -2,7 +2,20 @@
 
 import { createContext, useContext, useState, useCallback, useEffect } from "react";
 import { getPrice, type Currency } from "@/lib/currency";
-import { findDiscount, calcDiscount, getActiveSlugs, type Discount } from "@/lib/discounts";
+import { calcDiscount, getActiveSlugs, type Discount } from "@/lib/discounts";
+
+// Kódy teď žijí v Redisu (spravuje je admin) — ověřujeme je přes API, ne
+// synchronně z lokálního pole jako dřív.
+async function fetchDiscount(code: string): Promise<Discount | null> {
+  try {
+    const res = await fetch(`/api/discounts/check?code=${encodeURIComponent(code)}`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.discount ?? null;
+  } catch {
+    return null;
+  }
+}
 
 export type PriceRaw = number | Partial<Record<"CZK" | "EUR" | "USD", number>>;
 
@@ -28,7 +41,7 @@ type CartContext = {
   getItemPrice: (item: CartItem, currency: Currency) => number;
   getTotalPrice: (currency: Currency) => number;
   appliedDiscount: Discount | null;
-  applyDiscountCode: (code: string) => "ok" | "invalid";
+  applyDiscountCode: (code: string) => Promise<"ok" | "invalid">;
   removeDiscount: () => void;
   isDiscountActive: () => boolean;
   getDiscountAmount: (currency: Currency) => number;
@@ -65,8 +78,17 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       const stored = localStorage.getItem(DISCOUNT_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
-        const live = findDiscount(parsed.code);
-        if (live) setAppliedDiscount(live);
+        // Optimisticky rovnou zobrazíme uložený kód, pak na pozadí ověříme,
+        // že ještě platí (admin ho mezitím mohl smazat/deaktivovat/nechat vypršet).
+        setAppliedDiscount(parsed);
+        fetchDiscount(parsed.code).then((live) => {
+          if (live) {
+            setAppliedDiscount(live);
+          } else {
+            setAppliedDiscount(null);
+            try { localStorage.removeItem(DISCOUNT_KEY); } catch {}
+          }
+        });
       }
     } catch {}
   }, []);
@@ -126,8 +148,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     return items.filter(i => slugs.includes(i.slug));
   }, [items]);
 
-  const applyDiscountCode = useCallback((code: string): "ok" | "invalid" => {
-    const discount = findDiscount(code);
+  const applyDiscountCode = useCallback(async (code: string): Promise<"ok" | "invalid"> => {
+    const discount = await fetchDiscount(code);
     if (!discount) return "invalid";
     setAppliedDiscount(discount);
     try { localStorage.setItem(DISCOUNT_KEY, JSON.stringify(discount)); } catch {}

@@ -10,6 +10,7 @@ export const GRANTABLE_PERMISSIONS = [
   "messages",
   "settings",
   "analytics",
+  "discounts",
 ] as const;
 
 export type Permission = (typeof GRANTABLE_PERMISSIONS)[number];

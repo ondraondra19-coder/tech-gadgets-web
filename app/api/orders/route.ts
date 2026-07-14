@@ -5,7 +5,7 @@ import { NextResponse } from "next/server";
 import { getProductsWithPriceOverrides, resolveItemUnitPrice } from "@/lib/priceOverrides";
 import { createOrderDirect, type OrderInput, type PaymentMethod } from "@/lib/orders";
 import { deductStockForItems } from "@/lib/stock";
-import { resolveDiscountForOrder } from "@/lib/discounts";
+import { resolveDiscountForOrder } from "@/lib/discountsStore";
 import { getShippingPrice } from "@/lib/shipping/pricing";
 import { getDobirkaFee } from "@/lib/fees";
 import { checkRateLimit } from "@/lib/rateLimit";
@@ -87,7 +87,7 @@ export async function POST(req: Request) {
     // Sleva se u dobírky/převodu neřeší přes Stripe coupon — jen si ji
     // zaznamenáme pro přehled v adminu (odečet z celkové částky). Počítá ji
     // SERVER z KÓDU (orderData.discountCode), klientovu částku nečteme.
-    const resolvedDiscount = resolveDiscountForOrder(
+    const resolvedDiscount = await resolveDiscountForOrder(
       orderData?.discountCode,
       items,
       (i) => {
