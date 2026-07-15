@@ -7,6 +7,7 @@ import type { Product } from "@/lib/products";
 import RatingWidget from "./RatingWidget";
 import { useCurrency } from "@/lib/CurrencyContext";
 import { formatPrice, getPrice } from "@/lib/currency";
+import { trackEvent } from "@/lib/analytics";
 
 type Category = { slug: string; name: string };
 
@@ -380,6 +381,12 @@ export default function KategorieClient({
                     <a
                       key={product.slug}
                       href={`/produkt/${product.slug}`}
+                      onClick={() => trackEvent("product_clicked", {
+                        slug: product.slug,
+                        name: product.name,
+                        price: getPrice(product.price, currency),
+                        currency: currency.code,
+                      })}
                       className="group flex flex-col bg-white rounded-2xl overflow-hidden border border-border shadow-sm hover:shadow-md transition-all duration-200"
                     >
                       {/* Obrázek */}

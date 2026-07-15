@@ -10,6 +10,7 @@ import { formatPrice, getPrice } from "@/lib/currency";
 import DiscountWidget from "@/components/DiscountWidget";
 import { SHIPPING_PRICES } from "@/lib/shipping/pricing";
 import { DOBIRKA_FEE } from "@/lib/fees";
+import { trackEvent } from "@/lib/analytics";
 
 declare global {
   interface Window {
@@ -173,6 +174,7 @@ export default function ObjednavkaPage() {
       }));
     } catch {}
 
+    trackEvent("checkout_step_completed", { step: 2 });
     window.location.href = "/informace";
   }
 

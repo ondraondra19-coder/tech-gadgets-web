@@ -14,6 +14,7 @@ import DiscountWidget from "@/components/DiscountWidget";
 import { approxConvert } from "@/lib/discounts";
 import { CURRENCIES } from "@/lib/currency";
 import { DOBIRKA_FEE } from "@/lib/fees";
+import { trackEvent } from "@/lib/analytics";
 
 const ORDER_KEY = "hackpack-order";
 const INFO_KEY = "hackpack-info";
@@ -637,6 +638,7 @@ export default function InformacePage() {
       }, 50);
       return;
     }
+    trackEvent("checkout_step_completed", { step: 3 });
     setLoading(true);
     const rawOrder = localStorage.getItem(ORDER_KEY);
     const parsedOrder = rawOrder ? JSON.parse(rawOrder) : null;
@@ -669,6 +671,7 @@ export default function InformacePage() {
 
       // Dobírka / bankovní převod — žádný Stripe krok, objednávku uložíme
       // rovnou přes /api/orders, ať o ní admin ví (dřív se neukládala nikam).
+      let createdOrderId: string | null = null;
       if (metoda.includes("dobirka") || metoda.includes("prevod")) {
         const discountAmountCZK = getDiscountAmount({ code: "CZK", symbol: "Kč", decimals: 0, symbolBefore: false });
         const res = await fetch("/api/orders", {
@@ -679,11 +682,13 @@ export default function InformacePage() {
             orderData: { ...dataToSave, doprava: parsedOrder?.doprava ?? null, dopravaName: parsedOrder?.dopravaName || "Doprava", dopravaPrice: parsedOrder?.dopravaPrices || 0, discountCode: appliedDiscount?.code ?? null, discountLabel: appliedDiscount?.label ?? null, discountAmountCZK: discountAmountCZK > 0 ? discountAmountCZK : 0, zbox: parsedOrder?.zbox ?? null },
           }),
         });
+        const d = await res.json().catch(() => ({}));
         if (!res.ok) {
-          const d = await res.json().catch(() => ({}));
           console.error("Nepodařilo se uložit objednávku:", d.error);
           // Necháme zákazníka pokračovat na success stránku i tak — nechceme
           // mu zablokovat dokončení kvůli chybě na naší straně, jen to zalogujeme.
+        } else {
+          createdOrderId = d.orderId ?? null;
         }
       }
 
@@ -698,7 +703,9 @@ export default function InformacePage() {
       } catch {}
       sessionStorage.removeItem(INFO_KEY);
       clearCart(); removeDiscount();
-      window.location.href = `/objednavka/uspech?${new URLSearchParams({ method: metoda || "dobirka" })}`;
+      const successParams: Record<string, string> = { method: metoda || "dobirka" };
+      if (createdOrderId) successParams.order_id = createdOrderId;
+      window.location.href = `/objednavka/uspech?${new URLSearchParams(successParams)}`;
     } catch (err: any) {
       alert("Něco se pokazilo: " + err.message);
     } finally {

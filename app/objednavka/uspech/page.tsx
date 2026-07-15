@@ -12,9 +12,10 @@ import {
 } from "lucide-react";
 import { useCurrency } from "@/lib/CurrencyContext";
 import { formatPrice, getPrice } from "@/lib/currency";
-import { buildSpdString } from "@/lib/qrPlatba";
+import { buildSpdString, orderIdToVariableSymbol } from "@/lib/qrPlatba";
 import QRCode from "qrcode";
 import { DOBIRKA_FEE } from "@/lib/fees";
+import { identifyUser } from "@/lib/analytics";
 
 const SNAPSHOT_KEY = "hackpack-order-snapshot";
 
@@ -404,12 +405,17 @@ function SuccessContent() {
     const method: "prevod" | "dobirka" | "karta" =
         rawMethod === "prevod" ? "prevod" : rawMethod === "dobirka" ? "dobirka" : "karta";
     const sessionId = searchParams.get("session_id");
+    const orderIdParam = searchParams.get("order_id");
 
     useEffect(() => {
-        const id = sessionId
-            ? sessionId.replace(/^cs_live_|^cs_test_/, "").slice(-10).toUpperCase()
-            : (Math.floor(Math.random() * 90000) + 10000).toString();
-        setStableOrderId(id);
+        // Dokud neznáme skutečné ID objednávky, zobrazíme dočasnou hodnotu —
+        // jakmile dorazí (níže), přepíšeme ji na variabilní symbol odvozený
+        // ze SKUTEČNÉHO order.id, ať sedí se souhrnem v potvrzovacím e-mailu.
+        if (orderIdParam) {
+            setStableOrderId(orderIdToVariableSymbol(orderIdParam));
+        } else if (!sessionId) {
+            setStableOrderId((Math.floor(Math.random() * 90000) + 10000).toString());
+        }
 
         // Platba kartou — NEspoléháme na localStorage (to může obsahovat
         // starou objednávku z jiné návštěvy). Místo toho ověříme skutečnou
@@ -424,6 +430,7 @@ function SuccessContent() {
                         return;
                     }
                     const o = data.order;
+                    if (o.id) setStableOrderId(orderIdToVariableSymbol(o.id));
                     setApiTotal(typeof data.amountTotal === "number" ? data.amountTotal : o.total);
                     setSnapshot({
                         items: o.items.map((it: any) => ({
@@ -476,6 +483,15 @@ function SuccessContent() {
     const items = snapshot?.items ?? [];
     const info = snapshot?.info ?? {};
     const orderData = snapshot?.orderData ?? null;
+
+    // Spojí dosavadní anonymní návštěvnickou identitu se skutečným zákazníkem
+    // — jediné místo v appce, kde e-mail zákazníka známe jistě u všech tří
+    // platebních metod (kartou/dobírkou/převodem), protože snapshot je vždy
+    // dohydratovaný teprve tady.
+    useEffect(() => {
+        if (!hydrated || !info.email) return;
+        identifyUser(info.email, info.jmeno ? { name: info.jmeno } : undefined);
+    }, [hydrated, info.email, info.jmeno]);
 
     const vsymbol = stableOrderId.replace(/\D/g, "").slice(-8).padStart(8, "0");
 

@@ -13,15 +13,12 @@
 import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import posthog from "posthog-js";
+import { isPostHogLoaded } from "@/lib/analytics";
 import { CONSENT_CHANGED_EVENT, hasAnalyticsConsent } from "./CookieBanner";
 
 const POSTHOG_KEY = process.env.NEXT_PUBLIC_POSTHOG_KEY;
 const POSTHOG_HOST = process.env.NEXT_PUBLIC_POSTHOG_HOST;
 const ADMIN_HINT_COOKIE = "admin_hint"; // musí odpovídat ADMIN_HINT_COOKIE_NAME v lib/adminAuth.ts
-
-function isLoaded() {
-  return Boolean((posthog as unknown as { __loaded?: boolean }).__loaded);
-}
 
 function isAdminSession(): boolean {
   if (typeof document === "undefined") return false;
@@ -40,7 +37,7 @@ function capturePageview() {
 }
 
 function startPostHog() {
-  if (!POSTHOG_KEY || !POSTHOG_HOST || isLoaded() || isAdminSession() || isAdminRoute()) return;
+  if (!POSTHOG_KEY || !POSTHOG_HOST || isPostHogLoaded() || isAdminSession() || isAdminRoute()) return;
   posthog.init(POSTHOG_KEY, {
     api_host: POSTHOG_HOST,
     person_profiles: "identified_only",
@@ -51,7 +48,7 @@ function startPostHog() {
 }
 
 function stopPostHog() {
-  if (!isLoaded()) return;
+  if (!isPostHogLoaded()) return;
   posthog.opt_out_capturing();
   posthog.reset();
 }
@@ -61,7 +58,7 @@ function syncTrackingState() {
     stopPostHog();
     return;
   }
-  if (isLoaded()) {
+  if (isPostHogLoaded()) {
     posthog.opt_in_capturing();
     capturePageview();
   } else {
@@ -93,7 +90,7 @@ export default function PostHogProvider() {
       stopPostHog();
       return;
     }
-    if (!isLoaded() || !hasAnalyticsConsent()) return;
+    if (!isPostHogLoaded() || !hasAnalyticsConsent()) return;
     capturePageview();
   }, [pathname]);
 

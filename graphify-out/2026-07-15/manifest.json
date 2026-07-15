@@ -165,8 +165,8 @@
     "semantic_hash": "836458ca2e47a86ed313d2a299940c1d"
   },
   "app/api/webhooks/stripe/route.ts": {
-    "mtime": 1784069279.935918,
-    "ast_hash": "0d96020a7c4e81b42da971aad04c29eb",
+    "mtime": 1784040068.2572782,
+    "ast_hash": "c42c244b459809ff9749c995fcc3c1c3",
     "semantic_hash": ""
   },
   "app/blog/[slug]/page.tsx": {
@@ -200,8 +200,8 @@
     "semantic_hash": "13027186e2c94cab16a1e10690089289"
   },
   "app/informace/page.tsx": {
-    "mtime": 1784069408.4933276,
-    "ast_hash": "9da139a65f286eae444bc04c0622e0dc",
+    "mtime": 1784040068.2642112,
+    "ast_hash": "881a1e5c7e0ab940d7bcbef1f82fcff8",
     "semantic_hash": ""
   },
   "app/kategorie/[slug]/page.tsx": {
@@ -240,13 +240,13 @@
     "semantic_hash": "72fdeaf31adc53a10508e48d8fd99e99"
   },
   "app/objednavka/page.tsx": {
-    "mtime": 1784069399.2730231,
-    "ast_hash": "f713f83b9575032d2a5c9d634115846c",
+    "mtime": 1783985387.0737555,
+    "ast_hash": "af2b923913c1978f11530bfb01295535",
     "semantic_hash": ""
   },
   "app/objednavka/uspech/page.tsx": {
-    "mtime": 1784069429.8671823,
-    "ast_hash": "2fe5f8095dc278f9e99325a27e791297",
+    "mtime": 1784040068.2642112,
+    "ast_hash": "c475f37232c0da976e0aca1fc25ed032",
     "semantic_hash": ""
   },
   "app/ochrana-osobnich-udaju/page.tsx": {
@@ -325,8 +325,8 @@
     "semantic_hash": "fa95f0bbcd2549586a19dc64a19b8d6e"
   },
   "components/KategorieClient.tsx": {
-    "mtime": 1784069339.7503302,
-    "ast_hash": "da23bf60f613fb91e5ffaa92ed4591e0",
+    "mtime": 1783859051.167894,
+    "ast_hash": "14947e1fcf841e8b2093ebc1423c8732",
     "semantic_hash": ""
   },
   "components/Logo.tsx": {
@@ -335,13 +335,13 @@
     "semantic_hash": "da261c81505ca4eada24c21d54830478"
   },
   "components/PostHogProvider.tsx": {
-    "mtime": 1784069296.93577,
-    "ast_hash": "16de9db6df940ce7678268ad8f2f4316",
-    "semantic_hash": ""
+    "mtime": 1783853461.4052339,
+    "ast_hash": "21b0e266f2ed507c7a44cb1b4a75f089",
+    "semantic_hash": "21b0e266f2ed507c7a44cb1b4a75f089"
   },
   "components/ProduktClient.tsx": {
-    "mtime": 1784069386.4344056,
-    "ast_hash": "9dcb44d6cd3468c870ea542e9ac371a9",
+    "mtime": 1783858942.7666283,
+    "ast_hash": "c8fbf1da0680a29960392dd5fbc4ba5c",
     "semantic_hash": ""
   },
   "components/RatingWidget.tsx": {
@@ -450,9 +450,9 @@
     "semantic_hash": ""
   },
   "lib/posthog-server.ts": {
-    "mtime": 1784069268.043987,
-    "ast_hash": "a08edc3b66062a49222bd7a13fdddd51",
-    "semantic_hash": ""
+    "mtime": 1783850884.602924,
+    "ast_hash": "98942847fcc028f316471930011ae64b",
+    "semantic_hash": "98942847fcc028f316471930011ae64b"
   },
   "lib/priceOverrides.ts": {
     "mtime": 1783775577.9951582,
@@ -1027,11 +1027,6 @@
   "lib/email.ts": {
     "mtime": 1784039744.3743763,
     "ast_hash": "d7cafab7df72d3b8e3e778642ece4216",
-    "semantic_hash": ""
-  },
-  "lib/analytics.ts": {
-    "mtime": 1784069259.5192559,
-    "ast_hash": "727df7c29c7a7c41136aa7d871cef2b6",
     "semantic_hash": ""
   }
 }

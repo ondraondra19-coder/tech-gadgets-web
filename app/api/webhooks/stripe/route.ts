@@ -15,9 +15,10 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { products } from "@/lib/products";
-import { createPostHogServerClient } from "@/lib/posthog-server";
+import { createPostHogServerClient, captureServerEvent } from "@/lib/posthog-server";
 import { confirmPendingOrder, markStockIssue } from "@/lib/orders";
 import { deductStockForItems } from "@/lib/stock";
+import { sendOrderConfirmationEmail } from "@/lib/email";
 
 export async function POST(req: Request) {
   const key = process.env.STRIPE_SECRET_KEY;
@@ -72,27 +73,19 @@ export async function POST(req: Request) {
       const posthogClient = createPostHogServerClient();
       if (posthogClient) {
         const distinctId = session.id;
-        posthogClient.capture({
-          distinctId,
-          event: "order_completed",
-          properties: {
-            order_id: session.id,
-            currency,
-            revenue: amountTotal,
-            item_count: resolvedItems.reduce((s, i) => s + i.quantity, 0),
-          },
+        captureServerEvent(posthogClient, distinctId, "order_completed", {
+          order_id: session.id,
+          currency,
+          revenue: amountTotal,
+          item_count: resolvedItems.reduce((s, i) => s + i.quantity, 0),
         });
         for (const item of resolvedItems) {
-          posthogClient.capture({
-            distinctId,
-            event: "product_purchased",
-            properties: {
-              order_id: session.id,
-              slug: item.slug,
-              name: item.name,
-              quantity: item.quantity,
-              currency,
-            },
+          captureServerEvent(posthogClient, distinctId, "product_purchased", {
+            order_id: session.id,
+            slug: item.slug,
+            name: item.name,
+            quantity: item.quantity,
+            currency,
           });
         }
         await posthogClient.shutdown();
@@ -118,6 +111,7 @@ export async function POST(req: Request) {
               `Objednávka ${confirmed.id}: nedostatek skladu u ${deduction.insufficientFields.join(", ")} — zaplaceno, nutná ruční kontrola.`,
             );
           }
+          await sendOrderConfirmationEmail(confirmed);
         }
       }
     } catch (err) {

@@ -8,6 +8,7 @@ import { useCart } from "@/lib/cart";
 import { useCurrency } from "@/lib/CurrencyContext";
 import { formatPrice, getPrice, CURRENCIES } from "@/lib/currency";
 import { useStockPolling } from "@/lib/useStockPolling";
+import { trackEvent } from "@/lib/analytics";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -433,6 +434,19 @@ export default function ProduktClient({
     : 0;
   const totalPriceCZK = basePriceCZK + comboExtraCZK;
 
+  // Jedno "product_viewed" za návštěvu detailu — čeká na currencyMounted, ať
+  // se neposílá s cenou v (možná chybné) výchozí měně před hydratací.
+  useEffect(() => {
+    if (!currencyMounted) return;
+    trackEvent("product_viewed", {
+      slug: product.slug,
+      name: product.name,
+      price: basePrice,
+      currency: currency.code,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product.slug, currencyMounted]);
+
   const priceRawForCart = (isLayered && combo && bodyValue !== capValue && model?.comboExtra)
     ? (typeof rawBasePrice === "number"
         ? totalPriceCZK
@@ -632,6 +646,13 @@ export default function ProduktClient({
         stockKey: stockKeys, // přesný klíč (nebo dva u vrstvených barev) pro lookup skladu v košíku
       }, stockCeiling);
     }
+    trackEvent("add_to_cart", {
+      slug: product.slug,
+      name: product.name,
+      price: totalPrice,
+      currency: currency.code,
+      quantity: qty,
+    });
     setAdded(true);
   }
 
