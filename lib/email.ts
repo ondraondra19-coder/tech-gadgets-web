@@ -162,8 +162,6 @@ function orderNumber(order: Order): string {
 
 // ── 1) Potvrzení objednávky ─────────────────────────────────────────────────
 
-const QR_CONTENT_ID = "qr-platba";
-
 async function bankTransferBlock(order: Order): Promise<{ html: string; attachment?: Attachment }> {
   const account = process.env.NEXT_PUBLIC_BANK_ACCOUNT_DISPLAY;
   const bankName = process.env.NEXT_PUBLIC_BANK_NAME;
@@ -174,11 +172,17 @@ async function bankTransferBlock(order: Order): Promise<{ html: string; attachme
   const currency = currencyOf(order.currency);
 
   // QR Platba jen pro CZK/EUR (stejná podmínka jako na /objednavka/uspech —
-  // bankovní převod se pro USD vůbec nenabízí, viz /objednavka). Obrázek jde
-  // jako INLINE PŘÍLOHA (cid:), ne jako hostovaná URL/base64 data: URI —
-  // obojí se v Gmailu ukázalo nespolehlivé (externí obrázek se vůbec
-  // nenačetl). CID příloha je standardní způsob pro obrázky v e-mailech,
-  // co e-mailový klient stáhne rovnou s doručenou zprávou.
+  // bankovní převod se pro USD vůbec nenabízí, viz /objednavka).
+  //
+  // Obrázek jde jako BĚŽNÁ (ne-inline) příloha, ne vložený <img> v těle
+  // e-mailu — vyzkoušeny byly obě obvyklé cesty (hostovaná URL i CID inline
+  // příloha přes attachments[].contentId) a obě v Resendu (aspoň v sandbox
+  // režimu s onboarding@resend.dev) reálně nedorazily: u CID přílohy dorazí
+  // e-mail se správnou Content-ID hlavičkou, ale s PRÁZDNÝM tělem přílohy
+  // (ověřeno přes "Zobrazit originál" ve třech nezávislých pokusech, různé
+  // cesty odeslání — SDK i syrové REST API). Obyčejná (stažitelná) příloha
+  // stejná data ale doručí v pořádku — proto ji používáme, i když to
+  // znamená jeden klik navíc pro zákazníka místo QR přímo v textu mailu.
   const iban = process.env.NEXT_PUBLIC_BANK_ACCOUNT_IBAN;
   const showQr = Boolean(iban) && (order.currency === "CZK" || order.currency === "EUR");
 
@@ -187,19 +191,10 @@ async function bankTransferBlock(order: Order): Promise<{ html: string; attachme
   if (showQr && iban) {
     const spd = buildSpdString({ iban, amount: order.total, currency: order.currency, variableSymbol: vs, message: "Dekujeme za objednavku" });
     const png = await QRCode.toBuffer(spd, { width: 320, margin: 1 });
-    // Resend SDK content pole jen předá dál do JSON.stringify() beze změny —
-    // syrový Buffer se tak serializuje jako {type:"Buffer",data:[...]}, ne
-    // jako base64 string, takže API dostane nepoužitelná data. Musí se
-    // zakódovat na base64 string RUČNĚ, ne spoléhat na to, že to udělá SDK.
-    attachment = { content: png.toString("base64"), filename: "qr-platba.png", contentType: "image/png", contentId: QR_CONTENT_ID };
+    attachment = { content: png.toString("base64"), filename: "qr-platba.png", contentType: "image/png" };
     qrBlock = `
       <div style="text-align:center;margin-top:16px;padding-top:16px;border-top:1px solid #e5e7eb;">
-        <img
-          src="cid:${QR_CONTENT_ID}"
-          width="160" height="160" alt="QR platba"
-          style="display:block;margin:0 auto 6px;border-radius:8px;border:1px solid #e5e7eb;"
-        />
-        <p style="margin:0;font-size:11px;color:#9ca3af;">Naskenujte QR kód v bankovní aplikaci</p>
+        <p style="margin:0;font-size:12px;color:#71717a;">📎 QR kód pro rychlou platbu najdete v příloze tohoto e-mailu (<span style="white-space:nowrap;">qr-platba.png</span>).</p>
       </div>`;
   }
 
