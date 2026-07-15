@@ -171,9 +171,11 @@ function bankTransferBlock(order: Order): string {
   return `
     <div style="background:#f7f6f4;border-radius:12px;padding:16px 20px;margin:0 0 20px;">
       <p style="margin:0 0 10px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#9ca3af;">Platební instrukce</p>
-      ${summaryRow("Číslo účtu", `${account}${bankName ? ` (${bankName})` : ""}`, { bold: true })}
-      ${summaryRow("Variabilní symbol", vs, { bold: true })}
-      ${summaryRow("Částka", formatPrice(order.total, currency), { bold: true, color: BRAND_COLOR })}
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+        ${summaryRow("Číslo účtu", `${account}${bankName ? ` (${bankName})` : ""}`, { bold: true })}
+        ${summaryRow("Variabilní symbol", vs, { bold: true })}
+        ${summaryRow("Částka", formatPrice(order.total, currency), { bold: true, color: BRAND_COLOR })}
+      </table>
     </div>
     ${p("Zásilku odešleme ihned po připsání platby na účet — obvykle do 1 pracovního dne.")}
   `;
@@ -222,7 +224,9 @@ function trackingBlock(order: Order): string {
   const trackingUrl = `https://tracking.packeta.com/cs_CZ/?id=${encodeURIComponent(order.shipment.trackingNumber)}`;
   return `
     <div style="background:#f7f6f4;border-radius:12px;padding:16px 20px;margin:0 0 20px;">
-      ${summaryRow("Sledovací číslo", order.shipment.trackingNumber, { bold: true })}
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+        ${summaryRow("Sledovací číslo", order.shipment.trackingNumber, { bold: true })}
+      </table>
     </div>
     <p style="margin:0 0 20px;">
       <a href="${trackingUrl}" style="display:inline-block;background:${BRAND_COLOR};color:${DARK};font-weight:800;font-size:13px;padding:12px 20px;border-radius:10px;text-decoration:none;">Sledovat zásilku</a>
