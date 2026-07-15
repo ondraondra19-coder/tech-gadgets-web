@@ -45,6 +45,51 @@ const platbyOptions = [
   { id: "dobirka", name: "Dobírka",          desc: "Platba při převzetí",         icon: Truck      },
 ];
 
+// Packeta nemá žádný veřejný sandbox — ani pro plné API (createPacket), ani
+// pro tenhle výdejní widget — obojí vyžaduje reálný schválený účet (~3 dny).
+// Dokud NEXT_PUBLIC_PACKETA_API_KEY chybí A běžíme v lokálním vývoji, použije
+// se tahle vymyšlená nabídka míst místo skutečného widgetu, ať jde celý
+// checkout flow (výběr Z-BOXu → objednávka → admin) otestovat naostro i bez
+// reálných přístupů. V produkci se mock nikdy nezobrazí — tam beze klíče
+// zůstává původní chybová hláška.
+const MOCK_ZBOXES: PacketaPoint[] = [
+  { id: "99001", name: "Z-BOX Praha, Václavské náměstí", nameStreet: "Václavské náměstí 1", city: "Praha", zip: "11000" },
+  { id: "99002", name: "Výdejní místo Brno, náměstí Svobody", nameStreet: "náměstí Svobody 4", city: "Brno", zip: "60200" },
+  { id: "99003", name: "Z-BOX Ostrava, Nádražní", nameStreet: "Nádražní 123", city: "Ostrava", zip: "70200" },
+];
+
+function MockZboxModal({ onPick, onClose }: { onPick: (point: PacketaPoint) => void; onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-[200] flex items-center justify-center px-4">
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
+        <div className="flex items-center justify-between px-6 py-5 border-b border-border">
+          <div>
+            <p className="text-text-base font-semibold text-sm">Vybrat výdejní místo</p>
+            <p className="text-text-subtle text-xs mt-0.5">Testovací nabídka — skutečný widget zatím nemá API klíč</p>
+          </div>
+          <button onClick={onClose} className="text-text-subtle hover:text-text-base transition-colors shrink-0">✕</button>
+        </div>
+        <div className="p-2">
+          {MOCK_ZBOXES.map((point) => (
+            <button
+              key={point.id}
+              onClick={() => onPick(point)}
+              className="w-full flex items-start gap-2 text-left px-4 py-3 rounded-xl hover:bg-surface transition-colors"
+            >
+              <MapPin size={14} className="text-primary mt-0.5 shrink-0" />
+              <span>
+                <span className="block text-text-base text-sm font-semibold">{point.name}</span>
+                <span className="block text-text-subtle text-xs">{point.nameStreet}, {point.zip} {point.city}</span>
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function Stepper({ step }: { step: 1 | 2 | 3 }) {
   const steps = [
     { n: 1, label: "Košík",            href: "/kosik"      },
@@ -92,6 +137,7 @@ export default function ObjednavkaPage() {
   const [platba, setPlatba] = useState<string | null>(null);
   const [selectedZbox, setSelectedZbox] = useState<PacketaPoint | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [mockPickerOpen, setMockPickerOpen] = useState(false);
 
   useEffect(() => {
     try {
@@ -133,19 +179,25 @@ export default function ObjednavkaPage() {
     document.body.appendChild(script);
   }, []);
 
+  function pickZboxPoint(point: PacketaPoint) {
+    setSelectedZbox(point);
+    setErrors(prev => ({ ...prev, zasilkovna: "" }));
+    try { localStorage.setItem(ZBOX_KEY, JSON.stringify(point)); } catch {}
+  }
+
   function openPacketaWidget() {
     const apiKey = process.env.NEXT_PUBLIC_PACKETA_API_KEY;
     if (!apiKey) {
+      if (process.env.NODE_ENV === "development") {
+        setMockPickerOpen(true);
+        return;
+      }
       alert("Výběr výdejního místa Zásilkovny není nakonfigurován (chybí NEXT_PUBLIC_PACKETA_API_KEY). Kontaktujte prosím podporu.");
       return;
     }
     if (!window.Packeta?.Widget) { alert("Widget se načítá, zkuste za chvíli."); return; }
     window.Packeta.Widget.pick(apiKey, (point) => {
-      if (point) {
-        setSelectedZbox(point);
-        setErrors(prev => ({ ...prev, zasilkovna: "" }));
-        try { localStorage.setItem(ZBOX_KEY, JSON.stringify(point)); } catch {}
-      }
+      if (point) pickZboxPoint(point);
     }, { country: "cz", language: "cs" });
   }
 
@@ -385,6 +437,12 @@ export default function ObjednavkaPage() {
 
         </div>
       </main>
+      {mockPickerOpen && (
+        <MockZboxModal
+          onPick={(point) => { pickZboxPoint(point); setMockPickerOpen(false); }}
+          onClose={() => setMockPickerOpen(false)}
+        />
+      )}
     </>
   );
 }
