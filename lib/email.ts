@@ -160,15 +160,17 @@ function orderNumber(order: Order): string {
   return orderIdToVariableSymbol(order.id);
 }
 
-// Identifikace prodejce (jméno/firma, IČO, sídlo) — dokud nejsou vyplněné
-// env proměnné, blok se prostě vůbec nezobrazí (žádné vymyšlené placeholdery
-// v e-mailu skutečnému zákazníkovi). Neplátce DPH je teď natvrdo — až bude
-// prodejce plátcem DPH, bude potřeba i DIČ a rozpis DPH u položek/souhrnu,
-// to je oprava kódu, ne jen doplnění proměnné.
+// Identifikace prodejce (jméno/firma, IČO, sídlo) — dokud není vyplněné
+// aspoň jméno (NEXT_PUBLIC_SELLER_NAME), blok se vůbec nezobrazí. Chybějící
+// IČO NEVYMÝŠLÍME — místo čísla se ukáže poctivě označený placeholder
+// "v procesu registrace", ne fiktivní (ale reálně vypadající) číslo, které
+// by zákazník mohl brát jako skutečný firemní údaj. Neplátce DPH je teď
+// natvrdo — až bude prodejce plátcem DPH, bude potřeba i DIČ a rozpis DPH
+// u položek/souhrnu, to je oprava kódu, ne jen doplnění proměnné.
 function sellerBlock(): string {
   const name = process.env.NEXT_PUBLIC_SELLER_NAME;
+  if (!name) return "";
   const ico = process.env.NEXT_PUBLIC_SELLER_ICO;
-  if (!name || !ico) return "";
   const address = process.env.NEXT_PUBLIC_SELLER_ADDRESS;
   return `
     <div style="background:#f7f6f4;border-radius:12px;padding:16px 20px;margin:0 0 20px;">
@@ -176,7 +178,7 @@ function sellerBlock(): string {
       <p style="margin:0;font-size:13px;line-height:1.6;color:#3f3f46;">
         <strong style="color:#0f0f10;">${name}</strong><br />
         ${address ? `${address}<br />` : ""}
-        IČO: ${ico}<br />
+        IČO: ${ico ?? "v procesu registrace"}<br />
         Neplátce DPH
       </p>
     </div>`;

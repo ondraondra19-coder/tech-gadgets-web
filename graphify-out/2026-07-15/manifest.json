@@ -1025,8 +1025,8 @@
     "semantic_hash": ""
   },
   "lib/email.ts": {
-    "mtime": 1784123406.5755942,
-    "ast_hash": "eb76f49ff541fe0375520f00992c3ced",
+    "mtime": 1784126050.9198236,
+    "ast_hash": "5d3de562da03dea36abb395068f580b9",
     "semantic_hash": ""
   },
   "lib/analytics.ts": {
