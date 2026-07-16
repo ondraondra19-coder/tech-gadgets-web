@@ -2,23 +2,12 @@
 // Veřejný endpoint — přijímá zprávy z ChatWidgetu na e-shopu.
 import { NextResponse } from "next/server";
 import { addMessage, checkAndSetCooldown } from "@/lib/messages";
+import { getClientIp } from "@/lib/clientIp";
 
 const MAX_TEXT_LENGTH = 1000;
 const MAX_NAME_LENGTH = 80;
 const MAX_EMAIL_LENGTH = 150;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-// Vytáhne klientskou IP z hlaviček, které Vercel (a většina proxy) nastavuje.
-// x-forwarded-for může obsahovat seznam IP oddělený čárkou — první je klient.
-function getClientIp(req: Request): string {
-  const forwardedFor = req.headers.get("x-forwarded-for");
-  if (forwardedFor) return forwardedFor.split(",")[0].trim();
-
-  const realIp = req.headers.get("x-real-ip");
-  if (realIp) return realIp.trim();
-
-  return "unknown";
-}
 
 // POST /api/messages — odeslání zprávy z chat widgetu
 export async function POST(req: Request) {

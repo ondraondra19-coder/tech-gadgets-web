@@ -6,14 +6,7 @@
 import { NextResponse } from "next/server";
 import { findDiscount } from "@/lib/discountsStore";
 import { checkRateLimit } from "@/lib/rateLimit";
-
-function getClientIp(req: Request): string {
-  const forwardedFor = req.headers.get("x-forwarded-for");
-  if (forwardedFor) return forwardedFor.split(",")[0].trim();
-  const realIp = req.headers.get("x-real-ip");
-  if (realIp) return realIp.trim();
-  return "unknown";
-}
+import { getClientIp } from "@/lib/clientIp";
 
 export async function GET(req: Request) {
   const ip = getClientIp(req);

@@ -16,6 +16,20 @@ const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://hackpack-web.verc
 const BRAND_COLOR = "#ff8ad0";
 const DARK = "#1c1c1c";
 
+// Escapuje hodnoty vkládané do HTML e-mailů. VŠECHNO, co pochází od zákazníka
+// (jméno, adresa, text zprávy/recenze, varianty) nebo z externí služby (tracking
+// číslo dopravce), musí projít přes tohle — jinak by šlo vložit do těla mailu
+// vlastní HTML (rozbití layoutu, phishingový odkaz). Statické šablonové řetězce
+// v kódu se neescapují, jen dosazované hodnoty.
+function esc(value: unknown): string {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 let client: Resend | null = null;
 
 function getResendClient(): Resend | null {
@@ -100,7 +114,7 @@ function itemsTable(items: OrderItem[], currency: Currency): string {
       const variants = item.variants ? Object.values(item.variants).join(" · ") : "";
       return `<tr>
         <td style="padding:10px 0;border-bottom:1px solid #f1f1f3;font-size:13px;color:#0f0f10;">
-          <strong>${item.name}</strong>${variants ? `<br /><span style="color:#9ca3af;font-size:12px;">${variants}</span>` : ""}
+          <strong>${esc(item.name)}</strong>${variants ? `<br /><span style="color:#9ca3af;font-size:12px;">${esc(variants)}</span>` : ""}
           <br /><span style="color:#9ca3af;font-size:12px;">${item.quantity}&nbsp;ks</span>
         </td>
         <td style="padding:10px 0;border-bottom:1px solid #f1f1f3;font-size:13px;color:#0f0f10;text-align:right;white-space:nowrap;">
@@ -130,13 +144,13 @@ function priceSummary(order: Order): string {
     const discountInCurrency =
       currency.code === "CZK" ? order.discountAmountCZK : approxConvert(order.discountAmountCZK, currency.code);
     rows.push(
-      summaryRow(`Sleva (${order.discountLabel ?? order.discountCode})`, `−${formatPrice(discountInCurrency, currency)}`, {
+      summaryRow(`Sleva (${esc(order.discountLabel ?? order.discountCode)})`, `−${formatPrice(discountInCurrency, currency)}`, {
         color: "#16a34a",
       }),
     );
   }
 
-  rows.push(summaryRow(`Doprava${order.shippingName ? ` (${order.shippingName})` : ""}`, order.shippingPrice > 0 ? formatPrice(order.shippingPrice, currency) : "Zdarma"));
+  rows.push(summaryRow(`Doprava${order.shippingName ? ` (${esc(order.shippingName)})` : ""}`, order.shippingPrice > 0 ? formatPrice(order.shippingPrice, currency) : "Zdarma"));
 
   if (order.dobirkaFee) {
     rows.push(summaryRow("Dobírka", formatPrice(order.dobirkaFee, currency)));
@@ -151,9 +165,9 @@ function addressBlock(order: Order): string {
   const addr = order.deliveryAddress ?? order.address;
   if (!addr) return "";
   return `<p style="margin:0 0 16px;font-size:13px;line-height:1.6;color:#3f3f46;">
-    <strong style="color:#0f0f10;">${order.customer.jmeno}</strong><br />
-    ${addr.uliceCp}<br />
-    ${[addr.psc, addr.mesto].filter(Boolean).join(" ")}${addr.zeme && addr.zeme !== "Česká republika" ? `<br />${addr.zeme}` : ""}
+    <strong style="color:#0f0f10;">${esc(order.customer.jmeno)}</strong><br />
+    ${esc(addr.uliceCp)}<br />
+    ${[addr.psc, addr.mesto].filter(Boolean).map(esc).join(" ")}${addr.zeme && addr.zeme !== "Česká republika" ? `<br />${esc(addr.zeme)}` : ""}
   </p>`;
 }
 
@@ -177,7 +191,7 @@ function sellerBlock(): string {
     <div style="background:#f7f6f4;border-radius:12px;padding:16px 20px;margin:0 0 20px;">
       <p style="margin:0 0 10px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#9ca3af;">Prodejce</p>
       <p style="margin:0;font-size:13px;line-height:1.6;color:#3f3f46;">
-        <strong style="color:#0f0f10;">${name}</strong><br />
+        <strong style="color:#0f0f10;">${esc(name)}</strong><br />
         ${address ? `${address}<br />` : ""}
         IČO: ${ico ?? "v procesu registrace"}<br />
         Neplátce DPH
@@ -262,7 +276,7 @@ export async function renderOrderConfirmationEmail(
     `Objednávka ${vs} přijata`,
     `
     ${h1("Děkujeme za objednávku!")}
-    ${p(`Ahoj ${order.customer.jmeno}, potvrzujeme, že jsme objednávku <strong>#${vs}</strong> přijali a začínáme ji připravovat.`)}
+    ${p(`Ahoj ${esc(order.customer.jmeno)}, potvrzujeme, že jsme objednávku <strong>#${vs}</strong> přijali a začínáme ji připravovat.`)}
     ${paymentBlock}
     <p style="margin:0 0 8px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#9ca3af;">Položky objednávky</p>
     ${itemsTable(order.items, currency)}
@@ -295,7 +309,7 @@ export function renderPaymentReceivedEmail(order: Order): { subject: string; htm
     `Platba za objednávku ${vs} přijata`,
     `
     ${h1("Platbu jsme přijali")}
-    ${p(`Ahoj ${order.customer.jmeno}, potvrzujeme, že platba za objednávku <strong>#${vs}</strong> ve výši <strong>${formatPrice(order.total, currency)}</strong> nám přišla na účet. Teď ji zabalíme a pošleme.`)}
+    ${p(`Ahoj ${esc(order.customer.jmeno)}, potvrzujeme, že platba za objednávku <strong>#${vs}</strong> ve výši <strong>${formatPrice(order.total, currency)}</strong> nám přišla na účet. Teď ji zabalíme a pošleme.`)}
     ${p(`Přehled objednávky v příloze najdeš i jako PDF ke stažení.`)}
     ${sellerBlock()}
     <p style="margin:0 0 8px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#9ca3af;">Přehled objednávky</p>
@@ -335,7 +349,7 @@ function trackingBlock(order: Order): string {
   return `
     <div style="background:#f7f6f4;border-radius:12px;padding:16px 20px;margin:0 0 20px;">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-        ${summaryRow("Sledovací číslo", order.shipment.trackingNumber, { bold: true })}
+        ${summaryRow("Sledovací číslo", esc(order.shipment.trackingNumber), { bold: true })}
       </table>
     </div>
     <p style="margin:0 0 20px;">
@@ -350,7 +364,7 @@ export function renderOrderShippedEmail(order: Order): { subject: string; html: 
     `Objednávka ${vs} je na cestě`,
     `
     ${h1("Vaše objednávka je na cestě! 📦")}
-    ${p(`Ahoj ${order.customer.jmeno}, objednávku <strong>#${vs}</strong> jsme právě předali dopravci.`)}
+    ${p(`Ahoj ${esc(order.customer.jmeno)}, objednávku <strong>#${vs}</strong> jsme právě předali dopravci.`)}
     ${trackingBlock(order)}
     <p style="margin:0 0 8px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#9ca3af;">Doručovací adresa</p>
     ${addressBlock(order)}
@@ -373,7 +387,7 @@ export function renderOrderDeliveredEmail(order: Order): { subject: string; html
     `Objednávka ${vs} doručena`,
     `
     ${h1("Objednávka doručena ✅")}
-    ${p(`Ahoj ${order.customer.jmeno}, objednávka <strong>#${vs}</strong> byla doručena. Doufáme, že máš z nákupu radost!`)}
+    ${p(`Ahoj ${esc(order.customer.jmeno)}, objednávka <strong>#${vs}</strong> byla doručena. Doufáme, že máš z nákupu radost!`)}
     ${p("Budeme moc rádi, když nám necháš pár slov zpětné vazby — pomáhá nám to i dalším zákazníkům.")}
     <p style="margin:0 0 8px;">
       <a href="${SITE_URL}/napsat-recenzi" style="display:inline-block;background:${BRAND_COLOR};color:${DARK};font-weight:800;font-size:13px;padding:12px 20px;border-radius:10px;text-decoration:none;">Napsat recenzi</a>
@@ -396,7 +410,7 @@ export function renderReviewThankYouEmail(name: string): { subject: string; html
     "Díky za recenzi",
     `
     ${h1("Díky za tvůj čas! 🙏")}
-    ${p(`Ahoj ${name}, díky, že sis udělal/a čas napsat recenzi. Vážíme si toho a moc nám to pomáhá.`)}
+    ${p(`Ahoj ${esc(name)}, díky, že sis udělal/a čas napsat recenzi. Vážíme si toho a moc nám to pomáhá.`)}
     `,
   );
   return { subject: "Díky za recenzi — HackPack", html };
@@ -418,10 +432,10 @@ export function renderMessageReplyEmail(params: { name: string; originalText: st
     "Odpověď na vaši zprávu",
     `
     ${h1("Odpověď na vaši zprávu")}
-    ${p(`Ahoj ${name}, reagujeme na tvou zprávu z webu HackPack:`)}
-    <div style="background:#f7f6f4;border-radius:12px;padding:14px 18px;margin:0 0 20px;font-size:13px;line-height:1.6;color:#3f3f46;white-space:pre-wrap;">${replyText}</div>
+    ${p(`Ahoj ${esc(name)}, reagujeme na tvou zprávu z webu HackPack:`)}
+    <div style="background:#f7f6f4;border-radius:12px;padding:14px 18px;margin:0 0 20px;font-size:13px;line-height:1.6;color:#3f3f46;white-space:pre-wrap;">${esc(replyText)}</div>
     <p style="margin:0 0 6px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#9ca3af;">Tvá původní zpráva</p>
-    <div style="border-left:2px solid #e5e7eb;padding-left:14px;margin:0 0 8px;font-size:12px;line-height:1.6;color:#9ca3af;white-space:pre-wrap;">${originalText}</div>
+    <div style="border-left:2px solid #e5e7eb;padding-left:14px;margin:0 0 8px;font-size:12px;line-height:1.6;color:#9ca3af;white-space:pre-wrap;">${esc(originalText)}</div>
     `,
   );
   return { subject: "Odpověď na vaši zprávu — HackPack", html };

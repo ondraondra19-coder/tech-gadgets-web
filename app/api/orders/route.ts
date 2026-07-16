@@ -10,21 +10,12 @@ import { sendOrderConfirmationEmail } from "@/lib/email";
 import { getShippingPrice } from "@/lib/shipping/pricing";
 import { getDobirkaFee } from "@/lib/fees";
 import { checkRateLimit } from "@/lib/rateLimit";
+import { getClientIp } from "@/lib/clientIp";
 import { isBankTransferEnabled } from "@/lib/featureFlags";
 
 // Strop na množství jedné položky — brání zneužití (záporné/obří množství
 // rozbíjí cenu i odečet skladu, viz deductStockForItems).
 const MAX_ITEM_QUANTITY = 50;
-
-// Vytáhne klientskou IP z hlaviček (Vercel/proxy). x-forwarded-for může být
-// seznam oddělený čárkou — první je klient.
-function getClientIp(req: Request): string {
-  const forwardedFor = req.headers.get("x-forwarded-for");
-  if (forwardedFor) return forwardedFor.split(",")[0].trim();
-  const realIp = req.headers.get("x-real-ip");
-  if (realIp) return realIp.trim();
-  return "unknown";
-}
 
 export async function POST(req: Request) {
   try {
