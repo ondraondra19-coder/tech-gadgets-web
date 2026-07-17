@@ -15,6 +15,9 @@ import { approxConvert } from "@/lib/discounts";
 import { CURRENCIES } from "@/lib/currency";
 import { DOBIRKA_FEE } from "@/lib/fees";
 import { trackEvent } from "@/lib/analytics";
+import { COUNTRY_CZECHIA, COUNTRY_SLOVAKIA } from "@/lib/shipping/pricing";
+import { useT } from "@/lib/useT";
+import { shippingLabel } from "@/lib/shippingLabels";
 import CheckoutStepper from "@/components/CheckoutStepper";
 
 const ORDER_KEY = "hackpack-order";
@@ -62,7 +65,7 @@ type FormState = {
 };
 
 const emptyAddress = (): AddressBlock => ({
-  mesto: "", mestoRaw: "", vesnice: "", uliceCp: "", psc: "", zeme: "Česká republika",
+  mesto: "", mestoRaw: "", vesnice: "", uliceCp: "", psc: "", zeme: COUNTRY_CZECHIA,
 });
 
 const defaultForm = (): FormState => ({
@@ -131,6 +134,7 @@ function SmartAddressBlock({
   confirmed: boolean;
   errors?: AddressErrors;
 }) {
+  const t = useT("info");
   const [mestoSuggestions, setMestoSuggestions] = useState<MestoResult[]>([]);
   const [adresaSuggestions, setAdresaSuggestions] = useState<AdresaResult[]>([]);
   const [activeField, setActiveField] = useState<"mesto" | "uliceCp" | null>(null);
@@ -144,6 +148,10 @@ function SmartAddressBlock({
   const uid = useId();
   const mestoListId = `${uid}-mesto`;
   const adresaListId = `${uid}-adresa`;
+  // Blok je na stránce dvakrát (fakturační + doručovací adresa), takže id musí
+  // být unikátní — jinak by <label> mířil na pole z druhé adresy.
+  const mestoInputId = `${uid}-mesto-input`;
+  const uliceInputId = `${uid}-ulice-input`;
 
   useEffect(() => {
     function handler(e: MouseEvent) {
@@ -287,8 +295,8 @@ function SmartAddressBlock({
 
       {/* Město */}
       <div className="relative" data-field="mesto">
-        <label className="block text-text-muted text-xs font-medium mb-1.5">
-          Město nebo obec <span className="text-red-400">*</span>
+        <label htmlFor={mestoInputId} className="block text-text-muted text-xs font-medium mb-1.5">
+          {t("city")} <span className="text-red-400" aria-hidden="true">*</span>
         </label>
         <div className={`flex items-center border rounded-xl overflow-hidden transition-colors ${
           errors?.mesto ? "border-red-400"
@@ -297,6 +305,7 @@ function SmartAddressBlock({
         }`}>
           <MapPin size={13} className="ml-3 text-text-subtle shrink-0" />
           <input
+            id={mestoInputId}
             type="text"
             value={value.mesto ?? ""}
             onChange={e => handleMestoInput(e.target.value)}
@@ -305,7 +314,7 @@ function SmartAddressBlock({
               if (value.mesto.trim().length >= 2) searchMesto(value.mesto);
             }}
             onKeyDown={e => handleListKeyDown(e, mestoSuggestions, handleMestoSelect)}
-            placeholder="Praha, Košťany, Vilémov - Košťany..."
+            placeholder={t("cityPlaceholder")}
             autoComplete="off"
             spellCheck={false}
             role="combobox"
@@ -355,8 +364,8 @@ function SmartAddressBlock({
 
       {/* Ulice a č.p. */}
       <div className="relative" data-field="uliceCp">
-        <label className="block text-xs font-medium mb-1.5 text-text-muted">
-          Ulice a č.p. <span className="text-red-400">*</span>
+        <label htmlFor={uliceInputId} className="block text-xs font-medium mb-1.5 text-text-muted">
+          {t("street")} <span className="text-red-400" aria-hidden="true">*</span>
         </label>
         <div className={`flex items-center border rounded-xl overflow-hidden transition-all ${
           errors?.uliceCp ? "border-red-400"
@@ -365,6 +374,7 @@ function SmartAddressBlock({
         }`}>
           <input
             type="text"
+            id={uliceInputId}
             value={value.uliceCp ?? ""}
             onChange={e => handleUliceInput(e.target.value)}
             onFocus={() => {
@@ -372,7 +382,7 @@ function SmartAddressBlock({
               if (value.uliceCp.trim().length >= 2) searchAdresa(value.uliceCp);
             }}
             onKeyDown={e => handleListKeyDown(e, adresaSuggestions, handleAdresaSelect)}
-            placeholder="Generálská 1135/14"
+            placeholder={t("streetPlaceholder")}
             autoComplete="off"
             spellCheck={false}
             role="combobox"
@@ -413,13 +423,15 @@ function SmartAddressBlock({
 
       {/* PSČ — readonly, doplní se pokud uživatel vybere z RÚIAN; jinak ho může vyplnit ručně */}
       <div style={{ maxWidth: 180 }} data-field="psc">
-        <label className="block text-text-muted text-xs font-medium mb-1.5">PSČ</label>
+        <label htmlFor="psc" className="block text-text-muted text-xs font-medium mb-1.5">{t("zip")}</label>
         <div className="flex items-center border border-border rounded-xl overflow-hidden bg-surface">
           <input
             type="text"
+            id="psc"
+            name="psc"
             value={value.psc ?? ""}
             onChange={e => onChange({ ...value, psc: e.target.value })}
-            placeholder="Doplní se automaticky"
+            placeholder={t("zipPlaceholder")}
             className="flex-1 bg-surface px-4 py-2.5 text-sm text-text-base placeholder-text-subtle focus:outline-none"
           />
           {value.psc && <Check size={13} className="mr-3 text-green-500 shrink-0" />}
@@ -464,26 +476,28 @@ function Field({ label, name, value, onChange, placeholder, error, type = "text"
 }
 
 function NameField({ value, onChange, error }: { value: string; onChange: (v: string) => void; error?: string }) {
+  const t = useT("info");
   const [suggestion, setSuggestion] = useState<string | null>(null);
   return (
     <div data-field="jmeno">
-      <label className="block text-text-muted text-xs font-medium mb-1.5">Jméno a příjmení <span className="text-red-400">*</span></label>
+      <label htmlFor="jmeno" className="block text-text-muted text-xs font-medium mb-1.5">{t("fullName")} <span className="text-red-400" aria-hidden="true">*</span></label>
       <div className={`flex items-center border rounded-xl overflow-hidden transition-colors ${error ? "border-red-400" : "border-border focus-within:border-primary/60 focus-within:ring-2 focus-within:ring-primary/10"}`}>
-        <input name="jmeno" type="text" value={value}
+        <input id="jmeno" name="jmeno" type="text" value={value}
           onChange={e => { const raw = e.target.value; onChange(raw); const c = toTitleCase(raw); setSuggestion(raw.trim() && raw !== c && !isCorrectNameFormat(raw) ? c : null); }}
-          placeholder="Jan Novák" autoComplete="name"
+          placeholder={t("namePlaceholder")} autoComplete="name"
           className="flex-1 bg-surface px-4 py-2.5 text-sm text-text-base placeholder-text-subtle focus:outline-none" />
       </div>
-      {suggestion && <button type="button" onClick={() => { onChange(suggestion); setSuggestion(null); }} className="mt-1.5 flex items-center gap-1.5 text-xs text-primary-ink hover:underline"><AlertCircle size={11} /> Měli jste na mysli: <span className="font-semibold">{suggestion}</span>?</button>}
+      {suggestion && <button type="button" onClick={() => { onChange(suggestion); setSuggestion(null); }} className="mt-1.5 flex items-center gap-1.5 text-xs text-primary-ink hover:underline"><AlertCircle size={11} aria-hidden="true" /> {t("didYouMean")} <span className="font-semibold">{suggestion}</span>?</button>}
       {!suggestion && error && <p className="flex items-center gap-1 text-red-500 text-xs mt-1"><AlertCircle size={11} /> {error}</p>}
     </div>
   );
 }
 
 function TelefonField({ value, onChange, error }: { value: string; onChange: (v: string) => void; error?: string }) {
+  const t = useT("info");
   return (
     <div data-field="telefon">
-      <label className="block text-text-muted text-xs font-medium mb-1.5">Telefon <span className="text-red-400">*</span></label>
+      <label htmlFor="telefon" className="block text-text-muted text-xs font-medium mb-1.5">{t("phone")} <span className="text-red-400" aria-hidden="true">*</span></label>
       <div className={`flex items-center border rounded-xl overflow-hidden transition-colors ${error ? "border-red-400" : "border-border focus-within:border-primary/60 focus-within:ring-2 focus-within:ring-primary/10"}`}>
         <div className="relative shrink-0">
           <select defaultValue="+420" className="appearance-none bg-secondary border-r border-border px-3 py-2.5 text-sm text-text-muted focus:outline-none pr-7 cursor-pointer">
@@ -492,7 +506,7 @@ function TelefonField({ value, onChange, error }: { value: string; onChange: (v:
           </select>
           <ChevronDown size={12} className="absolute right-2 top-1/2 -translate-y-1/2 text-text-subtle pointer-events-none" />
         </div>
-        <input type="tel" value={formatPhone(value)} onChange={e => onChange(e.target.value.replace(/\D/g, "").slice(0, 9))}
+        <input id="telefon" name="telefon" type="tel" value={formatPhone(value)} onChange={e => onChange(e.target.value.replace(/\D/g, "").slice(0, 9))}
           placeholder="777 123 456" maxLength={11} autoComplete="tel-national"
           className="flex-1 bg-surface px-4 py-2.5 text-sm text-text-base placeholder-text-subtle focus:outline-none" />
       </div>
@@ -501,17 +515,26 @@ function TelefonField({ value, onChange, error }: { value: string; onChange: (v:
   );
 }
 
+// Volby mají oddělenou hodnotu a popisek. Dřív se `<option key={o}>{o}</option>`
+// vykreslovalo bez value, takže se do formuláře ukládal přímo zobrazený text —
+// u země by pak anglický zákazník uložil "Czechia" a podmínky
+// `zeme !== "Česká republika"` (e-mail, potvrzení objednávky) by přestaly platit.
+// Hodnota je česká a kanonická, popisek přeložený.
 function SelectField({ label, name, value, onChange, options }: {
-  label: string; name: string; value: string; onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void; options: string[];
+  label: string;
+  name: string;
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
+  options: { value: string; label: string }[];
 }) {
   return (
     <div>
-      <label className="block text-text-muted text-xs font-medium mb-1.5">{label}</label>
+      <label htmlFor={name} className="block text-text-muted text-xs font-medium mb-1.5">{label}</label>
       <div className="relative">
-        <select name={name} value={value} onChange={onChange} className="w-full appearance-none bg-surface border border-border rounded-xl px-4 py-2.5 text-sm text-text-base focus:outline-none focus:border-primary/50 transition-colors pr-9">
-          {options.map(o => <option key={o}>{o}</option>)}
+        <select id={name} name={name} value={value} onChange={onChange} className="w-full appearance-none bg-surface border border-border rounded-xl px-4 py-2.5 text-sm text-text-base focus:outline-none focus:border-primary/50 transition-colors pr-9">
+          {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
-        <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-text-subtle pointer-events-none" />
+        <ChevronDown size={14} aria-hidden="true" className="absolute right-3 top-1/2 -translate-y-1/2 text-text-subtle pointer-events-none" />
       </div>
     </div>
   );
@@ -541,6 +564,14 @@ function CheckRow({ checked, onChange, children }: { checked: boolean; onChange:
 export default function InformacePage() {
   const { items, getItemPrice, getTotalPrice, appliedDiscount, totalPriceCZK, isDiscountActive, getDiscountAmount, getFinalPrice, clearCart, removeDiscount } = useCart();
   const { currency } = useCurrency();
+  const t = useT("info");
+  const tc = useT("checkout");
+
+  // Hodnota je česká a kanonická (ukládá se do objednávky), popisek přeložený.
+  const countryOptions = [
+    { value: COUNTRY_CZECHIA,  label: t("countryCzechia")  },
+    { value: COUNTRY_SLOVAKIA, label: t("countrySlovakia") },
+  ];
 
   const [form, setForm] = useState<FormState>(defaultForm());
   // confirmed se stále sleduje pro zobrazení zelené badge, ale validace ho nevyžaduje
@@ -584,23 +615,23 @@ export default function InformacePage() {
     const e: typeof errors = {};
 
     // Osobní údaje
-    if (!form.jmeno.trim()) e.jmeno = "Vyplňte jméno a příjmení";
-    else if (!isCorrectNameFormat(form.jmeno)) e.jmeno = "Zadejte jméno ve formátu Jméno Příjmení";
-    if (!form.email.trim()) e.email = "Vyplňte e-mail";
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = "Neplatný formát e-mailu";
-    if (form.telefon.replace(/\D/g, "").length !== 9) e.telefon = "Zadejte platné telefonní číslo";
+    if (!form.jmeno.trim()) e.jmeno = t("errName");
+    else if (!isCorrectNameFormat(form.jmeno)) e.jmeno = t("errNameFormat");
+    if (!form.email.trim()) e.email = t("errEmail");
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = t("errEmailFormat");
+    if (form.telefon.replace(/\D/g, "").length !== 9) e.telefon = t("errPhone");
 
     // Fakturační adresa — RÚIAN confirmed NENÍ povinné, stačí vyplnit pole
     const addrErr: AddressErrors = {};
-    if (!form.adresa.mesto.trim()) addrErr.mesto = "Vyplňte město";
-    if (!form.adresa.uliceCp.trim()) addrErr.uliceCp = "Vyplňte ulici a č.p.";
+    if (!form.adresa.mesto.trim()) addrErr.mesto = t("errCity");
+    if (!form.adresa.uliceCp.trim()) addrErr.uliceCp = t("errStreet");
     if (Object.keys(addrErr).length > 0) e.adresa = addrErr;
 
     // Doručovací adresa (pokud je zaškrtnuta)
     if (jineDorucenoAdresa) {
       const dorErr: AddressErrors = {};
-      if (!form.dorAdresa.mesto.trim()) dorErr.mesto = "Vyplňte město";
-      if (!form.dorAdresa.uliceCp.trim()) dorErr.uliceCp = "Vyplňte ulici a č.p.";
+      if (!form.dorAdresa.mesto.trim()) dorErr.mesto = t("errCity");
+      if (!form.dorAdresa.uliceCp.trim()) dorErr.uliceCp = t("errStreet");
       if (Object.keys(dorErr).length > 0) e.dorAdresa = dorErr;
     }
 
@@ -627,7 +658,7 @@ export default function InformacePage() {
     // Měnu jde přepnout i tady na poslední straně (přepínač je v hlavičce),
     // takže bankovní převod + USD musíme odchytit znovu, ne jen na /objednavka.
     if (metoda.includes("prevod") && currency.code === "USD") {
-      alert("Bankovní převod není v USD dostupný. Vraťte se prosím na krok Doprava a platba a vyberte jiný způsob platby.");
+      alert(t("errTransferUsd"));
       setLoading(false);
       return;
     }
@@ -687,7 +718,7 @@ export default function InformacePage() {
       if (createdOrderId) successParams.order_id = createdOrderId;
       window.location.href = `/objednavka/uspech?${new URLSearchParams(successParams)}`;
     } catch (err: any) {
-      alert("Něco se pokazilo: " + err.message);
+      alert(t("errGeneric", { message: err.message }));
     } finally {
       setLoading(false);
     }
@@ -706,13 +737,13 @@ export default function InformacePage() {
       <main className="min-h-screen bg-dark">
         <div className="max-w-screen-2xl mx-auto px-6 lg:px-12 py-10">
           <nav className="flex items-center gap-2 text-xs text-text-subtle mb-8">
-            <a href="/" className="hover:text-text-muted transition-colors">Domů</a>
-            <ChevronRight size={12} className="text-border" />
-            <a href="/kosik" className="hover:text-text-muted transition-colors">Košík</a>
-            <ChevronRight size={12} className="text-border" />
-            <a href="/objednavka" className="hover:text-text-muted transition-colors">Doprava a platba</a>
-            <ChevronRight size={12} className="text-border" />
-            <span className="text-text-muted">Informace</span>
+            <a href="/" className="hover:text-text-muted transition-colors">{t("home")}</a>
+            <ChevronRight size={12} className="text-border" aria-hidden="true" />
+            <a href="/kosik" className="hover:text-text-muted transition-colors">{t("cart")}</a>
+            <ChevronRight size={12} className="text-border" aria-hidden="true" />
+            <a href="/objednavka" className="hover:text-text-muted transition-colors">{t("shippingStep")}</a>
+            <ChevronRight size={12} className="text-border" aria-hidden="true" />
+            <span className="text-text-muted">{t("title")}</span>
           </nav>
 
           <CheckoutStepper step={3} />
@@ -723,11 +754,11 @@ export default function InformacePage() {
               {/* Osobní údaje */}
               <div className="bg-secondary border border-border rounded-2xl overflow-hidden">
                 <div className="px-6 py-5 border-b border-border">
-                  <h2 className="text-text-base font-semibold text-lg">Osobní údaje</h2>
+                  <h2 className="text-text-base font-semibold text-lg">{t("personalHeading")}</h2>
                 </div>
                 <div className="p-6 flex flex-col gap-4">
                   <NameField value={form.jmeno} onChange={v => setSimpleField("jmeno", v)} error={errors.jmeno} />
-                  <Field label="E-mail" name="email" type="email" value={form.email} onChange={e => setSimpleField("email", e.target.value)} placeholder="jan@email.cz" error={errors.email} autoComplete="email" required />
+                  <Field label={t("email")} name="email" type="email" value={form.email} onChange={e => setSimpleField("email", e.target.value)} placeholder="jan@email.cz" error={errors.email} autoComplete="email" required />
                   <TelefonField value={form.telefon} onChange={v => setSimpleField("telefon", v)} error={errors.telefon} />
                 </div>
               </div>
@@ -735,14 +766,14 @@ export default function InformacePage() {
               {/* Fakturační adresa */}
               <div className="bg-secondary border border-border rounded-2xl overflow-hidden">
                 <div className="px-6 py-5 border-b border-border flex items-center justify-between">
-                  <h2 className="text-text-base font-semibold text-lg">Fakturační adresa</h2>
-                  <CheckRow checked={nakupNaFirmu} onChange={() => setNakupNaFirmu(v => !v)}>Nakupuji na firmu</CheckRow>
+                  <h2 className="text-text-base font-semibold text-lg">{t("billingHeading")}</h2>
+                  <CheckRow checked={nakupNaFirmu} onChange={() => setNakupNaFirmu(v => !v)}>{t("buyingAsCompany")}</CheckRow>
                 </div>
                 {nakupNaFirmu && (
                   <div className="px-6 pt-5 pb-2 grid grid-cols-2 gap-4 border-b border-border">
-                    <div className="col-span-2"><Field label="Název firmy" name="firma" value={form.firma} onChange={e => setSimpleField("firma", e.target.value)} placeholder="Firma s.r.o." autoComplete="organization" /></div>
-                    <Field label="IČO" name="ic" value={form.ic} onChange={e => setSimpleField("ic", e.target.value)} placeholder="12345678" />
-                    <Field label="DIČ" name="dic" value={form.dic} onChange={e => setSimpleField("dic", e.target.value)} placeholder="CZ12345678" />
+                    <div className="col-span-2"><Field label={t("companyName")} name="firma" value={form.firma} onChange={e => setSimpleField("firma", e.target.value)} placeholder="Firma s.r.o." autoComplete="organization" /></div>
+                    <Field label={t("companyId")} name="ic" value={form.ic} onChange={e => setSimpleField("ic", e.target.value)} placeholder="12345678" />
+                    <Field label={t("vatId")} name="dic" value={form.dic} onChange={e => setSimpleField("dic", e.target.value)} placeholder="CZ12345678" />
                   </div>
                 )}
                 <div className="p-6 flex flex-col gap-5">
@@ -753,9 +784,9 @@ export default function InformacePage() {
                     confirmed={adresaConfirmed}
                     errors={errors.adresa}
                   />
-                  <SelectField label="Země" name="adresaZeme" value={form.adresa.zeme}
+                  <SelectField label={t("country")} name="adresaZeme" value={form.adresa.zeme}
                     onChange={e => setForm(prev => ({ ...prev, adresa: { ...prev.adresa, zeme: e.target.value } }))}
-                    options={["Česká republika", "Slovensko"]} />
+                    options={countryOptions} />
                 </div>
               </div>
 
@@ -776,7 +807,7 @@ export default function InformacePage() {
                       const next = !jineDorucenoAdresa;
                       setJineDorucenoAdresa(next);
                       if (!next) { setForm(prev => ({ ...prev, dorAdresa: emptyAddress() })); setDorAdresaConfirmed(false); }
-                    }}>Doručit na jinou adresu</CheckRow>
+                    }}>{t("differentAddress")}</CheckRow>
                     {jineDorucenoAdresa && (
                       <div className="flex flex-col gap-5 pt-2 pl-7 border-l-2 border-primary/20 ml-2">
                         <SmartAddressBlock
@@ -786,25 +817,25 @@ export default function InformacePage() {
                           confirmed={dorAdresaConfirmed}
                           errors={errors.dorAdresa}
                         />
-                        <SelectField label="Země" name="dorZeme" value={form.dorAdresa.zeme}
+                        <SelectField label={t("country")} name="dorZeme" value={form.dorAdresa.zeme}
                           onChange={e => setForm(prev => ({ ...prev, dorAdresa: { ...prev.dorAdresa, zeme: e.target.value } }))}
-                          options={["Česká republika", "Slovensko"]} />
+                          options={countryOptions} />
                       </div>
                     )}
                   </>
                 )}
                 <div className="h-px bg-border" />
-                <CheckRow checked={zadatPoznamku} onChange={() => setZadatPoznamku(v => !v)}>Zadat poznámku pro prodejce</CheckRow>
+                <CheckRow checked={zadatPoznamku} onChange={() => setZadatPoznamku(v => !v)}>{t("addNote")}</CheckRow>
                 {zadatPoznamku && (
                   <div className="pt-1 pl-7 ml-2 border-l-2 border-primary/20">
                     <textarea value={form.poznamka} onChange={e => setForm(prev => ({ ...prev, poznamka: e.target.value }))}
-                      placeholder="Poznámka k objednávce..." rows={3}
+                      placeholder={t("notePlaceholder")} rows={3}
                       className="w-full bg-surface border border-border rounded-xl px-4 py-2.5 text-sm text-text-base focus:outline-none focus:border-primary/50 transition-colors resize-none" />
                   </div>
                 )}
                 <div className="h-px bg-border" />
-                <CheckRow checked={noNewsletter} onChange={() => setNoNewsletter(v => !v)}>Nepřeji si odebírat newslettery</CheckRow>
-                <CheckRow checked={registrace} onChange={() => setRegistrace(v => !v)}>Chci se registrovat v e-shopu</CheckRow>
+                <CheckRow checked={noNewsletter} onChange={() => setNoNewsletter(v => !v)}>{t("noNewsletter")}</CheckRow>
+                <CheckRow checked={registrace} onChange={() => setRegistrace(v => !v)}>{t("register")}</CheckRow>
               </div>
             </div>
 
@@ -812,7 +843,7 @@ export default function InformacePage() {
             <div className="w-full lg:w-80 shrink-0 sticky top-24 flex flex-col gap-4">
               <div className="bg-secondary border border-border rounded-2xl overflow-hidden">
                 <div className="px-5 py-4 border-b border-border flex items-center justify-between">
-                  <h2 className="text-text-base font-semibold text-sm">Položky</h2>
+                  <h2 className="text-text-base font-semibold text-sm">{t("itemsHeading")}</h2>
                   <a href="/kosik" className="text-primary-ink text-xs hover:underline">Upravit</a>
                 </div>
                 <div className="px-5 py-3 flex flex-col gap-3 max-h-48 overflow-y-auto">
@@ -834,12 +865,12 @@ export default function InformacePage() {
               <div className="bg-secondary border border-border rounded-2xl overflow-hidden">
                 <div className="px-5 py-4 flex flex-col gap-3">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-text-muted">Mezisoučet</span>
+                    <span className="text-text-muted">{tc("subtotal")}</span>
                     <span className={`font-medium ${appliedDiscount && discountAmount > 0 ? "text-text-subtle line-through" : "text-text-base"}`}>{formatPrice(currentTotalPrice, currency)}</span>
                   </div>
                   {appliedDiscount && discountAmount > 0 && (
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-green-600 flex items-center gap-1.5"><Tag size={12} /><span>{appliedDiscount.code}</span></span>
+                      <span className="text-green-600 flex items-center gap-1.5"><Tag size={12} aria-hidden="true" /><span>{appliedDiscount.code}</span></span>
                       <span className="text-green-600 font-semibold">− {formatPrice(discountAmount, currency)}</span>
                     </div>
                   )}
@@ -850,25 +881,34 @@ export default function InformacePage() {
                       <div className="flex items-start gap-2 px-3 py-2.5 rounded-xl bg-red-50 border border-red-200">
                         <AlertTriangle size={13} className="text-red-500 shrink-0 mt-0.5" />
                         <p className="text-red-700 text-xs leading-relaxed">
-                          Kód <span className="font-bold">{appliedDiscount.code}</span> se neuplatní — nakupte ještě za <span className="font-bold">{formatPrice(missingCZK, CURRENCIES.CZK)}</span>
-                          {showApprox && <span className="text-red-500"> (≈ {formatPrice(approxConvert(missingCZK, currency.code), currency)}*)</span>}.
+                          {(() => {
+                            const [before, after] = t("discountNotApplied", { code: appliedDiscount.code }).split("{amount}");
+                            return (
+                              <>
+                                {before}
+                                <span className="font-bold">{formatPrice(missingCZK, CURRENCIES.CZK)}</span>
+                                {showApprox && <span className="text-red-500"> (≈ {formatPrice(approxConvert(missingCZK, currency.code), currency)}*)</span>}
+                                {after}
+                              </>
+                            );
+                          })()}
                         </p>
                       </div>
                     );
                   })()}
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-text-muted">Doprava ({orderData?.dopravaName})</span>
-                    <span className="text-text-base font-medium">{currentDopravaPrice > 0 ? formatPrice(currentDopravaPrice, currency) : "Zdarma"}</span>
+                    <span className="text-text-muted">{tc("shipping")} ({shippingLabel(tc, orderData?.doprava, orderData?.dopravaName)})</span>
+                    <span className="text-text-base font-medium">{currentDopravaPrice > 0 ? formatPrice(currentDopravaPrice, currency) : t("free")}</span>
                   </div>
                   {orderData?.isDobirka && (
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-text-muted">Dobírka</span>
+                      <span className="text-text-muted">{tc("cod")}</span>
                       <span className="text-text-base font-medium">{formatPrice(currentDobirkaExtra, currency)}</span>
                     </div>
                   )}
                   <div className="h-px bg-border my-1" />
                   <div className="flex items-center justify-between">
-                    <span className="text-text-base font-bold">Celkem</span>
+                    <span className="text-text-base font-bold">{tc("total")}</span>
                     <span className="text-primary-ink font-extrabold text-xl">{formatPrice(celkem, currency)}</span>
                   </div>
                 </div>
@@ -876,9 +916,9 @@ export default function InformacePage() {
                 <div className="px-5 pb-5 flex flex-col gap-3">
                   <button onClick={handleSubmit} disabled={loading || items.length === 0}
                     className="w-full py-4 rounded-2xl bg-primary text-on-primary font-bold text-sm hover:brightness-105 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50">
-                    {loading ? <Loader2 className="animate-spin" size={18} /> : <><Check size={16} /> Dokončit objednávku</>}
+                    {loading ? <Loader2 className="animate-spin" size={18} aria-hidden="true" /> : <><Check size={16} aria-hidden="true" /> {t("submit")}</>}
                   </button>
-                  <p className="text-text-subtle text-xs text-center">Zabezpečená platba · SSL šifrování</p>
+                  <p className="text-text-subtle text-xs text-center">{tc("securePayment")}</p>
                 </div>
               </div>
             </div>

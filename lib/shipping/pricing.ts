@@ -30,6 +30,14 @@ export const PAYMENT_CANONICAL_NAMES: Record<PaymentId, string> = {
   dobirka: "Dobírka",
 };
 
+// Země v doručovací adrese. Ukládá se česky ze stejného důvodu jako výše —
+// navíc se na téhle konkrétní hodnotě porovnává v lib/email.ts a na stránce
+// potvrzení objednávky ("tuzemskou adresu netiskni se zemí"). Kdyby anglický
+// zákazník uložil "Czechia", ta podmínka by tiše přestala platit.
+export const COUNTRY_CZECHIA = "Česká republika";
+export const COUNTRY_SLOVAKIA = "Slovensko";
+export const COUNTRIES = [COUNTRY_CZECHIA, COUNTRY_SLOVAKIA] as const;
+
 // Cena dopravy pro daný způsob v dané měně. Neznámý způsob → 0,
 // chybějící měna → fallback na CZK.
 export function getShippingPrice(dopravaId: string | null | undefined, currencyCode: string): number {
