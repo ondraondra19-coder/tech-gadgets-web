@@ -3,23 +3,18 @@
 import { useRef, useState } from "react";
 import Image from "next/image";
 import { SlidersHorizontal, ChevronDown, X, Check } from "lucide-react";
-import type { Product } from "@/lib/products";
+import type { Product, Category } from "@/lib/products";
+import { getProductName, getCategoryName } from "@/lib/products";
 import RatingWidget from "./RatingWidget";
 import { useCurrency } from "@/lib/CurrencyContext";
 import { formatPrice, getPrice } from "@/lib/currency";
 import { trackEvent } from "@/lib/analytics";
-
-type Category = { slug: string; name: string };
+import { useT } from "@/lib/useT";
+import { useLang } from "@/lib/LangContext";
+import { LOCALE_TAGS } from "@/lib/locale";
 
 // stockData: { [slug]: Record<"color|size", number> }
 // předáno ze server componentu kategorie page.tsx
-
-const sortOptions = [
-  { label: "Doporučené",     value: "default"    },
-  { label: "Cena: nejnižší", value: "price-asc"  },
-  { label: "Cena: nejvyšší", value: "price-desc" },
-  { label: "Název A–Z",      value: "name-asc"   },
-];
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -41,48 +36,24 @@ function maxStock(product: Product, stockData: Record<string, Record<string, num
   return product.inStock ? product.stock : 0;
 }
 
-// ── Stock pill pro product kartu ─────────────────────────────────────────────
-
-function StockPill({ product, stockData }: { product: Product; stockData: Record<string, Record<string, number>> }) {
-  const inStock = anyInStock(product, stockData);
-
-  if (!inStock) {
-    return (
-      <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-red-700 bg-red-50 border border-red-200 px-2 py-0.5 rounded-full">
-        <span className="w-1.5 h-1.5 rounded-full bg-red-400 shrink-0" />
-        <span>Není skladem</span>
-      </span>
-    );
-  }
-
-  const best = maxStock(product, stockData);
-
-  if (best >= 5) {
-    return (
-      <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded-full">
-        <span className="w-1.5 h-1.5 rounded-full bg-green-500 shrink-0" />
-        <span>Skladem</span>
-      </span>
-    );
-  }
-  return (
-    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
-      <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse shrink-0" />
-      <span>Poslední kusy</span>
-    </span>
-  );
-}
+// (StockPill byl odsud smazán — nikde se nevykresloval, kartu skladem řeší
+// značka přímo v gridu níž. Nemělo smysl ho překládat do tří jazyků.)
 
 // ── Price range slider ────────────────────────────────────────────────────────
 
+// Popisky chodí zvenčí jako props — slider sám o překladech nic neví a jde
+// použít i jinde než na filtr ceny.
 function DualRangeSlider({
   min, max, valueMin, valueMax, onChangeMin, onChangeMax, step = 10,
+  labelMin, labelMax,
 }: {
   min: number; max: number;
   valueMin: number; valueMax: number;
   onChangeMin: (v: number) => void;
   onChangeMax: (v: number) => void;
   step?: number;
+  labelMin: string;
+  labelMax: string;
 }) {
   const trackRef = useRef<HTMLDivElement>(null);
   const range = Math.max(max - min, 1);
@@ -134,7 +105,7 @@ function DualRangeSlider({
         <div
           role="slider"
           tabIndex={0}
-          aria-label="Minimální cena"
+          aria-label={labelMin}
           aria-valuemin={min}
           aria-valuemax={max}
           aria-valuenow={valueMin}
@@ -153,7 +124,7 @@ function DualRangeSlider({
         <div
           role="slider"
           tabIndex={0}
-          aria-label="Maximální cena"
+          aria-label={labelMax}
           aria-valuemin={min}
           aria-valuemax={max}
           aria-valuenow={valueMax}
@@ -186,6 +157,16 @@ export default function KategorieClient({
   stockData?: Record<string, Record<string, number>>;
 }) {
   const { currency } = useCurrency();
+  const t = useT("category");
+  const { locale } = useLang();
+  const categoryName = getCategoryName(category, locale);
+
+  const sortOptions = [
+    { label: t("sortDefault"),   value: "default"    },
+    { label: t("sortPriceAsc"),  value: "price-asc"  },
+    { label: t("sortPriceDesc"), value: "price-desc" },
+    { label: t("sortNameAsc"),   value: "name-asc"   },
+  ];
 
   // Filtry vždy počítáme v CZK
   const allPrices = products.map(p => typeof p.price === "number" ? p.price : (p.price as any).CZK ?? 0);
@@ -212,7 +193,13 @@ export default function KategorieClient({
 
   if (sort === "price-asc")  filtered = [...filtered].sort((a, b) => getCZK(a) - getCZK(b));
   if (sort === "price-desc") filtered = [...filtered].sort((a, b) => getCZK(b) - getCZK(a));
-  if (sort === "name-asc")   filtered = [...filtered].sort((a, b) => a.name.localeCompare(b.name));
+  // Řadí se podle názvu ve zvoleném jazyce a jeho pravidly — "Č" patří v češtině
+  // až za "C", ne mezi latinku, a v angličtině by se řadil jiný název.
+  if (sort === "name-asc") {
+    filtered = [...filtered].sort((a, b) =>
+      getProductName(a, locale).localeCompare(getProductName(b, locale), LOCALE_TAGS[locale]),
+    );
+  }
 
   const activeFilters = priceMin > PRICE_MIN || priceMax < PRICE_MAX || onlyInStock;
   const currentSort   = sortOptions.find(s => s.value === sort)!;
@@ -233,7 +220,7 @@ export default function KategorieClient({
             aria-expanded={priceOpen}
             className="w-full flex items-center justify-between px-5 py-4 min-h-11 text-sm font-semibold text-text-base hover:text-primary-ink transition-colors"
           >
-            Cena
+            {t("price")}
             <ChevronDown size={14} aria-hidden="true" className={`transition-transform duration-200 ${priceOpen ? "rotate-180" : ""}`} />
           </button>
           {priceOpen && (
@@ -242,6 +229,7 @@ export default function KategorieClient({
                 min={PRICE_MIN} max={PRICE_MAX}
                 valueMin={priceMin} valueMax={priceMax}
                 onChangeMin={setPriceMin} onChangeMax={setPriceMax}
+                labelMin={t("priceMin")} labelMax={t("priceMax")}
               />
             </div>
           )}
@@ -254,7 +242,7 @@ export default function KategorieClient({
             aria-expanded={availOpen}
             className="w-full flex items-center justify-between px-5 py-4 min-h-11 text-sm font-semibold text-text-base hover:text-primary-ink transition-colors"
           >
-            Dostupnost
+            {t("availability")}
             <ChevronDown size={14} aria-hidden="true" className={`transition-transform duration-200 ${availOpen ? "rotate-180" : ""}`} />
           </button>
           {availOpen && (
@@ -272,7 +260,7 @@ export default function KategorieClient({
                 }`}>
                   {onlyInStock && <Check size={11} strokeWidth={3} className="text-on-primary" />}
                 </span>
-                Pouze skladem
+                {t("onlyInStock")}
               </button>
             </div>
           )}
@@ -287,17 +275,17 @@ export default function KategorieClient({
 
         {/* Breadcrumb */}
         <nav className="flex items-center gap-1.5 text-xs text-text-subtle mb-5 lg:mb-8">
-          <a href="/" className="hover:text-text-muted transition-colors">Domů</a>
-          <span className="text-border">/</span>
-          <span className="text-text-muted">{category.name}</span>
+          <a href="/" className="hover:text-text-muted transition-colors">{t("home")}</a>
+          <span aria-hidden="true" className="text-border">/</span>
+          <span className="text-text-muted">{categoryName}</span>
         </nav>
 
         {/* Page header */}
         <div className="flex items-end justify-between mb-6 lg:mb-10 gap-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-text-base tracking-tight">{category.name}</h1>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-text-base tracking-tight">{categoryName}</h1>
             <p className="text-text-subtle text-sm mt-1.5">
-              {filtered.length} {filtered.length === 1 ? "produkt" : filtered.length < 5 ? "produkty" : "produktů"}
+              {t.plural(filtered.length, "productCount")}
             </p>
           </div>
 
@@ -308,11 +296,11 @@ export default function KategorieClient({
                 říká slovy v aria-labelu. */}
             <button
               onClick={() => setMobileFilterOpen(true)}
-              aria-label={activeFilters ? "Filtrovat — filtry jsou aktivní" : "Filtrovat"}
+              aria-label={activeFilters ? t("filterActive") : t("filter")}
               className="lg:hidden inline-flex items-center gap-1.5 px-3 py-2 sm:px-4 sm:py-2.5 min-h-11 rounded-xl bg-white border border-border text-text-muted text-sm hover:text-text-base transition-colors shadow-sm"
             >
               <SlidersHorizontal size={14} aria-hidden="true" />
-              <span className="hidden sm:inline">Filtrovat</span>
+              <span className="hidden sm:inline">{t("filter")}</span>
               {activeFilters && <span aria-hidden="true" className="w-1.5 h-1.5 rounded-full bg-primary" />}
             </button>
 
@@ -320,13 +308,13 @@ export default function KategorieClient({
             <div className="relative">
               <button
                 onClick={() => setSortOpen(v => !v)}
-                aria-label={`Řadit produkty — vybráno ${currentSort.label}`}
+                aria-label={t("sortLabel", { current: currentSort.label })}
                 aria-expanded={sortOpen}
                 aria-haspopup="menu"
                 className="inline-flex items-center gap-1.5 px-3 py-2 sm:px-4 sm:py-2.5 min-h-11 rounded-xl bg-white border border-border text-text-muted text-sm hover:text-text-base transition-colors shadow-sm"
               >
                 <span className="hidden sm:inline">{currentSort.label}</span>
-                <span className="sm:hidden">Řadit</span>
+                <span className="sm:hidden">{t("sort")}</span>
                 <ChevronDown size={13} aria-hidden="true" className={`transition-transform duration-200 ${sortOpen ? "rotate-180" : ""}`} />
               </button>
               {sortOpen && (
@@ -358,11 +346,11 @@ export default function KategorieClient({
               <div className="flex items-center justify-between px-5 py-4 border-b border-border">
                 <div className="flex items-center gap-2">
                   <SlidersHorizontal size={14} className="text-primary-ink" />
-                  <span className="text-text-base font-semibold text-sm">Filtrovat</span>
+                  <span className="text-text-base font-semibold text-sm">{t("filter")}</span>
                 </div>
                 {activeFilters && (
                   <button onClick={resetFilters} className="text-text-subtle hover:text-primary-ink text-xs transition-colors">
-                    Zrušit vše
+                    {t("resetAll")}
                   </button>
                 )}
               </div>
@@ -378,13 +366,13 @@ export default function KategorieClient({
                 <div className="w-14 h-14 rounded-2xl bg-white border border-border flex items-center justify-center mb-4 shadow-sm">
                   <SlidersHorizontal size={22} className="text-text-subtle" />
                 </div>
-                <p className="text-text-base font-semibold">Žádné produkty</p>
-                <p className="text-text-muted text-sm mt-1">Zkus změnit nebo zrušit filtry.</p>
+                <p className="text-text-base font-semibold">{t("noProducts")}</p>
+                <p className="text-text-muted text-sm mt-1">{t("noProductsDesc")}</p>
                 <button
                   onClick={resetFilters}
                   className="mt-5 px-5 py-2.5 rounded-full bg-primary text-on-primary font-semibold text-sm hover:brightness-105 transition-all"
                 >
-                  Zrušit filtry
+                  {t("resetFilters")}
                 </button>
               </div>
             ) : (
@@ -394,10 +382,10 @@ export default function KategorieClient({
                   const best    = maxStock(product, stockData);
 
                   const stockLabel = !inStock
-                    ? { dot: "bg-red-400",             text: "Není skladem",  cls: "text-red-500"   }
+                    ? { dot: "bg-red-400",                 text: t("stockNone"), cls: "text-red-500"   }
                     : best < 5
-                    ? { dot: "bg-amber-400 animate-pulse", text: "Poslední kusy", cls: "text-amber-500" }
-                    : { dot: "bg-green-500",            text: "Skladem",       cls: "text-green-600" };
+                    ? { dot: "bg-amber-400 animate-pulse", text: t("stockLow"),  cls: "text-amber-500" }
+                    : { dot: "bg-green-500",               text: t("stockOk"),   cls: "text-green-600" };
 
                   return (
                     <a
@@ -415,7 +403,7 @@ export default function KategorieClient({
                       <div className="relative aspect-square bg-[#f5f5f5] overflow-hidden">
                         <Image
                           src={product.img}
-                          alt={product.name}
+                          alt=""
                           fill
                           className="object-contain p-5 sm:p-6 transition-transform duration-500 group-hover:scale-[1.04]"
                           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
@@ -426,7 +414,7 @@ export default function KategorieClient({
                       <div className="flex flex-col p-3 sm:p-4 gap-2 border-t border-border">
                         {/* Název */}
                         <p className="text-text-base text-sm font-semibold leading-snug line-clamp-2 min-h-[2.5rem]">
-                          {product.name}
+                          {getProductName(product, locale)}
                         </p>
 
                         {/* Cena + stock */}
@@ -442,8 +430,8 @@ export default function KategorieClient({
 
                         {/* Tlačítko Detail */}
                         <div className="mt-1 w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-primary text-on-primary text-sm font-bold transition-all duration-150 group-hover:brightness-105">
-                          <span>Detail</span>
-                          <ChevronDown size={14} className="-rotate-90" />
+                          <span>{t("detail")}</span>
+                          <ChevronDown size={14} aria-hidden="true" className="-rotate-90" />
                         </div>
                       </div>
                     </a>
@@ -466,11 +454,11 @@ export default function KategorieClient({
             <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-2">
                 <SlidersHorizontal size={15} className="text-primary-ink" />
-                <span className="text-text-base font-semibold">Filtrovat</span>
+                <span className="text-text-base font-semibold">{t("filter")}</span>
               </div>
               <button
                 onClick={() => setMobileFilterOpen(false)}
-                aria-label="Zavřít filtry"
+                aria-label={t("closeFilters")}
                 className="w-11 h-11 -mr-2 flex items-center justify-center rounded-full text-text-muted hover:text-text-base hover:bg-surface transition-colors"
               >
                 <X size={20} />
@@ -484,14 +472,14 @@ export default function KategorieClient({
                 onClick={resetFilters}
                 className="mt-3 w-full py-2.5 rounded-xl border border-border text-text-muted text-sm hover:text-text-base transition-colors"
               >
-                Zrušit všechny filtry
+                {t("resetAllFilters")}
               </button>
             )}
             <button
               onClick={() => setMobileFilterOpen(false)}
               className="mt-3 w-full px-5 py-3 rounded-xl bg-primary text-on-primary font-semibold text-sm hover:brightness-105 transition-all"
             >
-              Zobrazit výsledky ({filtered.length})
+              {t("showResults", { count: filtered.length })}
             </button>
           </div>
         </div>
