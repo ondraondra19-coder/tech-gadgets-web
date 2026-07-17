@@ -55,7 +55,8 @@
     "remove": "Remove from cart — {name}",
     "increase": "Add one — {name}",
     "decrease": "Remove one — {name}",
-    "quantity": "Quantity: "
+    "quantity": "Quantity: ",
+    "backToStep": "Back to step {step}"
   },
   "variants": {
     "attr_Tělo": "Body",
@@ -439,5 +440,36 @@
   "common": {
     "sending": "Sending…",
     "home": "Home"
+  },
+  "checkout": {
+    "home": "Home",
+    "cart": "Cart",
+    "title": "Shipping & payment",
+    "shippingHeading": "Shipping method",
+    "paymentHeading": "Payment method",
+    "shipBoxName": "Zásilkovna — pickup point",
+    "shipBoxDesc": "Collect from a Z-BOX or pickup point",
+    "shipAddrName": "Zásilkovna — to your address",
+    "shipAddrDesc": "Courier delivery in 1–2 working days",
+    "payCardName": "Card online",
+    "payCardDesc": "Visa, Mastercard, Apple Pay",
+    "payTransferName": "Bank transfer",
+    "payTransferDesc": "Pay in advance to our account",
+    "payCodName": "Cash on delivery",
+    "payCodDesc": "Pay when your parcel arrives",
+    "pickPoint": "Choose a pickup point",
+    "errShipping": "Choose a shipping method",
+    "errPickPoint": "Choose a pickup point",
+    "errPayment": "Choose a payment method",
+    "widgetLoading": "The widget is still loading, please try again in a moment.",
+    "widgetUnavailable": "We couldn't open the pickup point picker. Please try again later or get in touch.",
+    "orderHeading": "Your order",
+    "edit": "Edit",
+    "subtotal": "Subtotal",
+    "shipping": "Shipping",
+    "cod": "Cash on delivery",
+    "total": "Total",
+    "continueToInfo": "Continue to details",
+    "securePayment": "Secure payment · SSL encryption"
   }
 }

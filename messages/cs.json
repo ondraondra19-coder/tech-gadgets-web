@@ -58,7 +58,8 @@
     "remove": "Odebrat z košíku — {name}",
     "increase": "Přidat jeden kus — {name}",
     "decrease": "Ubrat jeden kus — {name}",
-    "quantity": "Počet kusů: "
+    "quantity": "Počet kusů: ",
+    "backToStep": "Zpět na krok {step}"
   },
   "variants": {
     "attr_Tělo": "Tělo",
@@ -447,5 +448,36 @@
   "common": {
     "sending": "Odesílám…",
     "home": "Domů"
+  },
+  "checkout": {
+    "home": "Domů",
+    "cart": "Košík",
+    "title": "Doprava a platba",
+    "shippingHeading": "Způsob dopravy",
+    "paymentHeading": "Způsob platby",
+    "shipBoxName": "Zásilkovna — výdejní místo",
+    "shipBoxDesc": "Vyzvednutí na Z-BOXu nebo výdejním místě",
+    "shipAddrName": "Zásilkovna — na adresu",
+    "shipAddrDesc": "Doručení kurýrem do 1–2 pracovních dní",
+    "payCardName": "Kartou online",
+    "payCardDesc": "Visa, Mastercard, Apple Pay",
+    "payTransferName": "Bankovní převod",
+    "payTransferDesc": "Platba předem na účet",
+    "payCodName": "Dobírka",
+    "payCodDesc": "Platba při převzetí",
+    "pickPoint": "Vybrat výdejní místo",
+    "errShipping": "Vyberte způsob dopravy",
+    "errPickPoint": "Vyberte výdejní místo",
+    "errPayment": "Vyberte způsob platby",
+    "widgetLoading": "Widget se načítá, zkuste to prosím za chvíli.",
+    "widgetUnavailable": "Výběr výdejního místa se nepodařilo otevřít. Zkuste to prosím později nebo nás kontaktujte.",
+    "orderHeading": "Objednávka",
+    "edit": "Upravit",
+    "subtotal": "Mezisoučet",
+    "shipping": "Doprava",
+    "cod": "Dobírka",
+    "total": "Celkem",
+    "continueToInfo": "Pokračovat k informacím",
+    "securePayment": "Zabezpečená platba · SSL šifrování"
   }
 }

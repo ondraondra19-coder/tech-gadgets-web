@@ -8,10 +8,19 @@ import { ChevronRight, Check, Package, CreditCard, Building2, Truck, MapPin, Ale
 import { useCurrency } from "@/lib/CurrencyContext";
 import { formatPrice, getPrice } from "@/lib/currency";
 import DiscountWidget from "@/components/DiscountWidget";
-import { SHIPPING_PRICES } from "@/lib/shipping/pricing";
+import {
+  SHIPPING_PRICES,
+  SHIPPING_CANONICAL_NAMES,
+  PAYMENT_CANONICAL_NAMES,
+  type ShippingId,
+  type PaymentId,
+} from "@/lib/shipping/pricing";
+import { useT, type T } from "@/lib/useT";
+import { useLang } from "@/lib/LangContext";
 import { DOBIRKA_FEE } from "@/lib/fees";
 import { trackEvent } from "@/lib/analytics";
 import { isBankTransferEnabled } from "@/lib/featureFlags";
+import CheckoutStepper from "@/components/CheckoutStepper";
 
 declare global {
   interface Window {
@@ -34,16 +43,22 @@ type PacketaPoint = {
 const ZBOX_KEY = "hackpack-zbox";
 export const ORDER_KEY = "hackpack-order";
 
-const dopravyOptions = [
-  { id: "zasilkovna_box",    name: "Zásilkovna — výdejní místo", desc: "Vyzvednutí na Z-BOXu nebo výdejním místě", price: SHIPPING_PRICES.zasilkovna_box,    hasPickup: true  },
-  { id: "zasilkovna_adresa", name: "Zásilkovna — na adresu",     desc: "Doručení kurýrem do 1–2 pracovních dní",   price: SHIPPING_PRICES.zasilkovna_adresa, hasPickup: false },
-];
+// Popisky pro zákazníka; do záznamu objednávky se ukládá české jméno
+// z SHIPPING_CANONICAL_NAMES / PAYMENT_CANONICAL_NAMES podle `id`.
+function buildDopravyOptions(t: T) {
+  return [
+    { id: "zasilkovna_box",    name: t("shipBoxName"),    desc: t("shipBoxDesc"),    price: SHIPPING_PRICES.zasilkovna_box,    hasPickup: true  },
+    { id: "zasilkovna_adresa", name: t("shipAddrName"),   desc: t("shipAddrDesc"),   price: SHIPPING_PRICES.zasilkovna_adresa, hasPickup: false },
+  ];
+}
 
-const platbyOptions = [
-  { id: "karta",   name: "Kartou online",    desc: "Visa, Mastercard, Apple Pay", icon: CreditCard },
-  { id: "prevod",  name: "Bankovní převod",  desc: "Platba předem na účet",       icon: Building2  },
-  { id: "dobirka", name: "Dobírka",          desc: "Platba při převzetí",         icon: Truck      },
-];
+function buildPlatbyOptions(t: T) {
+  return [
+    { id: "karta",   name: t("payCardName"),     desc: t("payCardDesc"),     icon: CreditCard },
+    { id: "prevod",  name: t("payTransferName"), desc: t("payTransferDesc"), icon: Building2  },
+    { id: "dobirka", name: t("payCodName"),      desc: t("payCodDesc"),      icon: Truck      },
+  ];
+}
 
 // Packeta nemá žádný veřejný sandbox — ani pro plné API (createPacket), ani
 // pro tenhle výdejní widget — obojí vyžaduje reálný schválený účet (~3 dny).
@@ -90,49 +105,14 @@ function MockZboxModal({ onPick, onClose }: { onPick: (point: PacketaPoint) => v
   );
 }
 
-function Stepper({ step }: { step: 1 | 2 | 3 }) {
-  const steps = [
-    { n: 1, label: "Košík",            href: "/kosik"      },
-    { n: 2, label: "Doprava a platba", href: "/objednavka" },
-    { n: 3, label: "Informace",        href: null          },
-  ];
-  return (
-    <div className="flex items-center w-full mb-10">
-      {steps.map((s, i) => {
-        const done = s.n < step;
-        const active = s.n === step;
-        const clickable = done && s.href;
-        return (
-          <div key={s.n} className="flex items-center flex-1 last:flex-none">
-            <div className="flex flex-col items-center gap-1.5">
-              {clickable ? (
-                <a href={s.href!}>
-                  <span className="w-8 h-8 rounded-full text-sm font-bold flex items-center justify-center bg-primary text-on-primary hover:brightness-110 transition-all">
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7L5.5 10.5L12 3.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                  </span>
-                </a>
-              ) : (
-                <span className={`w-8 h-8 rounded-full text-sm font-bold flex items-center justify-center ${active ? "bg-primary text-on-primary" : "bg-border text-text-subtle"}`}>
-                  {s.n}
-                </span>
-              )}
-              <span className={`text-xs font-medium whitespace-nowrap ${active ? "text-text-base" : done ? "text-text-muted" : "text-text-subtle"}`}>
-                {s.label}
-              </span>
-            </div>
-            {i < steps.length - 1 && (
-              <div className={`flex-1 h-px mx-3 mb-5 transition-colors ${done ? "bg-primary" : "bg-border"}`} />
-            )}
-          </div>
-        );
-      })}
-    </div>
-  );
-}
 
 export default function ObjednavkaPage() {
   const { items, getTotalPrice, getItemPrice, appliedDiscount, getDiscountAmount, getFinalPrice } = useCart();
   const { currency } = useCurrency();
+  const t = useT("checkout");
+  const { locale } = useLang();
+  const dopravyOptions = buildDopravyOptions(t);
+  const platbyOptions = buildPlatbyOptions(t);
   const [doprava, setDoprava] = useState<string | null>(null);
   const [platba, setPlatba] = useState<string | null>(null);
   const [selectedZbox, setSelectedZbox] = useState<PacketaPoint | null>(null);
@@ -192,13 +172,18 @@ export default function ObjednavkaPage() {
         setMockPickerOpen(true);
         return;
       }
-      alert("Výběr výdejního místa Zásilkovny není nakonfigurován (chybí NEXT_PUBLIC_PACKETA_API_KEY). Kontaktujte prosím podporu.");
+      // Název env proměnné patří do konzole, ne do očí zákazníka — ten s tím
+      // nic nezmůže a jen ho to vyděsí.
+      console.error("Chybí NEXT_PUBLIC_PACKETA_API_KEY — widget výdejních míst nelze otevřít.");
+      alert(t("widgetUnavailable"));
       return;
     }
-    if (!window.Packeta?.Widget) { alert("Widget se načítá, zkuste za chvíli."); return; }
+    if (!window.Packeta?.Widget) { alert(t("widgetLoading")); return; }
+    // Widget Zásilkovny umí cs/sk/en — ať se otevře v jazyce, který si
+    // zákazník zvolil, místo natvrdo české verze.
     window.Packeta.Widget.pick(apiKey, (point) => {
       if (point) pickZboxPoint(point);
-    }, { country: "cz", language: "cs" });
+    }, { country: "cz", language: locale });
   }
 
   const selectedDoprava = dopravyOptions.find(d => d.id === doprava);
@@ -211,9 +196,9 @@ export default function ObjednavkaPage() {
 
   function handleSubmit() {
     const e: Record<string, string> = {};
-    if (!doprava) e.doprava = "Vyberte způsob dopravy";
-    if (doprava === "zasilkovna_box" && !selectedZbox) e.zasilkovna = "Vyberte výdejní místo";
-    if (!platba) e.platba = "Vyberte způsob platby";
+    if (!doprava) e.doprava = t("errShipping");
+    if (doprava === "zasilkovna_box" && !selectedZbox) e.zasilkovna = t("errPickPoint");
+    if (!platba) e.platba = t("errPayment");
     setErrors(e);
     if (Object.keys(e).length > 0) return;
 
@@ -221,10 +206,13 @@ export default function ObjednavkaPage() {
       const rawDoprava = dopravyOptions.find(d => d.id === doprava);
       localStorage.setItem(ORDER_KEY, JSON.stringify({
         doprava,
-        dopravaName: rawDoprava?.name,
+        // Do záznamu jde české jméno podle ID, ne přeložený popisek z UI —
+        // tenhle údaj končí ve Stripe, v e-mailech a v administraci, které
+        // jsou české. Viz komentář v lib/shipping/pricing.ts.
+        dopravaName: SHIPPING_CANONICAL_NAMES[doprava as ShippingId],
         dopravaPrices: rawDoprava?.price,
         platba,
-        platbaName: platbyOptions.find(p => p.id === platba)?.name,
+        platbaName: PAYMENT_CANONICAL_NAMES[platba as PaymentId],
         isDobirka: platba === "dobirka",
         zbox: selectedZbox ?? null,
         // Uložíme i slevový kód pro další stránky
@@ -244,14 +232,14 @@ export default function ObjednavkaPage() {
         <div className="max-w-screen-2xl mx-auto px-6 lg:px-12 py-10">
 
           <nav className="flex items-center gap-2 text-xs text-text-subtle mb-8">
-            <a href="/" className="hover:text-text-muted transition-colors">Domů</a>
-            <ChevronRight size={12} className="text-border" />
-            <a href="/kosik" className="hover:text-text-muted transition-colors">Košík</a>
-            <ChevronRight size={12} className="text-border" />
-            <span className="text-text-muted">Doprava a platba</span>
+            <a href="/" className="hover:text-text-muted transition-colors">{t("home")}</a>
+            <ChevronRight size={12} className="text-border" aria-hidden="true" />
+            <a href="/kosik" className="hover:text-text-muted transition-colors">{t("cart")}</a>
+            <ChevronRight size={12} className="text-border" aria-hidden="true" />
+            <span className="text-text-muted">{t("title")}</span>
           </nav>
 
-          <Stepper step={2} />
+          <CheckoutStepper step={2} />
 
           <div className="flex flex-col lg:flex-row gap-8 items-start">
             <div className="flex-1 flex flex-col gap-6">
@@ -259,7 +247,7 @@ export default function ObjednavkaPage() {
               {/* Doprava */}
               <div className="bg-secondary border border-border rounded-2xl overflow-hidden">
                 <div className="px-6 py-5 border-b border-border">
-                  <h2 className="text-text-base font-semibold text-lg">Způsob dopravy</h2>
+                  <h2 className="text-text-base font-semibold text-lg">{t("shippingHeading")}</h2>
                 </div>
                 <div className="p-4 flex flex-col gap-2">
                   {errors.doprava && (
@@ -303,7 +291,7 @@ export default function ObjednavkaPage() {
                             }`}
                           >
                             <MapPin size={14} className={selectedZbox ? "text-primary-ink" : errors.zasilkovna ? "text-red-500" : "text-text-subtle"} />
-                            {selectedZbox ? selectedZbox.nameStreet : "Vybrat výdejní místo"}
+                            {selectedZbox ? selectedZbox.nameStreet : t("pickPoint")}
                             {selectedZbox && <Check size={13} className="text-primary-ink ml-1" />}
                           </button>
                           {errors.zasilkovna && (
@@ -324,7 +312,7 @@ export default function ObjednavkaPage() {
               {/* Platba */}
               <div className="bg-secondary border border-border rounded-2xl overflow-hidden">
                 <div className="px-6 py-5 border-b border-border">
-                  <h2 className="text-text-base font-semibold text-lg">Způsob platby</h2>
+                  <h2 className="text-text-base font-semibold text-lg">{t("paymentHeading")}</h2>
                 </div>
                 <div className="p-4 flex flex-col gap-2">
                   {errors.platba && (
@@ -360,14 +348,14 @@ export default function ObjednavkaPage() {
             <div className="w-full lg:w-80 shrink-0 sticky top-24 flex flex-col gap-4">
               <div className="bg-secondary border border-border rounded-2xl overflow-hidden">
                 <div className="px-5 py-4 border-b border-border flex items-center justify-between">
-                  <h2 className="text-text-base font-semibold text-sm">Objednávka</h2>
-                  <a href="/kosik" className="text-primary-ink text-xs hover:underline">Upravit</a>
+                  <h2 className="text-text-base font-semibold text-sm">{t("orderHeading")}</h2>
+                  <a href="/kosik" className="text-primary-ink text-xs hover:underline">{t("edit")}</a>
                 </div>
                 <div className="px-5 py-3 flex flex-col gap-3 max-h-52 overflow-y-auto">
                   {items.map((item) => (
                     <div key={item.slug + JSON.stringify(item.variants)} className="flex items-center gap-3">
                       <div className="relative w-10 h-10 rounded-lg bg-dark/5 border border-border shrink-0 overflow-hidden">
-                        <Image src={item.img} alt={item.name} fill className="object-contain p-1" />
+                        <Image src={item.img} alt="" fill className="object-contain p-1" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-text-base text-xs font-medium line-clamp-1">{item.name}</p>
@@ -385,7 +373,7 @@ export default function ObjednavkaPage() {
                 <div className="px-5 py-4 flex flex-col gap-3">
                   {/* Mezisoučet */}
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-text-muted">Mezisoučet</span>
+                    <span className="text-text-muted">{t("subtotal")}</span>
                     <span className={`font-medium ${appliedDiscount && discountAmount > 0 ? "text-text-subtle line-through" : "text-text-base"}`}>
                       {formatPrice(subtotal, currency)}
                     </span>
@@ -394,27 +382,27 @@ export default function ObjednavkaPage() {
                   {appliedDiscount && discountAmount > 0 && (
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-green-600 flex items-center gap-1.5">
-                        <Tag size={12} /> <span>{appliedDiscount.code}</span>
+                        <Tag size={12} aria-hidden="true" /> <span>{appliedDiscount.code}</span>
                       </span>
                       <span className="text-green-600 font-semibold">− {formatPrice(discountAmount, currency)}</span>
                     </div>
                   )}
                   {/* Doprava */}
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-text-muted">Doprava</span>
+                    <span className="text-text-muted">{t("shipping")}</span>
                     <span className="text-text-base font-medium">
                       {selectedDoprava ? formatPrice(dopravaPrice, currency) : "—"}
                     </span>
                   </div>
                   {platba === "dobirka" && (
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-text-muted">Dobírka</span>
+                      <span className="text-text-muted">{t("cod")}</span>
                       <span className="text-text-base font-medium">{formatPrice(dobirkaExtra, currency)}</span>
                     </div>
                   )}
                   <div className="h-px bg-border" />
                   <div className="flex items-center justify-between">
-                    <span className="text-text-base font-bold">Celkem</span>
+                    <span className="text-text-base font-bold">{t("total")}</span>
                     <span className="text-primary-ink font-extrabold text-xl">{formatPrice(celkem, currency)}</span>
                   </div>
                 </div>
@@ -427,9 +415,9 @@ export default function ObjednavkaPage() {
                 <div className="px-5 pb-5">
                   <button onClick={handleSubmit}
                     className="w-full py-4 rounded-2xl bg-primary text-on-primary font-bold text-sm hover:brightness-105 active:scale-[0.98] transition-all flex items-center justify-center gap-2">
-                    Pokračovat k informacím <ChevronRight size={15} />
+                    {t("continueToInfo")} <ChevronRight size={15} aria-hidden="true" />
                   </button>
-                  <p className="text-text-subtle text-xs text-center mt-3">Zabezpečená platba · SSL šifrování</p>
+                  <p className="text-text-subtle text-xs text-center mt-3">{t("securePayment")}</p>
                 </div>
               </div>
             </div>
