@@ -23,11 +23,15 @@
   },
   "search": {
     "placeholder": "Hľadať produkty...",
-    "label": "Hľadať produkty",
+    "label": "Vyhľadať produkty",
     "clear": "Vymazať hľadanie",
-    "noResults": "Nič sme nenašli",
-    "noResultsFor": "Na „{query}\" nič nemáme",
-    "suggestions": "Návrhy hľadania"
+    "noResults": "Žiadne výsledky pre",
+    "resultsLabel": "Výsledky vyhľadávania",
+    "moreResults": "Ďalšie výsledky",
+    "navigate": "navigácia",
+    "resultsFor_one": "{count} výsledok pre „{query}\"",
+    "resultsFor_few": "{count} výsledky pre „{query}\"",
+    "resultsFor_many": "{count} výsledkov pre „{query}\""
   },
   "cart": {
     "title": "Košík",
@@ -155,6 +159,39 @@
     "contactSubtitle": "sme tu pre teba",
     "contactBtn": "Kontaktovať",
     "hours": "Po–Pia: 9:00–17:00"
+  },
+  "featured": {
+    "eyebrow": "Výber pre vás",
+    "title": "Najvýhodnejšie produkty",
+    "prev": "Predchádzajúce produkty",
+    "next": "Ďalšie produkty",
+    "pagination": "Stránkovanie produktov",
+    "showGroup": "Zobraziť produkty {n}. skupiny z {total}"
+  },
+  "slider": {
+    "prev": "Predchádzajúci slide",
+    "next": "Ďalší slide",
+    "chooseSlide": "Výber slidu",
+    "s1Label": "Bestseller",
+    "s1Headline": "Silikónové puzdro",
+    "s1Accent": "na Apple Pencil",
+    "s1Sub": "Pre aj USB-C verzie. Výber zo 7 farieb, vlastná farebná kombinácia.",
+    "s1Cta": "Vybrať farbu",
+    "s2Label": "Novinka",
+    "s2Headline": "MagSafe",
+    "s2Accent": "peňaženka",
+    "s2Sub": "Prémiová koža. Silné magnety. Pojme až 3 karty.",
+    "s2Cta": "Kúpiť teraz",
+    "s3Label": "Odporúčame",
+    "s3Headline": "Magnetická fólia",
+    "s3Accent": "na iPad",
+    "s3Sub": "Simuluje pocit písania na papier. Kompatibilná s Apple Pencil.",
+    "s3Cta": "Preskúmať",
+    "s4Label": "Tip na darček",
+    "s4Headline": "Silikónový remienok",
+    "s4Accent": "na Apple Watch",
+    "s4Sub": "Športový dizajn. 5 farieb. Veľkosti 38–45 mm.",
+    "s4Cta": "Vybrať veľkosť"
   },
   "chat": {
     "title": "Máš otázku?",

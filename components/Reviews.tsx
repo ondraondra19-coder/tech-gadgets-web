@@ -68,7 +68,7 @@ function ReviewCard({ review }: { review: Review }) {
             !expanded && isLong ? "line-clamp-4" : ""
           }`}
         >
-          „{review.text}"
+          &bdquo;{review.text}&ldquo;
         </p>
         {isLong && (
           <button

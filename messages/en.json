@@ -24,9 +24,12 @@
     "placeholder": "Search products...",
     "label": "Search products",
     "clear": "Clear search",
-    "noResults": "No results found",
-    "noResultsFor": "Nothing found for \"{query}\"",
-    "suggestions": "Search suggestions"
+    "noResults": "No results for",
+    "resultsLabel": "Search results",
+    "moreResults": "More results",
+    "navigate": "navigate",
+    "resultsFor_one": "{count} result for \"{query}\"",
+    "resultsFor_many": "{count} results for \"{query}\""
   },
   "cart": {
     "title": "Cart",
@@ -153,6 +156,39 @@
     "contactSubtitle": "we're here for you",
     "contactBtn": "Get in touch",
     "hours": "Mon–Fri: 9:00–17:00"
+  },
+  "featured": {
+    "eyebrow": "Picked for you",
+    "title": "Best value products",
+    "prev": "Previous products",
+    "next": "Next products",
+    "pagination": "Product pagination",
+    "showGroup": "Show product group {n} of {total}"
+  },
+  "slider": {
+    "prev": "Previous slide",
+    "next": "Next slide",
+    "chooseSlide": "Choose a slide",
+    "s1Label": "Bestseller",
+    "s1Headline": "Silicone case",
+    "s1Accent": "for Apple Pencil",
+    "s1Sub": "Fits Pro and USB-C. Seven colours, or mix your own combination.",
+    "s1Cta": "Pick a colour",
+    "s2Label": "New",
+    "s2Headline": "MagSafe",
+    "s2Accent": "wallet",
+    "s2Sub": "Premium leather. Strong magnets. Holds up to 3 cards.",
+    "s2Cta": "Buy now",
+    "s3Label": "Recommended",
+    "s3Headline": "Magnetic film",
+    "s3Accent": "for iPad",
+    "s3Sub": "Feels like writing on paper. Works with Apple Pencil.",
+    "s3Cta": "Take a look",
+    "s4Label": "Gift idea",
+    "s4Headline": "Silicone strap",
+    "s4Accent": "for Apple Watch",
+    "s4Sub": "Sporty design. 5 colours. Sizes 38–45 mm.",
+    "s4Cta": "Pick a size"
   },
   "chat": {
     "title": "Got a question?",

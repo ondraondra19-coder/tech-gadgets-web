@@ -4,53 +4,35 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { ChevronLeft, ChevronRight, ArrowRight } from "lucide-react";
 import Image from "next/image";
 import { getProductBySlug } from "@/lib/products";
+import { useT } from "@/lib/useT";
 
-const slidesData = [
-  {
-    id: 1,
-    label: "Bestseller",
-    headline: "Silikonové pouzdro",
-    headlineAccent: "na Apple Pencil",
-    sub: "Pro i USB-C verze. Výběr ze 7 barev, vlastní barevná kombinace.",
-    cta: "Vybrat barvu",
-    slug: "pouzdro-apple-pencil",
-  },
-  {
-    id: 2,
-    label: "Novinka",
-    headline: "MagSafe",
-    headlineAccent: "peněženka",
-    sub: "Prémiová kůže. Silné magnety. Pojme až 3 karty.",
-    cta: "Koupit nyní",
-    slug: "magsafe-penezenka",
-  },
-  {
-    id: 3,
-    label: "Doporučujeme",
-    headline: "Magnetická folie",
-    headlineAccent: "na iPad",
-    sub: "Simuluje pocit psaní na papír. Kompatibilní s Apple Pencil.",
-    cta: "Prozkoumat",
-    slug: "magneticka-paperlike-folie-ipad",
-  },
-  {
-    id: 4,
-    label: "Tip na dárek",
-    headline: "Silikonový řemínek",
-    headlineAccent: "na Apple Watch",
-    sub: "Sportovní design. 5 barev. Velikosti 38–45 mm.",
-    cta: "Vybrat velikost",
-    slug: "silikonovy-reminek-apple-watch",
-  },
+const slideSlugs = [
+  "pouzdro-apple-pencil",
+  "magsafe-penezenka",
+  "magneticka-paperlike-folie-ipad",
+  "silikonovy-reminek-apple-watch",
 ];
 
-const slides = slidesData.map(s => ({
-  ...s,
-  href: `/produkt/${s.slug}`,
-  img: getProductBySlug(s.slug)?.img ?? "",
-}));
-
 export default function HomeSlider() {
+  const t = useT("slider");
+
+  // Klíče schválně vypsané, ne skládané přes `t(`s${i}Label`)` — takhle je
+  // najde scripts/check-messages.mjs a pozná, že se používají.
+  const copy = [
+    { label: t("s1Label"), headline: t("s1Headline"), headlineAccent: t("s1Accent"), sub: t("s1Sub"), cta: t("s1Cta") },
+    { label: t("s2Label"), headline: t("s2Headline"), headlineAccent: t("s2Accent"), sub: t("s2Sub"), cta: t("s2Cta") },
+    { label: t("s3Label"), headline: t("s3Headline"), headlineAccent: t("s3Accent"), sub: t("s3Sub"), cta: t("s3Cta") },
+    { label: t("s4Label"), headline: t("s4Headline"), headlineAccent: t("s4Accent"), sub: t("s4Sub"), cta: t("s4Cta") },
+  ];
+
+  const slides = slideSlugs.map((slug, i) => ({
+    id: i + 1,
+    slug,
+    ...copy[i],
+    href: `/produkt/${slug}`,
+    img: getProductBySlug(slug)?.img ?? "",
+  }));
+
   const [current, setCurrent] = useState(0);
   const [animating, setAnimating] = useState(false);
   const [direction, setDirection] = useState<"left" | "right">("right");
@@ -69,12 +51,15 @@ export default function HomeSlider() {
     }, 350);
   }, [animating]);
 
+  // slideSlugs, ne slides.length — `slides` se teď skládá při každém renderu
+  // (obsahuje přeložené texty), takže by se tyhle callbacky zbytečně měnily
+  // a přenastavovaly interval. Počet slidů je stejně dán slugy.
   const prev = useCallback(() => {
-    go((current - 1 + slides.length) % slides.length, "left");
+    go((current - 1 + slideSlugs.length) % slideSlugs.length, "left");
   }, [current, go]);
 
   const next = useCallback(() => {
-    go((current + 1) % slides.length, "right");
+    go((current + 1) % slideSlugs.length, "right");
   }, [current, go]);
 
   // mountKey zajistí čistý start při každém načtení stránky
@@ -85,7 +70,6 @@ export default function HomeSlider() {
     }
     timeoutRef.current = setInterval(next, 6000);
     return () => { if (timeoutRef.current) clearInterval(timeoutRef.current); };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [next, paused, mountKey]);
 
   const slide = slides[current];
@@ -171,14 +155,14 @@ export default function HomeSlider() {
       {/* Arrows */}
       <button
         onClick={prev}
-        aria-label="Předchozí slide"
+        aria-label={t("prev")}
         className="absolute left-4 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-secondary border border-border flex items-center justify-center text-text-muted hover:text-text-base hover:border-border-strong transition-all duration-150 z-10"
       >
         <ChevronLeft size={17} />
       </button>
       <button
         onClick={next}
-        aria-label="Další slide"
+        aria-label={t("next")}
         className="absolute right-4 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-secondary border border-border flex items-center justify-center text-text-muted hover:text-text-base hover:border-border-strong transition-all duration-150 z-10"
       >
         <ChevronRight size={17} />
@@ -187,7 +171,7 @@ export default function HomeSlider() {
       {/* Dots — samotná tečka je 6px, což je hluboko pod 24×24. Tlačítko je proto
           44×44 a průhledné; viditelnou tečku kreslí vnitřní <span>. Vzhled beze
           změny, dotykový cíl vyhovuje. */}
-      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center z-10" role="tablist" aria-label="Výběr slidu">
+      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center z-10" role="tablist" aria-label={t("chooseSlide")}>
         {slides.map((slide, i) => (
           <button
             key={i}

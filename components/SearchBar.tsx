@@ -9,7 +9,8 @@ import { formatPrice, getPrice } from "@/lib/currency";
 import Image from "next/image";
 import { useT } from "@/lib/useT";
 import { useLang } from "@/lib/LangContext";
-import { getProductName } from "@/lib/products";
+import { getProductName, getCategoryName, categories } from "@/lib/products";
+import type { Locale } from "@/lib/locale";
 
 type SearchResult = typeof staticProducts[0] & { score: number };
 
@@ -176,16 +177,12 @@ function highlightMatch(text: string, query: string) {
   );
 }
 
-const CATEGORY_LABELS: Record<string, string> = {
-  "pouzdra-obaly":  "Pouzdra & Obaly",
-  "ipad-pencil":    "iPad & Pencil",
-  "apple-watch":    "Apple Watch",
-  "prislusenstvi":  "Příslušenství",
-  "cisteni":        "Čištění",
-};
-
-function getCategoryLabel(slug: string): string {
-  return CATEGORY_LABELS[slug] ?? slug.replace(/-/g, " ");
+// Dřív tu byla vlastní kopie názvů kategorií. Rozešla se s katalogem
+// (měla "iPad & Pencil", katalog "iPad & Apple Pencil") a překlady by musela
+// držet podruhé — bere se proto přímo z lib/products.ts.
+function getCategoryLabel(slug: string, locale: Locale): string {
+  const category = categories.find(c => c.slug === slug);
+  return category ? getCategoryName(category, locale) : slug.replace(/-/g, " ");
 }
 
 // ── Confident card ────────────────────────────────────────────────────────────
@@ -200,7 +197,7 @@ function ConfidentCard({
   product: SearchResult;
   query: string;
   currency: ReturnType<typeof useCurrency>["currency"];
-  locale: string;
+  locale: Locale;
   onClick: () => void;
 }) {
   return (
@@ -225,7 +222,7 @@ function ConfidentCard({
           {highlightMatch(getProductName(product, locale), query)}
         </p>
         <p className="text-white/55 text-xs mt-1.5 capitalize">
-          {getCategoryLabel(product.categories[0])}
+          {getCategoryLabel(product.categories[0], locale)}
         </p>
       </div>
 
@@ -280,7 +277,13 @@ export default function SearchBar() {
 
   const trimmed = query.trim();
 
-  const results: SearchResult[] = trimmed.length > 1 ? searchProducts(fuse, trimmed) : [];
+  // useMemo, ne holý výpočet: `results` je v závislostech handleKeyDown, a nové
+  // pole při každém renderu by ten useCallback dělalo zbytečně — React Compiler
+  // kvůli tomu memoizaci vzdával úplně.
+  const results: SearchResult[] = useMemo(
+    () => (trimmed.length > 1 ? searchProducts(fuse, trimmed) : []),
+    [fuse, trimmed]
+  );
 
   const confident = isConfidentResult(results);
 
@@ -353,7 +356,7 @@ export default function SearchBar() {
           placeholder={t("placeholder")}
           autoComplete="off"
           spellCheck={false}
-          aria-label="Vyhledat produkty"
+          aria-label={t("label")}
           aria-expanded={showDropdown}
           aria-haspopup="listbox"
           /* combobox bez aria-controls je nekompletní — čtečka pak neví, který
@@ -369,7 +372,7 @@ export default function SearchBar() {
         {query && (
           <button
             onClick={handleClear}
-            aria-label="Vymazat hledání"
+            aria-label={t("clear")}
             className="absolute right-3.5 top-1/2 -translate-y-1/2 text-text-subtle hover:text-text-base transition-colors"
           >
             <X size={14} />
@@ -386,24 +389,24 @@ export default function SearchBar() {
             <div className="px-5 py-8 text-center">
               {/* Dropdown má tmavé pozadí (bg-header) — text-muted/subtle jsou
                   laděné na světlá pozadí, tady by splynuly. */}
-              <p className="text-white/60 text-sm">Žádné výsledky pro</p>
-              <p className="text-white/90 text-sm font-semibold mt-0.5">„{trimmed}"</p>
+              <p className="text-white/60 text-sm">{t("noResults")}</p>
+              <p className="text-white/90 text-sm font-semibold mt-0.5">&bdquo;{trimmed}&ldquo;</p>
             </div>
           ) : (
             <>
               {/* Header */}
               <div className="px-4 py-2.5 border-b border-white/10 flex items-center justify-between">
                 <span aria-live="polite" className="text-white/55 text-xs">
-                  {results.length} {results.length === 1 ? "výsledek" : results.length < 5 ? "výsledky" : "výsledků"} pro „{trimmed}"
+                  {t.plural(results.length, "resultsFor", { query: trimmed })}
                 </span>
                 <kbd aria-hidden="true" className="hidden sm:inline-flex items-center gap-1 text-white/50 text-[10px] font-mono">
-                  <span>↑↓</span> navigace
+                  <span>↑↓</span> {t("navigate")}
                 </kbd>
               </div>
 
               {/* Jeden listbox pro všechny položky — včetně "confident" karty,
                   která je taky plnohodnotný výsledek (index 0 při navigaci šipkami). */}
-              <ul role="listbox" id={listboxId} aria-label="Výsledky vyhledávání">
+              <ul role="listbox" id={listboxId} aria-label={t("resultsLabel")}>
                 {confident && (
                   <li id={optionId(0)} role="option" aria-selected={activeIndex === 0}>
                     <ConfidentCard
@@ -420,7 +423,7 @@ export default function SearchBar() {
                      jinak by ho čtečka počítala jako další položku. */
                   <li role="presentation" className="px-4 py-1.5 border-t border-b border-white/5">
                     <span className="text-white/50 text-[10px] uppercase tracking-wider font-medium">
-                      Další výsledky
+                      {t("moreResults")}
                     </span>
                   </li>
                 )}
@@ -450,7 +453,7 @@ export default function SearchBar() {
                             {highlightMatch(getProductName(product, locale), trimmed)}
                           </p>
                           <p className="text-white/55 text-xs mt-0.5 capitalize">
-                            {getCategoryLabel(product.categories[0])}
+                            {getCategoryLabel(product.categories[0], locale)}
                           </p>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">

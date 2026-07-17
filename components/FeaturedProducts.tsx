@@ -4,8 +4,11 @@ import { useRef, useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight, ArrowUpRight } from "lucide-react";
 import type { Product } from "@/lib/products";
+import { categories, getCategoryName, getProductName } from "@/lib/products";
 import { useCurrency } from "@/lib/CurrencyContext";
 import { formatPrice, getPrice } from "@/lib/currency";
+import { useT } from "@/lib/useT";
+import { useLang } from "@/lib/LangContext";
 
 const FEATURED_SLUGS = [
   "pouzdro-apple-pencil",
@@ -37,6 +40,8 @@ export default function FeaturedProducts({ products }: { products: Product[] }) 
 
   const trackRef       = useRef<HTMLDivElement>(null);
   const { currency }   = useCurrency();
+  const t              = useT("featured");
+  const { locale }     = useLang();
   const [index,        setIndex]        = useState(0);
   const [visibleCount, setVisibleCount] = useState(4);
   const [itemWidth,    setItemWidth]    = useState(0);
@@ -117,10 +122,10 @@ export default function FeaturedProducts({ products }: { products: Product[] }) 
         <div className="flex items-end justify-between mb-10">
           <div>
             <p className="text-text-subtle text-[11px] font-bold uppercase tracking-[0.18em] mb-2">
-              Výběr pro vás
+              {t("eyebrow")}
             </p>
             <h2 className="text-3xl font-extrabold text-text-base tracking-tight leading-none">
-              Nejvýhodnější produkty
+              {t("title")}
             </h2>
           </div>
 
@@ -129,7 +134,7 @@ export default function FeaturedProducts({ products }: { products: Product[] }) 
             <button
               onClick={() => goTo(index - 1)}
               disabled={index === 0}
-              aria-label="Předchozí"
+              aria-label={t("prev")}
               className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-opacity duration-200 ${
                 index === 0
                   ? "border-border text-border cursor-default opacity-40"
@@ -141,7 +146,7 @@ export default function FeaturedProducts({ products }: { products: Product[] }) 
             <button
               onClick={() => goTo(index + 1)}
               disabled={index >= maxIndex}
-              aria-label="Další"
+              aria-label={t("next")}
               className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-opacity duration-200 ${
                 index >= maxIndex
                   ? "border-border text-border cursor-default opacity-40"
@@ -177,7 +182,7 @@ export default function FeaturedProducts({ products }: { products: Product[] }) 
               {/* Fotka */}
               <Image
                 src={product.img}
-                alt={product.name}
+                alt=""
                 fill
                 className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.06]"
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
@@ -189,11 +194,17 @@ export default function FeaturedProducts({ products }: { products: Product[] }) 
               {/* Content dole */}
               <div className="absolute bottom-0 left-0 right-0 p-5 flex items-end justify-between gap-3">
                 <div className="flex-1 min-w-0">
+                  {/* Dřív se tu sázel slug s pomlčkami nahrazenými mezerami
+                      ("pouzdra obaly"). Katalog má pro kategorie skutečné názvy
+                      včetně překladů, tak ať se použijí. */}
                   <p className="text-white/50 text-[10px] font-semibold uppercase tracking-[0.15em] mb-1.5 line-clamp-1">
-                    {product.categories[0]?.replace(/-/g, " ")}
+                    {(() => {
+                      const category = categories.find(c => c.slug === product.categories[0]);
+                      return category ? getCategoryName(category, locale) : product.categories[0];
+                    })()}
                   </p>
                   <p className="text-white font-bold text-base leading-snug line-clamp-2 mb-2.5">
-                    {product.name}
+                    {getProductName(product, locale)}
                   </p>
                   <p className="text-primary-ink font-extrabold text-xl leading-none">
                     {formatPrice(getPrice(product.price as any, currency), currency)}
@@ -213,14 +224,14 @@ export default function FeaturedProducts({ products }: { products: Product[] }) 
             Neaktivní tečka: bg-border-strong mělo vůči bílé 1.47:1, což je pod
             3:1 pro UI prvek — text-subtle dává 5.36:1. */}
         {maxIndex > 0 && (
-          <div className="flex items-center justify-center mt-5" role="tablist" aria-label="Stránkování produktů">
+          <div className="flex items-center justify-center mt-5" role="tablist" aria-label={t("pagination")}>
             {Array.from({ length: maxIndex + 1 }).map((_, i) => (
               <button
                 key={i}
                 onClick={() => goTo(i)}
                 role="tab"
                 aria-selected={i === index}
-                aria-label={`Zobrazit produkty ${i + 1}. skupiny z ${maxIndex + 1}`}
+                aria-label={t("showGroup", { n: i + 1, total: maxIndex + 1 })}
                 className="w-11 h-11 flex items-center justify-center group"
               >
                 <span

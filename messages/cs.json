@@ -23,11 +23,15 @@
   },
   "search": {
     "placeholder": "Hledat produkty...",
-    "label": "Hledat produkty",
+    "label": "Vyhledat produkty",
     "clear": "Vymazat hledání",
-    "noResults": "Nic jsme nenašli",
-    "noResultsFor": "Na „{query}\" nic nemáme",
-    "suggestions": "Návrhy hledání"
+    "noResults": "Žádné výsledky pro",
+    "resultsLabel": "Výsledky vyhledávání",
+    "moreResults": "Další výsledky",
+    "navigate": "navigace",
+    "resultsFor_one": "{count} výsledek pro „{query}\"",
+    "resultsFor_few": "{count} výsledky pro „{query}\"",
+    "resultsFor_many": "{count} výsledků pro „{query}\""
   },
   "cart": {
     "title": "Košík",
@@ -155,6 +159,39 @@
     "contactSubtitle": "jsme tu pro tebe",
     "contactBtn": "Kontaktovat",
     "hours": "Po–Pá: 9:00–17:00"
+  },
+  "featured": {
+    "eyebrow": "Výběr pro vás",
+    "title": "Nejvýhodnější produkty",
+    "prev": "Předchozí produkty",
+    "next": "Další produkty",
+    "pagination": "Stránkování produktů",
+    "showGroup": "Zobrazit produkty {n}. skupiny z {total}"
+  },
+  "slider": {
+    "prev": "Předchozí slide",
+    "next": "Další slide",
+    "chooseSlide": "Výběr slidu",
+    "s1Label": "Bestseller",
+    "s1Headline": "Silikonové pouzdro",
+    "s1Accent": "na Apple Pencil",
+    "s1Sub": "Pro i USB-C verze. Výběr ze 7 barev, vlastní barevná kombinace.",
+    "s1Cta": "Vybrat barvu",
+    "s2Label": "Novinka",
+    "s2Headline": "MagSafe",
+    "s2Accent": "peněženka",
+    "s2Sub": "Prémiová kůže. Silné magnety. Pojme až 3 karty.",
+    "s2Cta": "Koupit nyní",
+    "s3Label": "Doporučujeme",
+    "s3Headline": "Magnetická folie",
+    "s3Accent": "na iPad",
+    "s3Sub": "Simuluje pocit psaní na papír. Kompatibilní s Apple Pencil.",
+    "s3Cta": "Prozkoumat",
+    "s4Label": "Tip na dárek",
+    "s4Headline": "Silikonový řemínek",
+    "s4Accent": "na Apple Watch",
+    "s4Sub": "Sportovní design. 5 barev. Velikosti 38–45 mm.",
+    "s4Cta": "Vybrat velikost"
   },
   "chat": {
     "title": "Máš dotaz?",
