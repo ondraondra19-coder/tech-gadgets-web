@@ -4,8 +4,10 @@ import { useState } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { ChevronRight, Phone, Mail, MapPin, Clock, Check, Send } from "lucide-react";
+import { useT } from "@/lib/useT";
 
 export default function KontaktPage() {
+  const t = useT("contact");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
@@ -24,14 +26,14 @@ export default function KontaktPage() {
 
           {/* Breadcrumb */}
           <nav className="flex items-center gap-2 text-xs text-text-subtle mb-8">
-            <a href="/" className="hover:text-text-muted transition-colors">Domů</a>
-            <ChevronRight size={12} className="text-border" />
-            <span className="text-text-muted">Kontakt</span>
+            <a href="/" className="hover:text-text-muted transition-colors">{t("home")}</a>
+            <ChevronRight size={12} className="text-border" aria-hidden="true" />
+            <span className="text-text-muted">{t("title")}</span>
           </nav>
 
           <div className="mb-10">
-            <p className="text-text-subtle text-xs font-semibold uppercase tracking-widest mb-2">Jsme tu pro tebe</p>
-            <h1 className="text-4xl font-extrabold text-text-base tracking-tight">Kontakt</h1>
+            <p className="text-text-subtle text-xs font-semibold uppercase tracking-widest mb-2">{t("eyebrow")}</p>
+            <h1 className="text-4xl font-extrabold text-text-base tracking-tight">{t("title")}</h1>
           </div>
 
           {/* Dvě karty vedle sebe */}
@@ -40,14 +42,14 @@ export default function KontaktPage() {
             {/* Kontaktní info */}
             <div className="bg-white rounded-2xl shadow-sm p-8 flex flex-col gap-8">
               <div>
-                <h2 className="text-lg font-bold text-text-base mb-5">Kontaktní údaje</h2>
+                <h2 className="text-lg font-bold text-text-base mb-5">{t("detailsHeading")}</h2>
                 <div className="flex flex-col gap-5">
                   <a href="tel:+420737565577" className="flex items-start gap-4 group">
                     <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
                       <Phone size={18} className="text-primary-ink" />
                     </div>
                     <div>
-                      <p className="text-text-subtle text-xs mb-0.5">Telefon</p>
+                      <p className="text-text-subtle text-xs mb-0.5">{t("phone")}</p>
                       <p className="text-text-base font-semibold group-hover:text-primary-ink transition-colors">+420 737 565 577</p>
                     </div>
                   </a>
@@ -56,7 +58,7 @@ export default function KontaktPage() {
                       <Mail size={18} className="text-primary-ink" />
                     </div>
                     <div>
-                      <p className="text-text-subtle text-xs mb-0.5">E-mail</p>
+                      <p className="text-text-subtle text-xs mb-0.5">{t("email")}</p>
                       <p className="text-text-base font-semibold group-hover:text-primary-ink transition-colors">info@dodelat.cz</p>
                     </div>
                   </a>
@@ -65,28 +67,31 @@ export default function KontaktPage() {
                       <MapPin size={18} className="text-primary-ink" />
                     </div>
                     <div>
-                      <p className="text-text-subtle text-xs mb-0.5">Adresa</p>
-                      <p className="text-text-base font-semibold">Václavské náměstí 1</p>
-                      <p className="text-text-muted text-sm">110 00 Praha 1</p>
+                      <p className="text-text-subtle text-xs mb-0.5">{t("address")}</p>
+                      <p className="text-text-base font-semibold">{t("addressStreet")}</p>
+                      <p className="text-text-muted text-sm">{t("addressCity")}</p>
                     </div>
                   </div>
                 </div>
               </div>
 
               <div>
-                <h2 className="text-lg font-bold text-text-base mb-5">Otevírací doba</h2>
+                <h2 className="text-lg font-bold text-text-base mb-5">{t("hoursHeading")}</h2>
                 <div className="flex flex-col gap-2">
+                  {/* `closed` je vlastní příznak, ne porovnání textu s "Zavřeno" —
+                      to by po překladu přestalo platit a neděle by se vykreslila
+                      jako otevřený den. */}
                   {[
-                    { day: "Pondělí – Pátek", time: "9:00 – 17:00" },
-                    { day: "Sobota", time: "10:00 – 14:00" },
-                    { day: "Neděle", time: "Zavřeno" },
+                    { day: t("weekdays"), time: "9:00 – 17:00",  closed: false },
+                    { day: t("saturday"), time: "10:00 – 14:00", closed: false },
+                    { day: t("sunday"),   time: t("closed"),     closed: true  },
                   ].map((row) => (
                     <div key={row.day} className="flex items-center justify-between py-2 border-b border-border last:border-0">
                       <div className="flex items-center gap-2">
-                        <Clock size={13} className="text-text-subtle" />
+                        <Clock size={13} className="text-text-subtle" aria-hidden="true" />
                         <span className="text-text-muted text-sm">{row.day}</span>
                       </div>
-                      <span className={`text-sm font-semibold ${row.time === "Zavřeno" ? "text-text-subtle" : "text-text-base"}`}>{row.time}</span>
+                      <span className={`text-sm font-semibold ${row.closed ? "text-text-subtle" : "text-text-base"}`}>{row.time}</span>
                     </div>
                   ))}
                 </div>
@@ -95,34 +100,34 @@ export default function KontaktPage() {
 
             {/* Formulář */}
             <div className="bg-white rounded-2xl shadow-sm p-8">
-              <h2 className="text-lg font-bold text-text-base mb-5">Napsat zprávu</h2>
+              <h2 className="text-lg font-bold text-text-base mb-5">{t("formHeading")}</h2>
 
               {sent ? (
                 <div className="flex flex-col items-center gap-3 py-12 text-center">
                   <div className="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center">
-                    <Check size={24} className="text-green-600" />
+                    <Check size={24} className="text-green-600" aria-hidden="true" />
                   </div>
-                  <p className="text-text-base font-semibold">Zpráva odeslána!</p>
-                  <p className="text-text-muted text-sm">Ozveme se ti co nejdříve, zpravidla do 24 hodin.</p>
+                  <p className="text-text-base font-semibold">{t("sentTitle")}</p>
+                  <p className="text-text-muted text-sm">{t("sentDesc")}</p>
                 </div>
               ) : (
                 <div className="flex flex-col gap-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-text-muted text-xs font-medium mb-1.5">Jméno *</label>
-                      <input value={name} onChange={e => setName(e.target.value)} placeholder="Jan Novák"
+                      <label className="block text-text-muted text-xs font-medium mb-1.5">{t("nameLabel")}</label>
+                      <input value={name} onChange={e => setName(e.target.value)} placeholder={t("namePlaceholder")} aria-label={t("nameLabel")}
                         className="w-full border border-border rounded-xl px-4 py-2.5 text-sm text-text-base placeholder-text-subtle focus:outline-none focus:border-primary/50 transition-colors bg-surface" />
                     </div>
                     <div>
-                      <label className="block text-text-muted text-xs font-medium mb-1.5">E-mail *</label>
-                      <input value={email} onChange={e => setEmail(e.target.value)} placeholder="jan@email.cz"
+                      <label className="block text-text-muted text-xs font-medium mb-1.5">{t("emailLabel")}</label>
+                      <input value={email} onChange={e => setEmail(e.target.value)} placeholder={t("emailPlaceholder")} aria-label={t("emailLabel")}
                         className="w-full border border-border rounded-xl px-4 py-2.5 text-sm text-text-base placeholder-text-subtle focus:outline-none focus:border-primary/50 transition-colors bg-surface" />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-text-muted text-xs font-medium mb-1.5">Zpráva *</label>
+                    <label className="block text-text-muted text-xs font-medium mb-1.5">{t("messageLabel")}</label>
                     <textarea value={message} onChange={e => setMessage(e.target.value)}
-                      placeholder="Jak ti můžeme pomoci?"
+                      placeholder={t("messagePlaceholder")} aria-label={t("messageLabel")}
                       rows={6}
                       className="w-full border border-border rounded-xl px-4 py-3 text-sm text-text-base placeholder-text-subtle focus:outline-none focus:border-primary/50 transition-colors resize-none bg-surface" />
                   </div>
@@ -135,8 +140,8 @@ export default function KontaktPage() {
                         : "bg-primary text-on-primary hover:brightness-105 active:scale-[0.98]"
                     }`}
                   >
-                    <Send size={14} />
-                    Odeslat zprávu
+                    <Send size={14} aria-hidden="true" />
+                    {t("submit")}
                   </button>
                 </div>
               )}
