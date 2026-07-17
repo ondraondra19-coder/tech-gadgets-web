@@ -8,70 +8,28 @@ import {
     ShieldCheck, Clock, CheckCircle2, ArrowRight,
     HelpCircle, Banknote, Send, AlertCircle,
 } from "lucide-react";
+import { useT, type T } from "@/lib/useT";
 
 // ── Data ──────────────────────────────────────────────────────────────────────
 
-const steps = [
-    {
-        num: 1,
-        tag: "Příprava",
-        tagColor: "text-primary-ink bg-primary/10",
-        title: "Vyplňte reklamační formulář",
-        desc: "Popište závadu co nejpodrobněji a přiložte fotografie poškození. Formulář naleznete níže na stránce nebo nás kontaktujte e-mailem.",
-    },
-    {
-        num: 2,
-        tag: "Odeslání",
-        tagColor: "text-primary-ink bg-primary/10",
-        title: "Zašlete nám zboží",
-        desc: "Zabalte zboží do původního nebo dostatečně pevného obalu. Přiložte vytištěný formulář a doklad o koupi (stačí kopie). Zásilku pošlete na naši adresu.",
-    },
-    {
-        num: 3,
-        tag: "Zpracování",
-        tagColor: "text-primary-ink bg-primary/10",
-        title: "Posoudíme reklamaci",
-        desc: "Do 3 pracovních dnů od přijetí zásilky vás e-mailem informujeme o stavu reklamace. Zákonná lhůta pro vyřízení je 30 dní.",
-    },
-    {
-        num: 4,
-        tag: "Vyřízení",
-        tagColor: "text-primary-ink bg-primary/10",
-        title: "Oprava, výměna nebo vrácení peněz",
-        desc: "Po uznání reklamace zvolíte preferovaný způsob vyřízení — opravený nebo nový kus zašleme zpět, případně vrátíme celou částku.",
-    },
-];
+function buildSteps(t: T) {
+    const tagColor = "text-primary-ink bg-primary/10";
+    return [
+        { num: 1, tag: t("step1Tag"), tagColor, title: t("step1Title"), desc: t("step1Desc") },
+        { num: 2, tag: t("step2Tag"), tagColor, title: t("step2Title"), desc: t("step2Desc") },
+        { num: 3, tag: t("step3Tag"), tagColor, title: t("step3Title"), desc: t("step3Desc") },
+        { num: 4, tag: t("step4Tag"), tagColor, title: t("step4Title"), desc: t("step4Desc") },
+    ];
+}
 
-const returnMethods = [
-    {
-        icon: Package,
-        title: "Vrácení přes Zásilkovnu",
-        desc: "Zboží podejte na nejbližší pobočce Zásilkovny. Štítek vám zašleme e-mailem zdarma po odeslání žádosti.",
-        isFree: true,
-        freeNote: "Štítek zašleme e-mailem",
-    },
-    {
-        icon: Home,
-        title: "Osobní předání v Praze",
-        desc: "Přineste zboží osobně na naši pobočku na Václavském náměstí. Vyřídíme vše okamžitě na místě.",
-        isFree: true,
-        freeNote: "Václavské nám. 1, Praha 1",
-    },
-    {
-        icon: MapPin,
-        title: "Zaslání vlastním přepravcem",
-        desc: "Zboží zašlete libovolnou přepravní službou na naši adresu. Doporučujeme pojistit zásilku na hodnotu zboží.",
-        isFree: false,
-        freeNote: "",
-    },
-    {
-        icon: ShoppingCart,
-        title: "Vrácení v rámci 14 dní",
-        desc: "Zboží koupené online lze vrátit bez udání důvodu do 14 dnů. Zboží musí být nepoužité a v originálním obalu.",
-        isFree: true,
-        freeNote: "Zákonné právo spotřebitele",
-    },
-];
+function buildReturnMethods(t: T) {
+    return [
+        { icon: Package,      title: t("return1Title"), desc: t("return1Desc"), isFree: true,  freeNote: t("return1Note") },
+        { icon: Home,         title: t("return2Title"), desc: t("return2Desc"), isFree: true,  freeNote: t("return2Note") },
+        { icon: MapPin,       title: t("return3Title"), desc: t("return3Desc"), isFree: false, freeNote: "" },
+        { icon: ShoppingCart, title: t("return4Title"), desc: t("return4Desc"), isFree: true,  freeNote: t("return4Note") },
+    ];
+}
 
 // ── Typy formuláře ────────────────────────────────────────────────────────────
 
@@ -177,6 +135,9 @@ function SelectField({
 // ── Stránka ───────────────────────────────────────────────────────────────────
 
 export default function ReklamaceAVraceniPage() {
+    const t = useT("claims");
+    const steps = buildSteps(t);
+    const returnMethods = buildReturnMethods(t);
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [ticketNumber] = useState(() => Math.floor(Math.random() * 90000) + 10000);
     const [form, setForm] = useState<FormState>(defaultForm);
@@ -190,14 +151,14 @@ export default function ReklamaceAVraceniPage() {
 
     function validate() {
         const e: Partial<Record<keyof FormState, string>> = {};
-        if (!form.jmeno.trim()) e.jmeno = "Vyplňte jméno a příjmení";
-        if (!form.email.trim()) e.email = "Vyplňte e-mail";
-        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = "Neplatný formát e-mailu";
-        if (!form.telefon.trim()) e.telefon = "Vyplňte telefonní číslo";
-        if (!form.cisloObjednavky.trim()) e.cisloObjednavky = "Vyplňte číslo objednávky";
-        if (!form.typZadosti) e.typZadosti = "Vyberte typ žádosti";
-        if (!form.zpusobVyrizeni) e.zpusobVyrizeni = "Vyberte způsob vyřízení";
-        if (!form.popis.trim()) e.popis = "Popište závadu nebo důvod vrácení";
+        if (!form.jmeno.trim()) e.jmeno = t("errName");
+        if (!form.email.trim()) e.email = t("errEmail");
+        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = t("errEmailFormat");
+        if (!form.telefon.trim()) e.telefon = t("errPhone");
+        if (!form.cisloObjednavky.trim()) e.cisloObjednavky = t("errOrderNumber");
+        if (!form.typZadosti) e.typZadosti = t("errRequestType");
+        if (!form.zpusobVyrizeni) e.zpusobVyrizeni = t("errResolution");
+        if (!form.popis.trim()) e.popis = t("errDescription");
         return e;
     }
 
@@ -237,21 +198,20 @@ export default function ReklamaceAVraceniPage() {
 
                     <div className="max-w-screen-2xl mx-auto px-6 lg:px-12 py-14 lg:py-20 relative z-10">
                         <nav className="flex items-center gap-2 text-xs text-white/30 mb-8">
-                            <a href="/" className="hover:text-white/60 transition-colors">Domů</a>
-                            <ChevronRight size={11} />
-                            <span className="text-white/60">Reklamace a vrácení zboží</span>
+                            <a href="/" className="hover:text-white/60 transition-colors">{t("home")}</a>
+                            <ChevronRight size={11} aria-hidden="true" />
+                            <span className="text-white/60">{t("breadcrumb")}</span>
                         </nav>
 
                         <div className="max-w-2xl">
                             <p className="text-primary-ink text-xs font-bold uppercase tracking-[0.18em] mb-4">
-                                Zákaznický servis
+                                {t("eyebrow")}
                             </p>
                             <h1 className="text-4xl sm:text-5xl font-extrabold text-white leading-tight tracking-tight mb-5">
-                                Reklamace &amp; vrácení<br />zboží
+                                {t("title")}
                             </h1>
                             <p className="text-white/50 text-base leading-relaxed">
-                                Vaše spokojenost je pro nás priorita. Poradíme vám, jak rychle
-                                a jednoduše reklamovat nebo vrátit zakoupené zboží.
+                                {t("intro")}
                             </p>
                         </div>
                     </div>
@@ -261,7 +221,7 @@ export default function ReklamaceAVraceniPage() {
 
                     {/* ── Kroky ── */}
                     <section className="mb-16">
-                        <SectionLabel>Jak postupovat</SectionLabel>
+                        <SectionLabel>{t("howToEyebrow")}</SectionLabel>
                         <h2 className="text-2xl font-extrabold text-text-base tracking-tight mb-10">
                             Reklamace krok za krokem
                         </h2>
@@ -291,7 +251,7 @@ export default function ReklamaceAVraceniPage() {
 
                     {/* ── Způsoby vrácení ── */}
                     <section className="mb-16">
-                        <SectionLabel>Vrácení zboží</SectionLabel>
+                        <SectionLabel>{t("returnsEyebrow")}</SectionLabel>
                         <h2 className="text-2xl font-extrabold text-text-base tracking-tight mb-8">
                             Způsoby a podmínky vrácení
                         </h2>
@@ -325,7 +285,7 @@ export default function ReklamaceAVraceniPage() {
 
                     {/* ── Reklamační formulář ── */}
                     <section className="mb-16" id="formular">
-                        <SectionLabel>Online žádost</SectionLabel>
+                        <SectionLabel>{t("formEyebrow")}</SectionLabel>
                         <h2 className="text-2xl font-extrabold text-text-base tracking-tight mb-8">
                             Reklamační formulář
                         </h2>
@@ -334,19 +294,19 @@ export default function ReklamaceAVraceniPage() {
                             {!isSubmitted ? (
                                 <form className="p-8 lg:p-10 grid grid-cols-1 md:grid-cols-2 gap-6" onSubmit={handleSubmit} noValidate>
                                     <div className="space-y-4">
-                                        <h3 className="text-sm font-bold text-text-base uppercase tracking-wider mb-2">Osobní údaje</h3>
+                                        <h3 className="text-sm font-bold text-text-base uppercase tracking-wider mb-2">{t("personalHeading")}</h3>
                                         <Field
-                                            label="Jméno a příjmení" name="jmeno" value={form.jmeno}
-                                            onChange={handleChange} placeholder="Jan Novák"
+                                            label={t("fullName")} name="jmeno" value={form.jmeno}
+                                            onChange={handleChange} placeholder={t("namePlaceholder")}
                                             error={errors.jmeno} required
                                         />
                                         <Field
-                                            label="E-mail" name="email" type="email" value={form.email}
+                                            label={t("email")} name="email" type="email" value={form.email}
                                             onChange={handleChange} placeholder="jan.novak@priklad.cz"
                                             error={errors.email} required
                                         />
                                         <Field
-                                            label="Telefon" name="telefon" type="tel" value={form.telefon}
+                                            label={t("phone")} name="telefon" type="tel" value={form.telefon}
                                             onChange={handleChange} placeholder="+420 123 456 789"
                                             error={errors.telefon} required
                                         />
@@ -355,29 +315,29 @@ export default function ReklamaceAVraceniPage() {
                                     <div className="space-y-4">
                                         <h3 className="text-sm font-bold text-text-base uppercase tracking-wider mb-2">Informace o zboží</h3>
                                         <Field
-                                            label="Číslo objednávky" name="cisloObjednavky" value={form.cisloObjednavky}
+                                            label={t("orderNumber")} name="cisloObjednavky" value={form.cisloObjednavky}
                                             onChange={handleChange} placeholder="TG-2024-XXXX"
                                             error={errors.cisloObjednavky} required
                                         />
                                         <SelectField
-                                            label="Typ žádosti" name="typZadosti" value={form.typZadosti}
+                                            label={t("requestType")} name="typZadosti" value={form.typZadosti}
                                             onChange={handleChange}
                                             options={[
-                                                { value: "", label: "Vyberte typ..." },
-                                                { value: "reklamace", label: "Reklamace závady" },
-                                                { value: "vraceni", label: "Vrácení zboží v 14denní lhůtě" },
-                                                { value: "vymena", label: "Výměna zboží" },
+                                                { value: "", label: t("pickType") },
+                                                { value: "reklamace", label: t("typeDefect") },
+                                                { value: "vraceni", label: t("typeReturn") },
+                                                { value: "vymena", label: t("typeExchange") },
                                             ]}
                                             error={errors.typZadosti} required
                                         />
                                         <SelectField
-                                            label="Preferovaný způsob vyřízení" name="zpusobVyrizeni" value={form.zpusobVyrizeni}
+                                            label={t("resolution")} name="zpusobVyrizeni" value={form.zpusobVyrizeni}
                                             onChange={handleChange}
                                             options={[
-                                                { value: "", label: "Vyberte způsob..." },
-                                                { value: "oprava", label: "Oprava / Výměna za nový kus" },
-                                                { value: "penize", label: "Vrácení peněz na účet" },
-                                                { value: "sleva", label: "Sleva z kupní ceny" },
+                                                { value: "", label: t("pickResolution") },
+                                                { value: "oprava", label: t("resolutionRepair") },
+                                                { value: "penize", label: t("resolutionRefund") },
+                                                { value: "sleva", label: t("resolutionDiscount") },
                                             ]}
                                             error={errors.zpusobVyrizeni} required
                                         />
@@ -386,7 +346,7 @@ export default function ReklamaceAVraceniPage() {
                                     <div className="md:col-span-2 space-y-4">
                                         <div>
                                             <label className="block text-xs font-bold text-text-muted mb-1.5 uppercase tracking-wide">
-                                                Popis závady / Důvod vrácení *
+                                                {t("descriptionLabel")} <span aria-hidden="true">*</span>
                                             </label>
                                             <div className={`border rounded-xl overflow-hidden transition-colors ${
                                                 errors.popis ? "border-red-400" : "border-border focus-within:border-primary/50"
@@ -396,7 +356,7 @@ export default function ReklamaceAVraceniPage() {
                                                     value={form.popis}
                                                     onChange={handleChange}
                                                     rows={4}
-                                                    placeholder="Popište prosím co nejpodrobněji, co se s produktem děje..."
+                                                    placeholder={t("descriptionPlaceholder")}
                                                     className="w-full px-4 py-3 bg-surface text-sm focus:outline-none resize-none text-text-base placeholder-text-subtle"
                                                 />
                                             </div>
@@ -436,10 +396,10 @@ export default function ReklamaceAVraceniPage() {
                                                 </div>
                                                 <div>
                                                     <h3 className="text-xl font-extrabold text-text-base mb-1 leading-tight">
-                                                        Žádost byla úspěšně odeslána
+                                                        {t("sentTitle")}
                                                     </h3>
                                                     <p className="text-text-muted text-sm">
-                                                        Potvrzení jsme zaslali na váš e-mail.
+                                                        {t("sentDesc")}
                                                     </p>
                                                 </div>
                                             </div>
@@ -447,7 +407,7 @@ export default function ReklamaceAVraceniPage() {
                                             {/* Ticket info card */}
                                             <div className="bg-surface rounded-2xl border border-border p-6">
                                                 <div className="flex items-center justify-between mb-5">
-                                                    <p className="text-xs font-bold text-text-subtle uppercase tracking-widest">Číslo žádosti</p>
+                                                    <p className="text-xs font-bold text-text-subtle uppercase tracking-widest">{t("ticketNumber")}</p>
                                                     <span className="px-3 py-1 rounded-full bg-primary/10 text-primary-ink text-xs font-extrabold tracking-wide">
                                                         TG-{ticketNumber}
                                                     </span>
@@ -483,12 +443,12 @@ export default function ReklamaceAVraceniPage() {
                                         {/* Pravý sloupec: kroky + akce */}
                                         <div className="flex flex-col gap-6 justify-between">
                                             <div>
-                                                <p className="text-xs font-bold text-text-subtle uppercase tracking-widest mb-4">Co bude dál?</p>
+                                                <p className="text-xs font-bold text-text-subtle uppercase tracking-widest mb-4">{t("whatsNext")}</p>
                                                 <div className="space-y-4">
                                                     {[
-                                                        { title: "Zkontrolujte e-mail", desc: "Potvrzení dorazí během pár minut na váš e-mail." },
-                                                        { title: "Zabalte zboží", desc: "Přiložte kopii dokladu o koupi do zásilky." },
-                                                        { title: "Odešlete zásilku", desc: "Zašlete ji dle zvoleného způsobu dopravy na naši adresu." },
+                                                        { title: t("next1Title"), desc: t("next1Desc") },
+                                                        { title: t("next2Title"), desc: t("next2Desc") },
+                                                        { title: t("next3Title"), desc: t("next3Desc") },
                                                     ].map((item, i) => (
                                                         <div key={i} className="flex items-start gap-4">
                                                             <span className="shrink-0 mt-0.5 w-7 h-7 rounded-full bg-primary/10 text-primary-ink text-xs font-extrabold flex items-center justify-center">
@@ -508,8 +468,8 @@ export default function ReklamaceAVraceniPage() {
                                                     href="/kontakt"
                                                     className="w-full sm:w-auto px-6 py-3 rounded-full bg-primary text-on-primary font-extrabold text-sm hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-lg shadow-primary/10"
                                                 >
-                                                    Kontaktovat podporu
-                                                    <ArrowRight size={14} />
+                                                    {t("contactSupport")}
+                                                    <ArrowRight size={14} aria-hidden="true" />
                                                 </a>
                                                 <button
                                                     onClick={() => {
@@ -574,9 +534,9 @@ export default function ReklamaceAVraceniPage() {
                         <HelpCircle className="absolute -bottom-10 -left-10 w-48 h-48 text-white/[0.03]" />
 
                         <div className="relative z-10">
-                            <p className="text-white font-extrabold text-2xl mb-2">Potřebujete pomoc s reklamací?</p>
+                            <p className="text-white font-extrabold text-2xl mb-2">{t("ctaTitle")}</p>
                             <p className="text-white/70 text-sm">
-                                Rádi poradíme — Po–Pá 9–18 h, So 10–14 h.
+                                {t("ctaDesc")}
                             </p>
                         </div>
 
@@ -584,8 +544,8 @@ export default function ReklamaceAVraceniPage() {
                             href="/kontakt"
                             className="relative z-10 shrink-0 inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-primary text-on-primary font-bold text-sm hover:brightness-110 active:scale-[0.97] transition-all shadow-lg shadow-primary/20"
                         >
-                            Kontaktovat nás
-                            <ArrowRight size={15} />
+                            {t("ctaButton")}
+                            <ArrowRight size={15} aria-hidden="true" />
                         </a>
                     </div>
 
