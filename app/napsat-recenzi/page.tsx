@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Star, ChevronRight, Send, Check, AlertCircle, ChevronDown } from "lucide-react";
+import { useT } from "@/lib/useT";
+import { LOCALE_TAGS, type Locale } from "@/lib/locale";
 
 const HCAPTCHA_SITE_KEY = "d5505d72-aa1a-4b50-a746-a1b0175c9092";
 // Poznámka: cooldown se nyní vynucuje na serveru (podle IP) přes Upstash Redis.
@@ -24,9 +26,9 @@ type Review = {
   text: string;
 };
 
-function formatDate(iso: string): string {
+function formatDate(iso: string, locale: Locale): string {
   try {
-    return new Date(iso).toLocaleDateString("cs-CZ", { day: "numeric", month: "numeric", year: "numeric" });
+    return new Date(iso).toLocaleDateString(LOCALE_TAGS[locale], { day: "numeric", month: "numeric", year: "numeric" });
   } catch {
     return iso;
   }
@@ -46,6 +48,7 @@ function calcStats(reviews: Review[]) {
 
 // ── Single review card with 4-line clamp ─────────────────────────────────────
 function ReviewCard({ review }: { review: Review }) {
+  const t = useT("review");
   const [expanded, setExpanded] = useState(false);
   const isLong = review.text.length > 200;
 
@@ -62,7 +65,7 @@ function ReviewCard({ review }: { review: Review }) {
               <Star key={i} size={12} className={i < review.rating ? "fill-primary text-primary-ink" : "fill-border text-border"} />
             ))}
           </div>
-          <span className="text-text-subtle text-xs">{formatDate(review.date)}</span>
+          <span className="text-text-subtle text-xs">{formatDate(review.date, t.locale)}</span>
         </div>
         <p className={`text-text-muted text-sm mt-2 leading-relaxed ${!expanded && isLong ? "line-clamp-4" : ""}`}>
           {review.text}
@@ -72,7 +75,7 @@ function ReviewCard({ review }: { review: Review }) {
             onClick={() => setExpanded(v => !v)}
             className="mt-1.5 text-xs text-primary-ink hover:underline flex items-center gap-1"
           >
-            {expanded ? "Zobrazit méně" : "Zobrazit více"}
+            {expanded ? t("showLess") : t("showMore")}
             <ChevronDown size={11} className={`transition-transform duration-200 ${expanded ? "rotate-180" : ""}`} />
           </button>
         )}
@@ -92,6 +95,8 @@ declare global {
 }
 
 export default function RecenzePage() {
+  const t = useT("review");
+  const tr = useT("rating");
   const [reviews, setReviews] = useState<Review[]>([]);
   const [visibleCount, setVisibleCount] = useState(INITIAL_SHOW);
 
@@ -161,6 +166,23 @@ export default function RecenzePage() {
   const charsLeft = MAX_CHARS - text.length;
   const canSubmit = !!rating && !!name.trim() && !!text.trim() && !!captchaToken && !cooldownLeft && text.length <= MAX_CHARS;
 
+  // API vrací kód, ne hotovou větu — text se vybírá tady podle jazyka.
+  function messageForCode(code: unknown, hours: unknown, minutes: unknown): string {
+    switch (code) {
+      case "invalid_name":     return t("errName");
+      case "invalid_text":     return t("errText");
+      case "invalid_rating":   return t("errRating");
+      case "invalid_email":    return t("errEmail");
+      case "captcha_missing":  return t("errCaptchaMissing");
+      case "captcha_failed":   return t("errCaptchaFailed");
+      case "cooldown":         return t("errCooldown", {
+        hours: typeof hours === "number" ? hours : 23,
+        minutes: typeof minutes === "number" ? minutes : 59,
+      });
+      default:                 return t("errFailed");
+    }
+  }
+
   async function handleSubmit() {
     if (!canSubmit || submitting) return;
     setSubmitting(true);
@@ -175,7 +197,7 @@ export default function RecenzePage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setSubmitError(data.error ?? "Nepodařilo se odeslat recenzi.");
+        setSubmitError(messageForCode(data?.code, data?.hours, data?.minutes));
         setCaptchaToken(null);
         if (captchaId !== null && window.hcaptcha) window.hcaptcha.reset(captchaId);
         return;
@@ -197,7 +219,7 @@ export default function RecenzePage() {
         setCooldownLeft("23h 59min");
       }, 3000);
     } catch {
-      setSubmitError("Nepodařilo se odeslat recenzi. Zkuste to prosím znovu.");
+      setSubmitError(t("errNetwork"));
     } finally {
       setSubmitting(false);
     }
@@ -214,12 +236,12 @@ export default function RecenzePage() {
 
           {/* Breadcrumb */}
           <nav className="flex items-center gap-2 text-xs text-text-subtle mb-8">
-            <a href="/" className="hover:text-text-muted transition-colors">Domů</a>
+            <a href="/" className="hover:text-text-muted transition-colors">{t("home")}</a>
             <ChevronRight size={12} className="text-border" />
             <span className="text-text-muted">Hodnocení obchodu</span>
           </nav>
 
-          <h1 className="text-3xl font-extrabold text-text-base mb-8">Hodnocení obchodu</h1>
+          <h1 className="text-3xl font-extrabold text-text-base mb-8">{tr("title")}</h1>
 
           {/* Souhrn */}
           {reviews.length > 0 && (
@@ -243,7 +265,7 @@ export default function RecenzePage() {
                     );
                   })}
                 </div>
-                <span className="text-text-subtle text-xs mt-1.5">{stats.total} hodnocení</span>
+                <span className="text-text-subtle text-xs mt-1.5">{tr.plural(stats.total, "count")}</span>
               </div>
               <div className="flex-1 w-full flex flex-col gap-2">
                 {stats.distribution.map((d) => (
@@ -266,13 +288,16 @@ export default function RecenzePage() {
 
           {/* Formulář */}
           <div className="bg-white rounded-2xl shadow-sm p-6 mb-6">
-            <h2 className="text-text-base font-semibold text-base mb-5">Napsat recenzi</h2>
+            <h2 className="text-text-base font-semibold text-base mb-5">{tr("writeReview")}</h2>
 
             {cooldownLeft && (
               <div className="flex items-center gap-3 p-4 rounded-xl bg-amber-50 border border-amber-200">
-                <AlertCircle size={16} className="text-amber-500 shrink-0" />
+                <AlertCircle size={16} className="text-amber-500 shrink-0" aria-hidden="true" />
                 <p className="text-amber-700 text-sm">
-                  Další recenzi můžete napsat za <strong>{cooldownLeft}</strong>.
+                  {(() => {
+                    const [before, after] = t("cooldownBanner").split("{time}");
+                    return <>{before}<strong>{cooldownLeft}</strong>{after}</>;
+                  })()}
                 </p>
               </div>
             )}
@@ -284,17 +309,17 @@ export default function RecenzePage() {
                     <Check size={22} className="text-green-600" />
                   </div>
                   <p className="text-text-base font-semibold">Děkujeme za recenzi!</p>
-                  <p className="text-text-muted text-sm">Vaše hodnocení bylo přidáno.</p>
+                  <p className="text-text-muted text-sm">{t("sentDesc")}</p>
                 </div>
               ) : (
                 <div className="flex flex-col gap-4">
                   {/* Hvězdičky */}
                   <div>
-                    <label className="block text-text-muted text-xs font-medium mb-2">Vaše hodnocení *</label>
+                    <label className="block text-text-muted text-xs font-medium mb-2">{t("ratingLabel")} <span aria-hidden="true">*</span></label>
                     {/* Hvězdičky jsou výběr jedné hodnoty z pěti — radiogroup to
                         čtečce sdělí i s pořadím ("3 z 5"). Bez aria-labelu to byla
                         pětice nepojmenovaných tlačítek. */}
-                    <div className="flex items-center gap-1" role="radiogroup" aria-label="Hodnocení hvězdičkami">
+                    <div className="flex items-center gap-1" role="radiogroup" aria-label={t("starsLabel")}>
                       {Array.from({ length: 5 }).map((_, i) => (
                         <button key={i}
                           onMouseEnter={() => setHovered(i + 1)}
@@ -302,7 +327,7 @@ export default function RecenzePage() {
                           onClick={() => setRating(i + 1)}
                           role="radio"
                           aria-checked={rating === i + 1}
-                          aria-label={`${i + 1} ${i === 0 ? "hvězdička" : i < 4 ? "hvězdičky" : "hvězdiček"}`}
+                          aria-label={t.plural(i + 1, "star")}
                           className="w-11 h-11 flex items-center justify-center transition-transform hover:scale-110"
                         >
                           <Star size={28} aria-hidden="true" className={i < (hovered || rating) ? "fill-primary text-primary-ink" : "fill-border text-border"} />
@@ -310,7 +335,7 @@ export default function RecenzePage() {
                       ))}
                       {rating > 0 && (
                         <span className="ml-2 text-text-muted text-sm">
-                          {["", "Velmi špatné", "Špatné", "Průměrné", "Dobré", "Výborné"][rating]}
+                          {[t("rate1"), t("rate2"), t("rate3"), t("rate4"), t("rate5")][rating - 1]}
                         </span>
                       )}
                     </div>
@@ -319,12 +344,12 @@ export default function RecenzePage() {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-text-muted text-xs font-medium mb-1.5">Jméno *</label>
-                      <input value={name} onChange={e => setName(e.target.value)} placeholder="Jan Novák"
+                      <input value={name} onChange={e => setName(e.target.value)} placeholder={t("namePlaceholder")}
                         className="w-full bg-surface border border-border rounded-xl px-4 py-2.5 text-sm text-text-base placeholder-text-subtle focus:outline-none focus:border-primary/50 transition-colors" />
                     </div>
                     <div>
-                      <label className="block text-text-muted text-xs font-medium mb-1.5">E-mail</label>
-                      <input value={email} onChange={e => setEmail(e.target.value)} placeholder="jan@email.cz"
+                      <label htmlFor="review-email" className="block text-text-muted text-xs font-medium mb-1.5">{t("emailLabel")}</label>
+                      <input id="review-email" value={email} onChange={e => setEmail(e.target.value)} placeholder={t("emailPlaceholder")}
                         className="w-full bg-surface border border-border rounded-xl px-4 py-2.5 text-sm text-text-base placeholder-text-subtle focus:outline-none focus:border-primary/50 transition-colors" />
                     </div>
                   </div>
@@ -340,7 +365,7 @@ export default function RecenzePage() {
                     <textarea
                       value={text}
                       onChange={e => { if (e.target.value.length <= MAX_CHARS) setText(e.target.value); }}
-                      placeholder="Jak jste byli spokojeni s objednávkou, doručením nebo produktem?"
+                      placeholder={t("textPlaceholder")}
                       rows={4}
                       maxLength={MAX_CHARS}
                       className={`w-full bg-surface border rounded-xl px-4 py-3 text-sm text-text-base placeholder-text-subtle focus:outline-none transition-colors resize-none ${
@@ -357,7 +382,7 @@ export default function RecenzePage() {
                     )}
                     {captchaToken && (
                       <p className="flex items-center gap-1.5 text-green-600 text-xs mt-1.5">
-                        <Check size={12} /> Ověření proběhlo úspěšně
+                        <Check size={12} aria-hidden="true" /> {t("captchaOk")}
                       </p>
                     )}
                   </div>
@@ -376,7 +401,7 @@ export default function RecenzePage() {
                         : "bg-primary text-on-primary hover:brightness-105 active:scale-[0.98]"
                     }`}>
                     <Send size={14} />
-                    {submitting ? "Odesílám…" : "Odeslat hodnocení"}
+                    {submitting ? t("submitting") : t("submit")}
                   </button>
                 </div>
               )
@@ -387,7 +412,7 @@ export default function RecenzePage() {
           {reviews.length > 0 ? (
             <div className="bg-white rounded-2xl shadow-sm px-6 py-2">
               <h2 className="text-text-base font-semibold text-base py-4 border-b border-border">
-                Výpis hodnocení
+                {t("listTitle")}
                 <span className="text-text-subtle font-normal text-sm ml-2">({stats.total} celkem)</span>
               </h2>
 
