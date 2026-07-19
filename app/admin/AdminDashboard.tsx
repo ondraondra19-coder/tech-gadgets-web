@@ -251,7 +251,7 @@ export default function AdminDashboard({
                 alt="SLINGR"
                 width={500}
                 height={150}
-                className="h-8 w-auto object-contain"
+                className="h-12 w-auto object-contain"
                 priority
               />
               <span className="text-[9px] font-mono font-medium bg-white/10 text-zinc-400 px-1 py-0.5 rounded uppercase tracking-wider">
