@@ -8,12 +8,12 @@ import CategoryGrid from "@/components/CategoryGrid";
 import InfoGrid from "@/components/InfoGrid";
 import BlogPreview from "@/components/BlogPreview";
 import Footer from "@/components/Footer";
-import { getProductsWithPriceOverrides } from "@/lib/priceOverrides";
+import { getProductsForDisplay } from "@/lib/productDiscounts";
 
 export const revalidate = 180;
 
 export default async function Home() {
-  const products = await getProductsWithPriceOverrides();
+  const products = await getProductsForDisplay();
 
   return (
     <main className="min-h-screen bg-dark">

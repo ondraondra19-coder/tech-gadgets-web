@@ -9,11 +9,11 @@
 // maximálně jednou za 3 minuty CELKOVĚ (napříč všemi návštěvníky), ne
 // při každém načtení stránky/otevření vyhledávání.
 import { NextResponse } from "next/server";
-import { getProductsWithPriceOverrides } from "@/lib/priceOverrides";
+import { getProductsForDisplay } from "@/lib/productDiscounts";
 
 export async function GET() {
   try {
-    const products = await getProductsWithPriceOverrides();
+    const products = await getProductsForDisplay();
     return NextResponse.json(
       { products },
       { headers: { "Cache-Control": "public, s-maxage=180, stale-while-revalidate=60" } },

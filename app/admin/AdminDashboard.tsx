@@ -41,6 +41,7 @@ type AdminDashboardProps = {
   initialAccounts: PublicAccount[];
   initialDiscounts: Discount[];
   products: Product[];
+  productDiscounts: Record<string, number>;
   initialStock: Record<string, number>;
 };
 
@@ -50,6 +51,7 @@ export default function AdminDashboard({
   initialAccounts,
   initialDiscounts,
   products,
+  productDiscounts,
   initialStock
 }: AdminDashboardProps) {
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
@@ -422,7 +424,7 @@ export default function AdminDashboard({
                 )}
 
                 {activeTab === 'products' && (
-                  <ProductsAdminList products={products} stock={initialStock} initialQuery={productsQuery} />
+                  <ProductsAdminList products={products} stock={initialStock} discounts={productDiscounts} initialQuery={productsQuery} />
                 )}
 
                 {activeTab === 'reviews' && (

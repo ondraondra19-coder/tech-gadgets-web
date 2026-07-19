@@ -3,6 +3,7 @@ import { getAllReviews } from "@/lib/reviews";
 import { getAllAccounts, toPublicAccount } from "@/lib/accounts";
 import { getCurrentSession } from "@/lib/session";
 import { getProductsWithPriceOverrides } from "@/lib/priceOverrides";
+import { getProductDiscounts } from "@/lib/productDiscounts";
 import { getStockMap } from "@/lib/stock";
 import { getAllDiscounts } from "@/lib/discountsStore";
 import AdminDashboard from "./AdminDashboard";
@@ -23,8 +24,10 @@ export default async function AdminPage() {
   const discounts = canSeeDiscounts ? await getAllDiscounts() : [];
 
   // Katalog s aplikovanými přepisy cen z admina — ProductsAdminList tak
-  // rovnou vidí aktuální (ne jen katalogovou) cenu.
+  // rovnou vidí aktuální (ne jen katalogovou) cenu. Slevy se posílají zvlášť
+  // jako mapa (klíč → procento), ať editor ukáže původní cenu i zlevněnou.
   const products = await getProductsWithPriceOverrides();
+  const productDiscounts = await getProductDiscounts();
 
   // Načtení real-time skladu z Google Sheets a konverze Mapy na čistý JSON objekt
   const stockMap = await getStockMap();
@@ -37,6 +40,7 @@ export default async function AdminPage() {
       initialAccounts={accounts}
       initialDiscounts={discounts}
       products={products}
+      productDiscounts={productDiscounts}
       initialStock={serializedStock}
     />
   );

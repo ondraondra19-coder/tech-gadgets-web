@@ -227,8 +227,15 @@ function ConfidentCard({
       </div>
 
       <div className="flex flex-col items-end gap-2 shrink-0">
-        <span className="text-primary font-bold text-lg">
-          {formatPrice(getPrice(product.price, currency), currency)}
+        <span className="flex items-baseline gap-1.5">
+          <span className="text-primary font-bold text-lg">
+            {formatPrice(getPrice(product.price, currency), currency)}
+          </span>
+          {product.discountPercent && product.originalPrice && (
+            <span className="text-white/40 line-through text-xs font-medium">
+              {formatPrice(getPrice(product.originalPrice, currency), currency)}
+            </span>
+          )}
         </span>
         <ArrowUpRight
           size={16}
@@ -459,8 +466,15 @@ export default function SearchBar() {
                           </p>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
-                          <span className="text-primary font-bold text-sm">
-                            {formatPrice(getPrice(product.price, currency), currency)}
+                          <span className="flex items-baseline gap-1.5">
+                            <span className="text-primary font-bold text-sm">
+                              {formatPrice(getPrice(product.price, currency), currency)}
+                            </span>
+                            {product.discountPercent && product.originalPrice && (
+                              <span className="text-white/40 line-through text-[11px] font-medium">
+                                {formatPrice(getPrice(product.originalPrice, currency), currency)}
+                              </span>
+                            )}
                           </span>
                           <ArrowUpRight
                             size={14}

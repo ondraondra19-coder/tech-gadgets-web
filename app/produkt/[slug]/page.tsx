@@ -2,7 +2,7 @@
 // Server Component — fetchuje produkt + skladovost, předá client komponentě
 
 import { products as staticProducts } from "@/lib/products";
-import { getProductsWithPriceOverrides } from "@/lib/priceOverrides";
+import { getProductsForDisplay } from "@/lib/productDiscounts";
 import { getProductStock } from "@/lib/stock";
 import { notFound } from "next/navigation";
 import Header from "@/components/Header";
@@ -24,7 +24,7 @@ export default async function ProduktPage({
   const { slug } = await params;
 
   // Katalog s aplikovanými přepisy cen z admina.
-  const products = await getProductsWithPriceOverrides();
+  const products = await getProductsForDisplay();
 
   const product = products.find((p) => p.slug === slug);
   if (!product) notFound();

@@ -25,10 +25,27 @@ function priceEquals(a: { CZK: number; EUR?: number; USD?: number }, b: { CZK: n
 type ProductsAdminListProps = {
   products: Product[];
   stock: Record<string, number>;
+  // Slevy: klíč "slug" nebo "slug::modelId" → procento slevy. Z něj + základní
+  // ceny se v editoru dopočítá zlevněná cena, kterou admin může přímo přepsat.
+  discounts: Record<string, number>;
   initialQuery?: string;
 };
 
-export default function ProductsAdminList({ products, stock, initialQuery }: ProductsAdminListProps) {
+// Z procenta slevy a základní CZK ceny dopočítá zlevněnou cenu (zaokrouhlenou
+// na celé koruny). 0 = bez slevy.
+function saleFromPercent(baseCZK: number, percent: number | undefined): number {
+  if (!percent || percent < 1 || baseCZK <= 0) return 0;
+  return Math.max(0, Math.round(baseCZK * (1 - percent / 100)));
+}
+
+// Z původní a zlevněné CZK ceny dopočítá procento slevy. <= 0 nebo >= základ
+// znamená „bez slevy" (0).
+function percentFromSale(baseCZK: number, saleCZK: number): number {
+  if (saleCZK <= 0 || baseCZK <= 0 || saleCZK >= baseCZK) return 0;
+  return (1 - saleCZK / baseCZK) * 100;
+}
+
+export default function ProductsAdminList({ products, stock, discounts, initialQuery }: ProductsAdminListProps) {
   const buildInitialStock = () => {
     const initial: Record<string, number> = {};
     products.forEach((p) => {
@@ -61,6 +78,23 @@ export default function ProductsAdminList({ products, stock, initialQuery }: Pro
   const [currentPrices, setCurrentPrices] = useState(buildInitialPrices);
   const [savedPrices, setSavedPrices] = useState(buildInitialPrices);
 
+  // Zlevněné ceny (CZK) — stejný klíč jako ceny. 0 = bez slevy. Init z předaných
+  // procent slev + základní CZK ceny.
+  const buildInitialSale = () => {
+    const initial: Record<string, number> = {};
+    products.forEach((p) => {
+      initial[p.slug] = saleFromPercent(normalizePrice(p.price).CZK, discounts[p.slug]);
+      p.models?.forEach((m) => {
+        const key = `${p.slug}::${m.id}`;
+        initial[key] = saleFromPercent(normalizePrice(m.price).CZK, discounts[key]);
+      });
+    });
+    return initial;
+  };
+
+  const [currentSale, setCurrentSale] = useState<Record<string, number>>(buildInitialSale);
+  const [savedSale, setSavedSale] = useState<Record<string, number>>(buildInitialSale);
+
   const [expandedSlugs, setExpandedSlugs] = useState<Record<string, boolean>>({});
   const [expandedSubKeys, setExpandedSubKeys] = useState<Record<string, boolean>>({});
   const [savingAll, setSavingAll] = useState(false);
@@ -69,7 +103,8 @@ export default function ProductsAdminList({ products, stock, initialQuery }: Pro
 
   const changedStockKeys = Object.keys(currentStock).filter((k) => currentStock[k] !== savedStock[k]);
   const changedPriceKeys = Object.keys(currentPrices).filter((k) => !priceEquals(currentPrices[k], savedPrices[k]));
-  const changedCount = changedStockKeys.length + changedPriceKeys.length;
+  const changedSaleKeys = Object.keys(currentSale).filter((k) => (currentSale[k] ?? 0) !== (savedSale[k] ?? 0));
+  const changedCount = changedStockKeys.length + changedPriceKeys.length + changedSaleKeys.length;
 
   const toggleExpand = (slug: string) => {
     setExpandedSlugs((prev) => ({ ...prev, [slug]: !prev[slug] }));
@@ -91,6 +126,10 @@ export default function ProductsAdminList({ products, stock, initialQuery }: Pro
       ...prev,
       [key]: { ...prev[key], [currency]: Math.max(0, value) },
     }));
+  };
+
+  const handleSaleChange = (key: string, value: number) => {
+    setCurrentSale((prev) => ({ ...prev, [key]: Math.max(0, value) }));
   };
 
   // Uloží VŠECHNY změněné varianty i ceny napříč všemi produkty najednou.
@@ -134,6 +173,24 @@ export default function ProductsAdminList({ products, stock, initialQuery }: Pro
         );
       }
 
+      if (changedSaleKeys.length > 0) {
+        // Zlevněnou cenu (CZK) převedeme na procento z aktuální základní ceny.
+        // 0 / >= základ = sleva se zruší (percent 0 → server smaže).
+        const entries = changedSaleKeys.map((key) => {
+          const [slug, modelId] = key.split("::");
+          const baseCZK = currentPrices[key]?.CZK ?? 0;
+          const percent = percentFromSale(baseCZK, currentSale[key] ?? 0);
+          return { slug, modelId: modelId || undefined, percent };
+        });
+        requests.push(
+          fetch("/api/admin/product-discounts", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ entries }),
+          }),
+        );
+      }
+
       const results = await Promise.all(requests);
       for (const res of results) {
         if (!res.ok) {
@@ -144,6 +201,7 @@ export default function ProductsAdminList({ products, stock, initialQuery }: Pro
 
       setSavedStock((prev) => ({ ...prev, ...currentStock }));
       setSavedPrices((prev) => ({ ...prev, ...currentPrices }));
+      setSavedSale((prev) => ({ ...prev, ...currentSale }));
     } catch (error) {
       console.error("Chyba při ukládání:", error);
       setSaveError(error instanceof Error ? error.message : "Uložení se nezdařilo.");
@@ -206,8 +264,15 @@ export default function ProductsAdminList({ products, stock, initialQuery }: Pro
       { code: "USD", symbol: "$" },
     ];
 
+    // Zlevněná cena (CZK) + dopočítané procento pro tenhle klíč.
+    const baseCZK = current.CZK ?? 0;
+    const saleCZK = currentSale[priceKey] ?? 0;
+    const saleChanged = (currentSale[priceKey] ?? 0) !== (savedSale[priceKey] ?? 0);
+    const salePercent = Math.round(percentFromSale(baseCZK, saleCZK));
+    const saleActive = salePercent >= 1;
+
     return (
-      <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+      <div className="flex items-center gap-1.5 flex-wrap justify-end" onClick={(e) => e.stopPropagation()}>
         {fields.map(({ code, symbol }) => {
           // EUR/USD nemusí být u produktu vyplněné vůbec — pak pole nezobrazujeme,
           // ať editor nenutí zadávat měny, které produkt v katalogu nemá.
@@ -230,6 +295,31 @@ export default function ProductsAdminList({ products, stock, initialQuery }: Pro
             </div>
           );
         })}
+
+        {/* Zlevněná cena — admin zadá cílovou CZK cenu, procento se dopočítá
+            a při uložení se aplikuje na EUR/USD. Prázdné / 0 = bez slevy. */}
+        <div className="flex items-center gap-1 pl-1.5 ml-0.5 border-l border-[#e5e7eb]">
+          <span className="text-[9px] font-mono uppercase tracking-wider text-rose-400">Sleva</span>
+          <div
+            className={`flex items-center border rounded-lg px-1.5 py-0.5 transition-colors ${
+              saleChanged ? "bg-rose-100 border-rose-300" : saleActive ? "bg-rose-50 border-rose-200" : "bg-[#f1f1f1] border-[#e5e7eb]"
+            }`}
+          >
+            <input
+              type="number"
+              step="1"
+              min={0}
+              placeholder="—"
+              value={saleCZK || ""}
+              onChange={(e) => handleSaleChange(priceKey, parseFloat(e.target.value) || 0)}
+              className="w-12 bg-transparent text-right text-xs font-bold font-mono text-rose-700 placeholder-zinc-300 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+            />
+            <span className="text-[10px] font-mono text-rose-300 ml-0.5">Kč</span>
+          </div>
+          <span className={`text-[10px] font-bold font-mono w-10 text-left ${saleActive ? "text-rose-600" : "text-zinc-300"}`}>
+            {saleActive ? `−${salePercent} %` : "—"}
+          </span>
+        </div>
       </div>
     );
   };

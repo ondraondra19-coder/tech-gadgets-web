@@ -561,6 +561,14 @@ export default function ProduktClient({
     : 0;
   const totalPriceCZK = basePriceCZK + comboExtraCZK;
 
+  // Sleva na aktuální variantě — u produktů s modely ji nese vybraný model,
+  // jinak samotný produkt (doplnil ji server ve vrstvě lib/productDiscounts.ts).
+  // Příplatek za kombinaci (comboExtra) se neslevuje, přičte se k původní ceně.
+  const rawOriginalPrice = model ? model.originalPrice : product.originalPrice;
+  const discountPercent  = model ? model.discountPercent : product.discountPercent;
+  const hasSale = !!discountPercent && !!rawOriginalPrice;
+  const originalTotalPrice = hasSale ? getPrice(rawOriginalPrice, currency) + comboExtra : 0;
+
   // Jedno "product_viewed" za návštěvu detailu — čeká na currencyMounted, ať
   // se neposílá s cenou v (možná chybné) výchozí měně před hydratací.
   useEffect(() => {
@@ -850,8 +858,20 @@ export default function ProduktClient({
                   {productName}
                 </h1>
                 <div className="flex items-center gap-4 mt-3 flex-wrap">
-                  <span className="text-3xl sm:text-4xl font-extrabold text-primary-ink leading-none">
-                    {currencyMounted ? formatPrice(totalPrice, currency) : <span className="opacity-0">—</span>}
+                  <span className="flex items-baseline gap-2.5">
+                    <span className="text-3xl sm:text-4xl font-extrabold text-primary-ink leading-none">
+                      {currencyMounted ? formatPrice(totalPrice, currency) : <span className="opacity-0">—</span>}
+                    </span>
+                    {currencyMounted && hasSale && (
+                      <>
+                        <span className="text-lg sm:text-xl font-medium text-text-subtle line-through leading-none">
+                          {formatPrice(originalTotalPrice, currency)}
+                        </span>
+                        <span className="text-xs font-bold text-white bg-rose-600 rounded-full px-2 py-1 leading-none">
+                          −{discountPercent}&nbsp;%
+                        </span>
+                      </>
+                    )}
                   </span>
                   {comboExtra > 0 && (
                     <span className="text-xs text-text-subtle">

@@ -29,6 +29,11 @@ export type ProductModel = {
   colors: ModelColor[] | ModelColorLayered[];
   layered?: boolean;
   comboExtra?: PriceValue;
+  // Doplněno za běhu vrstvou slev (lib/productDiscounts.ts). Když je na modelu
+  // sleva, `price` už drží zlevněnou cenu, `originalPrice` je cena před slevou
+  // (přeškrtnutá) a `discountPercent` je zaokrouhlené procento pro odznak.
+  originalPrice?: PriceValue;
+  discountPercent?: number;
 };
 
 export type MediaItem =
@@ -73,6 +78,11 @@ export type Product = {
   }[];
   models?: ProductModel[];
   related?: string[];
+  // Doplněno za běhu vrstvou slev (lib/productDiscounts.ts). Když má produkt
+  // slevu, `price` už je zlevněná cena, `originalPrice` původní (přeškrtnutá)
+  // a `discountPercent` zaokrouhlené procento pro odznak „−X %".
+  originalPrice?: PriceValue;
+  discountPercent?: number;
 };
 
 // ─── Produkty ───────────────────────────────────────

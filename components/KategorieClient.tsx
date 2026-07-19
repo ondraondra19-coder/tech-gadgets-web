@@ -8,7 +8,8 @@ import type { Product, Category } from "@/lib/products";
 import { getProductName, getCategoryName } from "@/lib/products";
 import RatingWidget from "./RatingWidget";
 import { useCurrency } from "@/lib/CurrencyContext";
-import { formatPrice, getPrice } from "@/lib/currency";
+import { getPrice } from "@/lib/currency";
+import ProductPrice from "./ProductPrice";
 import { trackEvent } from "@/lib/analytics";
 import { useT } from "@/lib/useT";
 import { useLang } from "@/lib/LangContext";
@@ -402,6 +403,11 @@ export default function KategorieClient({
                     >
                       {/* Obrázek */}
                       <div className="relative aspect-square bg-[#f5f5f5] overflow-hidden">
+                        {product.discountPercent && (
+                          <span className="absolute top-2 left-2 z-10 text-[11px] font-extrabold text-white bg-rose-600 rounded-full px-2 py-0.5 shadow-sm">
+                            −{product.discountPercent}&nbsp;%
+                          </span>
+                        )}
                         <Image
                           src={product.img}
                           alt=""
@@ -420,9 +426,11 @@ export default function KategorieClient({
 
                         {/* Cena + stock */}
                         <div className="flex items-center justify-between gap-2 mt-0.5">
-                          <p className="text-primary-ink font-extrabold text-2xl leading-none">
-                            {formatPrice(getPrice(product.price, currency), currency)}
-                          </p>
+                          <ProductPrice
+                            product={product}
+                            badge={false}
+                            priceClassName="text-primary-ink font-extrabold text-2xl leading-none"
+                          />
                           <span className={`inline-flex items-center gap-1.5 text-xs font-semibold ${stockLabel.cls}`}>
                             <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${stockLabel.dot}`} />
                             <span>{stockLabel.text}</span>

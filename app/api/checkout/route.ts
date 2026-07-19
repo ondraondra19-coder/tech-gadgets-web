@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { getProductsWithPriceOverrides, resolveItemUnitPrice } from '@/lib/priceOverrides';
+import { resolveItemUnitPrice } from '@/lib/priceOverrides';
+import { getProductsForDisplay } from '@/lib/productDiscounts';
 import { createPendingOrder, type OrderInput } from '@/lib/orders';
 import { resolveDiscountForOrder } from '@/lib/discountsStore';
 import { getShippingPrice } from '@/lib/shipping/pricing';
@@ -58,7 +59,7 @@ export async function POST(req: Request) {
     // Katalog SE ZAPSANÝMI přepisy cen z admina — od teď se v celé funkci
     // používá TOHLE pole, ne přímý import z lib/products.ts, aby se vždy
     // strhla aktuální cena (i těsně po úpravě v adminu, bez redeploye).
-    const products = await getProductsWithPriceOverrides();
+    const products = await getProductsForDisplay();
 
     // ── 1. Produkty ──────────────────────────────────────────────────────────
     let subtotal = 0;

@@ -2,7 +2,8 @@
 // Zakládá objednávku PŘÍMO (bez Stripe) — pro platbu na dobírku a bankovním
 // převodem. Platba kartou jde přes /api/checkout → Stripe → webhook.
 import { NextResponse } from "next/server";
-import { getProductsWithPriceOverrides, resolveItemUnitPrice } from "@/lib/priceOverrides";
+import { resolveItemUnitPrice } from "@/lib/priceOverrides";
+import { getProductsForDisplay } from "@/lib/productDiscounts";
 import { createOrderDirect, type OrderInput, type PaymentMethod } from "@/lib/orders";
 import { deductStockForItems } from "@/lib/stock";
 import { resolveDiscountForOrder } from "@/lib/discountsStore";
@@ -68,7 +69,7 @@ export async function POST(req: Request) {
 
     // Katalog s aplikovanými přepisy cen z admina — viz stejná poznámka
     // v /api/checkout/route.ts.
-    const effectiveProducts = await getProductsWithPriceOverrides();
+    const effectiveProducts = await getProductsForDisplay();
 
     let subtotal = 0;
     const resolvedItems = items.map((i: OrderReqItem) => {

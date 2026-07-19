@@ -10,10 +10,9 @@ import Link from "next/link";
 import { ChevronLeft, ChevronRight, ArrowRight } from "lucide-react";
 import type { Product } from "@/lib/products";
 import { getProductName } from "@/lib/products";
-import { useCurrency } from "@/lib/CurrencyContext";
-import { formatPrice, getPrice } from "@/lib/currency";
 import { useLang } from "@/lib/LangContext";
 import { useT } from "@/lib/useT";
+import ProductPrice from "./ProductPrice";
 
 export default function ProductRow({
   title,
@@ -27,7 +26,6 @@ export default function ProductRow({
   products: Product[];
 }) {
   const trackRef = useRef<HTMLDivElement>(null);
-  const { currency } = useCurrency();
   const { locale } = useLang();
   const t = useT("productrow");
 
@@ -90,6 +88,11 @@ export default function ProductRow({
             >
               {/* Fotka */}
               <div className="relative aspect-square bg-white">
+                {product.discountPercent && (
+                  <span className="absolute top-2 left-2 z-10 text-[11px] font-extrabold text-white bg-rose-600 rounded-full px-2 py-0.5 shadow-sm">
+                    −{product.discountPercent}&nbsp;%
+                  </span>
+                )}
                 <Image
                   src={product.img}
                   alt=""
@@ -105,9 +108,11 @@ export default function ProductRow({
                   {getProductName(product, locale)}
                 </p>
                 <div className="mt-2 flex items-center justify-between gap-2">
-                  <span className="text-text-base font-extrabold text-base">
-                    {formatPrice(getPrice(product.price, currency), currency)}
-                  </span>
+                  <ProductPrice
+                    product={product}
+                    badge={false}
+                    priceClassName="text-text-base font-extrabold text-base"
+                  />
                   <span className={`text-xs font-medium whitespace-nowrap ${product.inStock ? "text-emerald-700" : "text-text-subtle"}`}>
                     {product.inStock ? t("inStock") : t("outStock")}
                   </span>
