@@ -250,8 +250,8 @@
     "semantic_hash": ""
   },
   "app/page.tsx": {
-    "mtime": 1784452309.5634418,
-    "ast_hash": "0bc77fe59f61613c2ca920a3f4229de8",
+    "mtime": 1784454091.9445755,
+    "ast_hash": "5a73bae6244434ecc78be08b41befa5b",
     "semantic_hash": ""
   },
   "app/produkt/[slug]/page.tsx": {
@@ -315,8 +315,8 @@
     "semantic_hash": ""
   },
   "components/KategorieClient.tsx": {
-    "mtime": 1784452459.845764,
-    "ast_hash": "0a5c793d634b74f94de6fc4b942535dc",
+    "mtime": 1784454224.0298064,
+    "ast_hash": "b0b19a12ffadaacd623317adf9de6fac",
     "semantic_hash": ""
   },
   "components/Logo.tsx": {
@@ -445,8 +445,8 @@
     "semantic_hash": "d065b21ff55437301501288e27496632"
   },
   "lib/products.ts": {
-    "mtime": 1784452220.3317268,
-    "ast_hash": "cdd07ee47ab5dddc65e62c24536f76d2",
+    "mtime": 1784453944.940002,
+    "ast_hash": "94cf4e0ea419e321d24d3ba38836f113",
     "semantic_hash": ""
   },
   "lib/redis.ts": {
@@ -480,18 +480,18 @@
     "semantic_hash": ""
   },
   "messages/cs.json": {
-    "mtime": 1784406364.0207183,
-    "ast_hash": "26161d316332610cff5fe51b96e8243f",
+    "mtime": 1784454140.6103158,
+    "ast_hash": "81d860f732802470f5d7238cd84dc016",
     "semantic_hash": ""
   },
   "messages/en.json": {
-    "mtime": 1784406366.0263073,
-    "ast_hash": "b9550366befff0e8893c3ef1953fcee0",
+    "mtime": 1784454151.2459028,
+    "ast_hash": "351dfff979e99cdcccf7d13aa18927f0",
     "semantic_hash": ""
   },
   "messages/sk.json": {
-    "mtime": 1784406368.210653,
-    "ast_hash": "1ff20266fd848fd2ab93528ce4ab9abb",
+    "mtime": 1784454146.3274887,
+    "ast_hash": "98d281b4ada7913f18e1652d11e6c05c",
     "semantic_hash": ""
   },
   "next.config.ts": {
@@ -880,13 +880,13 @@
     "semantic_hash": ""
   },
   "components/CategoryProductRows.tsx": {
-    "mtime": 1784410298.7426846,
-    "ast_hash": "544ffb1b77da2cde8316afb61d669869",
+    "mtime": 1784454104.0929935,
+    "ast_hash": "883221e50a600d718c76938c8040100f",
     "semantic_hash": ""
   },
   "components/ProductRow.tsx": {
-    "mtime": 1784452431.7333562,
-    "ast_hash": "02228440fabbb1d7e80a8b126451713b",
+    "mtime": 1784454066.95996,
+    "ast_hash": "2ca9cd90949ca604d10c0974ab9d688b",
     "semantic_hash": ""
   },
   "components/HowItWorks.tsx": {

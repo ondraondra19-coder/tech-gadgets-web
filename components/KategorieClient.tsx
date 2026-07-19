@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { SlidersHorizontal, ChevronDown, X, Check } from "lucide-react";
+import { SlidersHorizontal, ChevronDown, X, Check, Truck } from "lucide-react";
 import type { Product, Category } from "@/lib/products";
 import { getProductName, getCategoryName } from "@/lib/products";
 import RatingWidget from "./RatingWidget";
@@ -19,6 +19,16 @@ import { LOCALE_TAGS } from "@/lib/locale";
 // předáno ze server componentu kategorie page.tsx
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
+
+// Do kolika kusů křičíme „Poslední kusy!" (sladěno s kartami na homepage).
+const LOW_STOCK_THRESHOLD = 10;
+
+// Brandová šrafovaná dlaždice pod fotkou — stejná jako v ProductRow.
+const TILE_STYLE: React.CSSProperties = {
+  backgroundColor: "#eaf8f4",
+  backgroundImage:
+    "repeating-linear-gradient(-45deg, rgba(40,191,166,0.07) 0 16px, rgba(40,191,166,0.15) 16px 32px)",
+};
 
 function anyInStock(product: Product, stockData: Record<string, Record<string, number>>): boolean {
   const sd = stockData[product.slug];
@@ -160,6 +170,9 @@ export default function KategorieClient({
 }) {
   const { currency } = useCurrency();
   const t = useT("category");
+  // Sdílené texty produktové karty (odeslání do 24 h, poslední kusy) žijí ve
+  // stejném namespace jako karty na homepage, ať se nepřekládají dvakrát.
+  const tp = useT("productrow");
   const { locale } = useLang();
   const categoryName = getCategoryName(category, locale);
 
@@ -401,13 +414,22 @@ export default function KategorieClient({
                       })}
                       className="group flex flex-col bg-white rounded-2xl overflow-hidden border border-border shadow-sm hover:shadow-md transition-all duration-200"
                     >
-                      {/* Obrázek */}
-                      <div className="relative aspect-square bg-[#f5f5f5] overflow-hidden">
-                        {product.discountPercent && (
-                          <span className="absolute top-2 left-2 z-10 text-[11px] font-extrabold text-white bg-rose-600 rounded-full px-2 py-0.5 shadow-sm">
-                            −{product.discountPercent}&nbsp;%
-                          </span>
-                        )}
+                      {/* Obrázek na brandové dlaždici */}
+                      <div className="relative aspect-square overflow-hidden" style={TILE_STYLE}>
+                        <div className="absolute inset-x-0 top-0 z-10 flex items-start justify-between p-2.5 pointer-events-none">
+                          {product.discountPercent ? (
+                            <span className="text-[11px] leading-none text-white bg-rose-600 rounded-lg px-2 py-1 shadow-sm">
+                              {tp("sale")} <b className="font-extrabold">−{product.discountPercent}&nbsp;%</b>
+                            </span>
+                          ) : (
+                            <span />
+                          )}
+                          {inStock && best > 0 && best <= LOW_STOCK_THRESHOLD && (
+                            <span className="text-[11px] font-bold leading-none text-white bg-header rounded-lg px-2 py-1 shadow-sm">
+                              {tp("lastPieces")}
+                            </span>
+                          )}
+                        </div>
                         <Image
                           src={product.img}
                           alt=""
@@ -436,6 +458,14 @@ export default function KategorieClient({
                             <span>{stockLabel.text}</span>
                           </span>
                         </div>
+
+                        {/* Odeslání do 24 hodin */}
+                        {inStock && (
+                          <p className="flex items-center gap-1.5 text-xs font-semibold text-emerald-700">
+                            <Truck size={14} aria-hidden="true" />
+                            {tp("ship24")}
+                          </p>
+                        )}
 
                         {/* Tlačítko Detail */}
                         <div className="mt-1 w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-primary text-on-primary text-sm font-bold transition-all duration-150 group-hover:brightness-105">

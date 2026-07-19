@@ -293,11 +293,16 @@
     "approxNote": "* Orientačný prepočet. Podmienka platnosti kódu sa počíta v Kč."
   },
   "productrow": {
-    "viewAll": "Zobrazit vše",
-    "prev": "Předchozí",
-    "next": "Další",
-    "inStock": "Skladem",
-    "outStock": "Není skladem"
+    "viewAll": "Zobraziť všetko",
+    "prev": "Predchádzajúci",
+    "next": "Ďalší",
+    "inStock": "Skladom",
+    "outStock": "Nie je skladom",
+    "sale": "Zľava",
+    "lastPieces": "Posledné kusy!",
+    "ship24": "Odoslanie do 24 hodín!",
+    "stockLeft": "Ostáva {count} skladom",
+    "ratingAria": "Hodnotenie {rating} z 5"
   },
   "rows": {
     "setyTitle": "Ušetři a vyraz ve dvou",

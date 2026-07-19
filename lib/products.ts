@@ -78,6 +78,12 @@ export type Product = {
   }[];
   models?: ProductModel[];
   related?: string[];
+  // Volitelné hodnocení pro produktovou kartu (hvězdičky + počet recenzí).
+  // Recenze na webu jsou celowebové, ne per-produkt, takže tohle je editorial
+  // pole — vyplní se ručně u produktu, kde ho chceme ukázat. Bez vyplnění se
+  // hvězdičky nezobrazí (nic se nevymýšlí).
+  rating?: number;        // 1–5, klidně desetinné (např. 4.7)
+  reviewCount?: number;   // počet hodnocení pro popisek „(14×)"
   // Doplněno za běhu vrstvou slev (lib/productDiscounts.ts). Když má produkt
   // slevu, `price` už je zlevněná cena, `originalPrice` původní (přeškrtnutá)
   // a `discountPercent` zaokrouhlené procento pro odznak „−X %".

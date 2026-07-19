@@ -10,8 +10,8 @@
     "semantic_hash": ""
   },
   "app/admin/AdminDashboard.tsx": {
-    "mtime": 1784308279.5086555,
-    "ast_hash": "e2b9cde6f53206be89c3887d8bb9fb3d",
+    "mtime": 1784452595.9138117,
+    "ast_hash": "00f30480223634b47975f87a3275d0ff",
     "semantic_hash": ""
   },
   "app/admin/AnalyticsPanel.tsx": {
@@ -40,8 +40,8 @@
     "semantic_hash": ""
   },
   "app/admin/ProductsAdminList.tsx": {
-    "mtime": 1784308279.5086555,
-    "ast_hash": "0eb03184b3be2d8e0c63d299cf7214fd",
+    "mtime": 1784452695.8705766,
+    "ast_hash": "ab6582b216fc44b96a13c4f4c84f3049",
     "semantic_hash": ""
   },
   "app/admin/login/page.tsx": {
@@ -50,8 +50,8 @@
     "semantic_hash": ""
   },
   "app/admin/page.tsx": {
-    "mtime": 1784237468.9331717,
-    "ast_hash": "9af48874928a5f10a1c8854858b27271",
+    "mtime": 1784452586.0995882,
+    "ast_hash": "d01ce32bac87b1c46fea012d99bbc664",
     "semantic_hash": ""
   },
   "app/admin/recenze/ReviewsAdminList.tsx": {
@@ -130,8 +130,8 @@
     "semantic_hash": ""
   },
   "app/api/checkout/route.ts": {
-    "mtime": 1784308279.516774,
-    "ast_hash": "e37e1f42b770ee601128f2481d9154d8",
+    "mtime": 1784452343.8734424,
+    "ast_hash": "80ea6df8a3f6f0c7a334dfa75ee56507",
     "semantic_hash": ""
   },
   "app/api/checkout/session/route.ts": {
@@ -145,14 +145,14 @@
     "semantic_hash": ""
   },
   "app/api/orders/route.ts": {
-    "mtime": 1784308279.516774,
-    "ast_hash": "fb4448daa0fb0f8977fc1618fd92c346",
+    "mtime": 1784452350.5793731,
+    "ast_hash": "efdd081c9b146ea7d1169f21bda8bddd",
     "semantic_hash": ""
   },
   "app/api/products/route.ts": {
-    "mtime": 1783843810.5093048,
-    "ast_hash": "57d0470ff8803f0e71cb2db7dd089537",
-    "semantic_hash": "57d0470ff8803f0e71cb2db7dd089537"
+    "mtime": 1784452333.6714914,
+    "ast_hash": "25ca63762d35703780ec35c0ebeda5fc",
+    "semantic_hash": ""
   },
   "app/api/reviews/route.ts": {
     "mtime": 1784288340.042387,
@@ -200,8 +200,8 @@
     "semantic_hash": ""
   },
   "app/kategorie/[slug]/page.tsx": {
-    "mtime": 1784308279.524784,
-    "ast_hash": "d08028b7c6ee04713a6abea5040031a8",
+    "mtime": 1784452320.4121294,
+    "ast_hash": "f546255e6ae2c39fc8ae60575128cdb3",
     "semantic_hash": ""
   },
   "app/kontakt/page.tsx": {
@@ -250,13 +250,13 @@
     "semantic_hash": ""
   },
   "app/page.tsx": {
-    "mtime": 1784409475.4194677,
-    "ast_hash": "13fd7341962bfd1618683c28f8c4ec41",
+    "mtime": 1784452309.5634418,
+    "ast_hash": "0bc77fe59f61613c2ca920a3f4229de8",
     "semantic_hash": ""
   },
   "app/produkt/[slug]/page.tsx": {
-    "mtime": 1784245633.7464023,
-    "ast_hash": "7132fa88d6994f5ed1c38d636b29ace9",
+    "mtime": 1784452326.7353468,
+    "ast_hash": "0a63f13b9d0da6ee7cc45ee5d82a129c",
     "semantic_hash": ""
   },
   "app/reklamace/page.tsx": {
@@ -315,8 +315,8 @@
     "semantic_hash": ""
   },
   "components/KategorieClient.tsx": {
-    "mtime": 1784308279.545401,
-    "ast_hash": "283eced210dba14865217b7a4e178da4",
+    "mtime": 1784452459.845764,
+    "ast_hash": "0a5c793d634b74f94de6fc4b942535dc",
     "semantic_hash": ""
   },
   "components/Logo.tsx": {
@@ -330,8 +330,8 @@
     "semantic_hash": ""
   },
   "components/ProduktClient.tsx": {
-    "mtime": 1784308279.545401,
-    "ast_hash": "8d2ee3769b946d79617c85013a25e75d",
+    "mtime": 1784452540.9877522,
+    "ast_hash": "f0ac29e41f722e9e40356e538b328123",
     "semantic_hash": ""
   },
   "components/RatingWidget.tsx": {
@@ -345,8 +345,8 @@
     "semantic_hash": ""
   },
   "components/SearchBar.tsx": {
-    "mtime": 1784308279.5489213,
-    "ast_hash": "3e3b699ffd3160b0ba57265ac94fcf09",
+    "mtime": 1784452514.0867596,
+    "ast_hash": "736f2fe03ef242e8be1aad96285de316",
     "semantic_hash": ""
   },
   "components/TrustBar.tsx": {
@@ -445,8 +445,8 @@
     "semantic_hash": "d065b21ff55437301501288e27496632"
   },
   "lib/products.ts": {
-    "mtime": 1784398375.3243902,
-    "ast_hash": "a6cdb1f1a9f4c74be8e1686beb9981a0",
+    "mtime": 1784452220.3317268,
+    "ast_hash": "cdd07ee47ab5dddc65e62c24536f76d2",
     "semantic_hash": ""
   },
   "lib/redis.ts": {
@@ -604,46 +604,6 @@
     "ast_hash": "2aaafa6a49b6563925fe440891e32717",
     "semantic_hash": ""
   },
-  "public/images/blog/apple.jpg": {
-    "mtime": 1774120182.8939912,
-    "ast_hash": "85c6700a793f29f202476cf5970b315c",
-    "semantic_hash": ""
-  },
-  "public/images/blog/cip.jpg": {
-    "mtime": 1774778137.175248,
-    "ast_hash": "af2f3aab79ee9b21bcbdb2630ee8b0cb",
-    "semantic_hash": ""
-  },
-  "public/images/blog/ipad.jpg": {
-    "mtime": 1774285276.3841946,
-    "ast_hash": "c190dca501fe8c113ef32e693f053055",
-    "semantic_hash": ""
-  },
-  "public/images/blog/iphone.jpg": {
-    "mtime": 1774285420.8623228,
-    "ast_hash": "632e4074a4441fe8b045c7661295b87f",
-    "semantic_hash": ""
-  },
-  "public/images/blog/magsafe.jpg": {
-    "mtime": 1774284680.521132,
-    "ast_hash": "0cedaf52484b36e47d94bbc62927cdbf",
-    "semantic_hash": ""
-  },
-  "public/images/blog/pencil.jpg": {
-    "mtime": 1774284780.582233,
-    "ast_hash": "96cf9ce9a96d2fc18593766e123db90d",
-    "semantic_hash": ""
-  },
-  "public/images/blog/ropa.jpg": {
-    "mtime": 1774777624.572767,
-    "ast_hash": "70ee01a9730284487af022a322e5d7c8",
-    "semantic_hash": ""
-  },
-  "public/images/help/airpod.png": {
-    "mtime": 1774466574.306026,
-    "ast_hash": "324e94f323cff41b4b0d542dfd798b62",
-    "semantic_hash": ""
-  },
   "public/images/main/logo-black.png": {
     "mtime": 1784384941.604862,
     "ast_hash": "6bb06fb36f469b42f4083108f973b3a6",
@@ -664,269 +624,9 @@
     "ast_hash": "153fe904c2f374769bf30da759740b2a",
     "semantic_hash": ""
   },
-  "public/images/page/panak.png": {
-    "mtime": 1774043834.2515602,
-    "ast_hash": "4606ebb7bc8a344b08666ac06736d0c5",
-    "semantic_hash": ""
-  },
   "public/images/page/setup.jpg": {
     "mtime": 1772370891.1054409,
     "ast_hash": "c235ba01b44565770d894c672a7047e8",
-    "semantic_hash": ""
-  },
-  "public/images/products/airpods/beige.jpg": {
-    "mtime": 1771681491.361511,
-    "ast_hash": "4d5504ad7c864171cf77b6fba970187a",
-    "semantic_hash": ""
-  },
-  "public/images/products/airpods/black.jpg": {
-    "mtime": 1771679831.3025148,
-    "ast_hash": "46217b502e6bbb42e1f9d798f8ed647b",
-    "semantic_hash": ""
-  },
-  "public/images/products/airpods/darkblue.jpg": {
-    "mtime": 1771681221.0414705,
-    "ast_hash": "5a0fa0d8315a6c84a475b14a42da638a",
-    "semantic_hash": ""
-  },
-  "public/images/products/airpods/grey.jpg": {
-    "mtime": 1771681227.1382575,
-    "ast_hash": "156a05c3d36390b16d6ed0b043dd61eb",
-    "semantic_hash": ""
-  },
-  "public/images/products/airpods/pink.jpg": {
-    "mtime": 1771681212.395527,
-    "ast_hash": "6d9d5004d586b1e1fb6e3724b000f6c7",
-    "semantic_hash": ""
-  },
-  "public/images/products/airpods/purple.jpg": {
-    "mtime": 1771681626.7183592,
-    "ast_hash": "6ce0e793b8709233c3c8d3449832f392",
-    "semantic_hash": ""
-  },
-  "public/images/products/airpods/white.jpg": {
-    "mtime": 1771681199.4380953,
-    "ast_hash": "fe4afe3c97eea07345f9cb875194b7fd",
-    "semantic_hash": ""
-  },
-  "public/images/products/airtag-holder.png": {
-    "mtime": 1772039433.0339718,
-    "ast_hash": "87941534fae6b44e9a2d505af37873f7",
-    "semantic_hash": ""
-  },
-  "public/images/products/airtag-keychain.png": {
-    "mtime": 1774037106.9241636,
-    "ast_hash": "5616bb38d385a569a990855a997ec83e",
-    "semantic_hash": ""
-  },
-  "public/images/products/airtag/black.jpg": {
-    "mtime": 1774634093.9840796,
-    "ast_hash": "520330596141713915d541a7f9cfc9cf",
-    "semantic_hash": ""
-  },
-  "public/images/products/airtag/white.jpg": {
-    "mtime": 1774634109.020077,
-    "ast_hash": "4d59e4e5589a5cee81999dfe29359e38",
-    "semantic_hash": ""
-  },
-  "public/images/products/krytka-konektoru.jpg": {
-    "mtime": 1772041537.7899578,
-    "ast_hash": "dd57af15373dd786488d031947844ffe",
-    "semantic_hash": ""
-  },
-  "public/images/products/organizer-black.jpg": {
-    "mtime": 1771950063.8232667,
-    "ast_hash": "fb48cc8a00f16f5837dd0cb91eb0effe",
-    "semantic_hash": ""
-  },
-  "public/images/products/other/brush.png": {
-    "mtime": 1772040127.569789,
-    "ast_hash": "cd4408ac8f97dc71b708f88c55896987",
-    "semantic_hash": ""
-  },
-  "public/images/products/paperfeel/main.png": {
-    "mtime": 1771946573.874539,
-    "ast_hash": "c6d4d2e92883ec7dab652987810d4877",
-    "semantic_hash": ""
-  },
-  "public/images/products/pencil/pro-armygreen.jpg": {
-    "mtime": 1771678564.8156662,
-    "ast_hash": "563c98ea282f3d38635d718ab7a72f22",
-    "semantic_hash": ""
-  },
-  "public/images/products/pencil/pro-black.jpg": {
-    "mtime": 1771665147.8330164,
-    "ast_hash": "c3eccee208f1c395060c3f015c750aa2",
-    "semantic_hash": ""
-  },
-  "public/images/products/pencil/pro-darkblue.jpg": {
-    "mtime": 1771678608.2993498,
-    "ast_hash": "10e17050167ba25dc49a3a886adb0c18",
-    "semantic_hash": ""
-  },
-  "public/images/products/pencil/pro-green.jpg": {
-    "mtime": 1771678623.8007789,
-    "ast_hash": "4895babcfd637d104703a99cb9d6839f",
-    "semantic_hash": ""
-  },
-  "public/images/products/pencil/pro-grey.jpg": {
-    "mtime": 1771678584.8171866,
-    "ast_hash": "01b19080f874a817ab535a391cdfd5cd",
-    "semantic_hash": ""
-  },
-  "public/images/products/pencil/pro-pink.jpg": {
-    "mtime": 1771665088.723071,
-    "ast_hash": "3f337701054d300ac1e7519aa61217db",
-    "semantic_hash": ""
-  },
-  "public/images/products/pencil/pro-white.jpg": {
-    "mtime": 1771665170.0711725,
-    "ast_hash": "2994d22ad4ff8f394666124f4c636558",
-    "semantic_hash": ""
-  },
-  "public/images/products/pencil/test1.jpg": {
-    "mtime": 1774650463.8490214,
-    "ast_hash": "ec4919d905ef99b214f04609663ada4a",
-    "semantic_hash": ""
-  },
-  "public/images/products/pencil/test2.jpg": {
-    "mtime": 1774650476.3706028,
-    "ast_hash": "9a9ff3899b275ae208b923495996cba9",
-    "semantic_hash": ""
-  },
-  "public/images/products/pencil/usb-black.jpg": {
-    "mtime": 1772289235.796137,
-    "ast_hash": "0d8dd5ec3139851a92c5c0e955b3ac4b",
-    "semantic_hash": ""
-  },
-  "public/images/products/pencil/usb-body-black.png": {
-    "mtime": 1772352374.272498,
-    "ast_hash": "8a2ae5b30f47b9ca1e112017da7aa73c",
-    "semantic_hash": ""
-  },
-  "public/images/products/pencil/usb-body-grey.png": {
-    "mtime": 1772354398.3628287,
-    "ast_hash": "8713dd7edeb363437713eff4e0f1c1dd",
-    "semantic_hash": ""
-  },
-  "public/images/products/pencil/usb-cap-black.png": {
-    "mtime": 1772352577.1057582,
-    "ast_hash": "64be6a8c4d2876f41f9521f82951b8cb",
-    "semantic_hash": ""
-  },
-  "public/images/products/pencil/usb-cap-grey.png": {
-    "mtime": 1772354517.5447164,
-    "ast_hash": "27511bb7026df9d3f33e631c10588072",
-    "semantic_hash": ""
-  },
-  "public/images/products/pencil/usb-grey.jpg": {
-    "mtime": 1772289255.8231518,
-    "ast_hash": "bdcb0cb3129fc8532042af5229f5910a",
-    "semantic_hash": ""
-  },
-  "public/images/products/pencil/usb-pink.jpg": {
-    "mtime": 1772289270.8694975,
-    "ast_hash": "66287f475625f3757af1bd2c7d2b0335",
-    "semantic_hash": ""
-  },
-  "public/images/products/pencil/usb-purple.jpg": {
-    "mtime": 1772289282.0131595,
-    "ast_hash": "5ef03b71651fdd12f16aebaf7e0968ce",
-    "semantic_hash": ""
-  },
-  "public/images/products/sliz.jpg": {
-    "mtime": 1772041940.0918908,
-    "ast_hash": "87f48bbd9a96b9ac9f5cb49f20c60121",
-    "semantic_hash": ""
-  },
-  "public/images/products/sprej.jpg": {
-    "mtime": 1772042277.375655,
-    "ast_hash": "25074ab75b160c5b6bef435778e1517d",
-    "semantic_hash": ""
-  },
-  "public/images/products/spunty.jpg": {
-    "mtime": 1772042806.4470124,
-    "ast_hash": "1ef42c4229a573d5d793caf912211252",
-    "semantic_hash": ""
-  },
-  "public/images/products/tip/lightblue.jpg": {
-    "mtime": 1774632868.5530913,
-    "ast_hash": "883b89e76e7fdb57d4a21507a2a732f4",
-    "semantic_hash": ""
-  },
-  "public/images/products/tip/pink.jpg": {
-    "mtime": 1774632815.7825155,
-    "ast_hash": "28be5f44c1d1ff915668700246b731b5",
-    "semantic_hash": ""
-  },
-  "public/images/products/tip/purple.jpg": {
-    "mtime": 1774632879.5249214,
-    "ast_hash": "cdb3d1914c6deb98ac934120ae191be3",
-    "semantic_hash": ""
-  },
-  "public/images/products/tip/white.jpg": {
-    "mtime": 1772038806.0740225,
-    "ast_hash": "16e3bb4f7c4d3d9e2073729195c48f2b",
-    "semantic_hash": ""
-  },
-  "public/images/products/wallet/black.jpg": {
-    "mtime": 1772040801.170875,
-    "ast_hash": "0642472ed3be7df1fafc60ad53d13629",
-    "semantic_hash": ""
-  },
-  "public/images/products/watch/beige.jpg": {
-    "mtime": 1772038988.601056,
-    "ast_hash": "1c1add309acf9eb0e9267405033d5a98",
-    "semantic_hash": ""
-  },
-  "public/images/products/watch/blue.jpg": {
-    "mtime": 1774633334.938701,
-    "ast_hash": "11d988b052dc3ff8b747085fe6c485f0",
-    "semantic_hash": ""
-  },
-  "public/images/products/watch/darkblue.jpg": {
-    "mtime": 1774633232.9649866,
-    "ast_hash": "881719a7e38280f5090ace793a556f22",
-    "semantic_hash": ""
-  },
-  "public/images/products/watch/darkgreen.jpg": {
-    "mtime": 1774633247.6586244,
-    "ast_hash": "14b474c46d4dfc13f7297c329d8c44c6",
-    "semantic_hash": ""
-  },
-  "public/images/products/watch/grey.jpg": {
-    "mtime": 1774633320.146585,
-    "ast_hash": "6940b814a62b824c431b2a1872d395bf",
-    "semantic_hash": ""
-  },
-  "public/images/products/watch/pink.jpg": {
-    "mtime": 1774633265.9020593,
-    "ast_hash": "8f10e0a082caf961f5721d3af180f04e",
-    "semantic_hash": ""
-  },
-  "public/images/products/watch/purple.jpg": {
-    "mtime": 1774633278.00814,
-    "ast_hash": "31872118a2021fef4bfa19169f3e1e8b",
-    "semantic_hash": ""
-  },
-  "public/images/products/watch/white.jpg": {
-    "mtime": 1774633302.9125328,
-    "ast_hash": "624090c629948a6dab79bf611308f0c1",
-    "semantic_hash": ""
-  },
-  "public/images/products/webcam-cover.jpg": {
-    "mtime": 1772040472.960896,
-    "ast_hash": "09a4af7976dcbe13401c893ee458ed21",
-    "semantic_hash": ""
-  },
-  "public/images/shipping/hero.jpg": {
-    "mtime": 1774976563.830179,
-    "ast_hash": "7288516f963a553e4ed352fa74307fe4",
-    "semantic_hash": ""
-  },
-  "public/images/shipping/zasilkovna.png": {
-    "mtime": 1774976400.947645,
-    "ast_hash": "1c8eac137a7bb77565815879f74e2c86",
     "semantic_hash": ""
   },
   "public/next.svg": {
@@ -942,11 +642,6 @@
   "public/window.svg": {
     "mtime": 1773679505.1049821,
     "ast_hash": "a2760511c65806022ad20adf74370ff3",
-    "semantic_hash": ""
-  },
-  "public/images/products/test3.mp4": {
-    "mtime": 1774650874.4771998,
-    "ast_hash": "4c1d2b8fa41598c01cb17060068b36e0",
     "semantic_hash": ""
   },
   "lib/qrPlatba.ts": {
@@ -1185,18 +880,33 @@
     "semantic_hash": ""
   },
   "components/CategoryProductRows.tsx": {
-    "mtime": 1784409462.4464393,
-    "ast_hash": "eaba31321d37be387d6a81b7a97608ff",
+    "mtime": 1784410298.7426846,
+    "ast_hash": "544ffb1b77da2cde8316afb61d669869",
     "semantic_hash": ""
   },
   "components/ProductRow.tsx": {
-    "mtime": 1784402777.424838,
-    "ast_hash": "6074a659067df1d9b7c7bd0d32c36c83",
+    "mtime": 1784452431.7333562,
+    "ast_hash": "02228440fabbb1d7e80a8b126451713b",
     "semantic_hash": ""
   },
   "components/HowItWorks.tsx": {
     "mtime": 1784406663.6499934,
     "ast_hash": "35930cdad98b53a8b01d4cd3e3c4b381",
+    "semantic_hash": ""
+  },
+  "app/api/admin/product-discounts/route.ts": {
+    "mtime": 1784452287.9949565,
+    "ast_hash": "5e341c0838348f9ce961ead3eb8479dc",
+    "semantic_hash": ""
+  },
+  "components/ProductPrice.tsx": {
+    "mtime": 1784452485.1412716,
+    "ast_hash": "4156f6113ac2b0baf0b8cfc2525c1c0a",
+    "semantic_hash": ""
+  },
+  "lib/productDiscounts.ts": {
+    "mtime": 1784452269.2470436,
+    "ast_hash": "f6806ee21b19bc54a0848434fe466f1d",
     "semantic_hash": ""
   }
 }

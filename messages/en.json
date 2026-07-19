@@ -288,11 +288,16 @@
     "approxNote": "* Approximate conversion. The code's minimum is calculated in CZK."
   },
   "productrow": {
-    "viewAll": "Zobrazit vše",
-    "prev": "Předchozí",
-    "next": "Další",
-    "inStock": "Skladem",
-    "outStock": "Není skladem"
+    "viewAll": "View all",
+    "prev": "Previous",
+    "next": "Next",
+    "inStock": "In stock",
+    "outStock": "Out of stock",
+    "sale": "Sale",
+    "lastPieces": "Last pieces!",
+    "ship24": "Ships within 24 hours!",
+    "stockLeft": "Only {count} left",
+    "ratingAria": "Rated {rating} out of 5"
   },
   "rows": {
     "setyTitle": "Ušetři a vyraz ve dvou",

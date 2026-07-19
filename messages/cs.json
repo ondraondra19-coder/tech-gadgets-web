@@ -297,7 +297,12 @@
     "prev": "Předchozí",
     "next": "Další",
     "inStock": "Skladem",
-    "outStock": "Není skladem"
+    "outStock": "Není skladem",
+    "sale": "Sleva",
+    "lastPieces": "Poslední kusy!",
+    "ship24": "Odeslání do 24 hodin!",
+    "stockLeft": "Zbývá {count} skladem",
+    "ratingAria": "Hodnocení {rating} z 5"
   },
   "rows": {
     "setyTitle": "Ušetři a vyraz ve dvou",

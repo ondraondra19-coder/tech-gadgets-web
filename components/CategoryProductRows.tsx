@@ -12,11 +12,14 @@ import ProductRow from "./ProductRow";
 export default function CategoryProductRows({
   products,
   slugs,
+  availability,
 }: {
   products: Product[];
   /** Které kategorie tady vykreslit. Nevyplněno = všechny. Umožní rozmístit
       jednotlivé řádky na různá místa homepage. */
   slugs?: string[];
+  /** slug → počet dostupných kusů (pro odznaky skladu na kartách). */
+  availability?: Record<string, number>;
 }) {
   const { locale } = useLang();
   const t = useT("rows");
@@ -43,6 +46,7 @@ export default function CategoryProductRows({
             subtitle={c?.sub}
             viewAllHref={`/kategorie/${cat.slug}`}
             products={items}
+            availability={availability}
           />
         );
       })}
