@@ -54,8 +54,8 @@ function itemKey(slug: string, variants?: Record<string, string>) {
   return slug + JSON.stringify(variants ?? {});
 }
 
-const STORAGE_KEY = "hackpack-cart";
-const DISCOUNT_KEY = "hackpack-discount";
+const STORAGE_KEY = "slingr-cart";
+const DISCOUNT_KEY = "slingr-discount";
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);

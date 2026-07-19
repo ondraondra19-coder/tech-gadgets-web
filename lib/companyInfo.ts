@@ -14,7 +14,7 @@
 // se nepřekládají.
 
 export type CompanyInfo = {
-  /** Obchodní firma, např. "HackPack s.r.o." */
+  /** Obchodní firma, např. "SLINGR s.r.o." */
   name: string;
   /** IČO */
   companyId: string;

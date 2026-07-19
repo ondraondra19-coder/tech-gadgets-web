@@ -1,22 +1,24 @@
 @import "tailwindcss";
 
 @theme {
-  /* Značková růžová. Je to světlý odstín — unese text jen na tmavém pozadí
-     (na #1c1c1c má 7.95:1). Na bílé/surface má jen 2.14:1, takže jako barvu
-     textu na světlém pozadí použij --color-primary-ink, ne tuhle. */
-  --color-primary: #ff8ad0;
+  /* Značkový tyrkys (SLINGR). Je to středně světlý odstín — unese tmavý text
+     (černá na #28bfa6 má 8.07:1), ale ne bílý (2.32:1). Jako barvu TEXTU na
+     světlém pozadí (na bílé jen 2.32:1) použij --color-primary-ink, ne tuhle. */
+  --color-primary: #28bfa6;
   --color-secondary: #f1f1f3;
-  --color-accent: #FF00E5;
+  /* Značková malinová — slevy, badge, akcenty. Bílý text na ní má 5.08:1,
+     a jako text na bílé taky 5.08:1, takže jde použít obojím směrem. */
+  --color-accent: #cf2161;
   /* POZOR: "dark" je historický název, ale je to BÍLÁ — používá se jako
      pozadí stránek (`min-h-screen bg-dark`). Nepřebarvovat. */
   --color-dark: #ffffff;
   --color-header: #1c1c1c;
   --color-surface: #f7f6f4;
 
-  /* Text na růžovém pozadí (tlačítka). Bílá na #ff8ad0 dává 2.14:1, tohle 8.94:1. */
+  /* Text na tyrkysovém pozadí (tlačítka). Bílá na #28bfa6 dává jen 2.32:1, tahle 8.07:1. */
   --color-on-primary: #0f0f10;
-  /* Růžová pro text na světlém pozadí — ceny, odkazy. 5.13:1 na bílé, 4.75:1 na surface. */
-  --color-primary-ink: #c72d7b;
+  /* Tmavý tyrkys pro text na světlém pozadí — ceny, odkazy, tagy. 5.35:1 na bílé, 5.05:1 na surface. */
+  --color-primary-ink: #0f766e;
 
   /* Texty. Odstíny voleny tak, aby splnily 4.5:1 na bílé (#ffffff),
      surface (#f7f6f4) i secondary (#f1f1f3). */

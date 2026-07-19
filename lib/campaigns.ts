@@ -19,7 +19,7 @@ function campaignFrom(): string {
   return (
     process.env.RESEND_CAMPAIGN_FROM ??
     process.env.RESEND_FROM_EMAIL ??
-    "HackPack <info@hackpack.cz>"
+    "SLINGR <info@slingr.cz>"
   );
 }
 

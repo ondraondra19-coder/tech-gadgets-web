@@ -88,7 +88,7 @@ function ClaimCard({
 
           <div className="flex items-center gap-3 flex-wrap">
             <a
-              href={`mailto:${claim.email}?subject=${encodeURIComponent(`Reklamace ${claim.ticket} — HackPack`)}`}
+              href={`mailto:${claim.email}?subject=${encodeURIComponent(`Reklamace ${claim.ticket} — SLINGR`)}`}
               className="inline-flex items-center gap-1 text-[11px] text-zinc-400 hover:text-[#0f0f10] hover:underline"
             >
               <Mail size={11} /> {claim.email}

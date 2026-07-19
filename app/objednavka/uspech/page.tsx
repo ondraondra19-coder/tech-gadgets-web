@@ -20,7 +20,7 @@ import { useT } from "@/lib/useT";
 import { shippingLabel, paymentLabel } from "@/lib/shippingLabels";
 import { COUNTRY_CZECHIA } from "@/lib/shipping/pricing";
 
-const SNAPSHOT_KEY = "hackpack-order-snapshot";
+const SNAPSHOT_KEY = "slingr-order-snapshot";
 
 type SnapshotItem = {
     slug: string;

@@ -17,9 +17,9 @@ import { useT } from "@/lib/useT";
 import { useLang } from "@/lib/LangContext";
 
 const socialLinks = [
-  { icon: Instagram, label: "Instagram", href: "https://instagram.com/hackpack.cz" },
-  { icon: Facebook,  label: "Facebook",  href: "https://facebook.com/hackpack.cz"  },
-  { icon: Youtube,   label: "YouTube",   href: "https://youtube.com/@hackpack"     },
+  { icon: Instagram, label: "Instagram", href: "https://instagram.com/slingr.cz" },
+  { icon: Facebook,  label: "Facebook",  href: "https://facebook.com/slingr.cz"  },
+  { icon: Youtube,   label: "YouTube",   href: "https://youtube.com/@slingr"     },
 ];
 
 export default function Footer() {
@@ -82,7 +82,7 @@ export default function Footer() {
             <HomeLink className="inline-block">
               <Image
                 src="/images/main/logo-white.png"
-                alt="HackPack"
+                alt="SLINGR"
                 width={1024}
                 height={559}
                 className="h-20 w-auto object-contain"
@@ -177,7 +177,7 @@ export default function Footer() {
       <div className="border-t border-white/8">
         <div className="max-w-screen-2xl mx-auto px-6 lg:px-12 py-5 flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="text-white/50 text-xs">
-            © {new Date().getFullYear()} HackPack s.r.o. — {t("rights")}
+            © {new Date().getFullYear()} SLINGR s.r.o. — {t("rights")}
           </p>
           <div className="flex items-center gap-1">
             {legalLinks.map((link, i, arr) => (

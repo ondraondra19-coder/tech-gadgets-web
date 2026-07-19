@@ -11,13 +11,17 @@ import { approxConvert } from "./discounts";
 import { buildSpdString, orderIdToVariableSymbol } from "./qrPlatba";
 import { generatePaymentReceiptPdf } from "./pdf";
 
-const FROM_ADDRESS = process.env.RESEND_FROM_EMAIL ?? "HackPack <info@hackpack.cz>";
-const SUPPORT_EMAIL = "info@hackpack.cz";
+const FROM_ADDRESS = process.env.RESEND_FROM_EMAIL ?? "SLINGR <info@slingr.cz>";
+const SUPPORT_EMAIL = "info@slingr.cz";
 // Kam chodí interní upozornění (nová zpráva, nová reklamace). Zatím shodné se
 // SUPPORT_EMAIL — až bude potřeba jiná adresa, stačí sáhnout sem.
 const ADMIN_EMAIL = SUPPORT_EMAIL;
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://hackpack-web.vercel.app").replace(/\/$/, "");
-const BRAND_COLOR = "#ff8ad0";
+// Jasný tyrkys — pozadí tlačítek (s tmavým textem) a akcenty na tmavém pozadí.
+const BRAND_COLOR = "#28bfa6";
+// Tmavý tyrkys — text na SVĚTLÉM pozadí (odkazy, částky). Jasný tyrkys má na
+// bílé jen 2.32:1, tenhle 5.35:1.
+const BRAND_INK = "#0f766e";
 const DARK = "#1c1c1c";
 
 // Escapuje hodnoty vkládané do HTML e-mailů. VŠECHNO, co pochází od zákazníka
@@ -95,15 +99,15 @@ function layout(previewText: string, bodyHtml: string): string {
     <tr><td align="center">
       <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="width:100%;max-width:560px;background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #e5e7eb;">
         <tr><td style="background:${DARK};padding:24px 32px;">
-          <span style="font-size:18px;font-weight:800;color:#ffffff;letter-spacing:-0.02em;">Hack<span style="color:${BRAND_COLOR};">Pack</span></span>
+          <span style="font-size:18px;font-weight:800;color:#ffffff;letter-spacing:-0.02em;">SLIN<span style="color:${BRAND_COLOR};">GR</span></span>
         </td></tr>
         <tr><td style="padding:32px;color:#0f0f10;">
           ${bodyHtml}
         </td></tr>
         <tr><td style="padding:20px 32px;background:#f7f6f4;border-top:1px solid #e5e7eb;">
           <p style="margin:0;font-size:11px;color:#9ca3af;line-height:1.6;">
-            Potřebujete pomoct? Napište nám na <a href="mailto:${SUPPORT_EMAIL}" style="color:${BRAND_COLOR};text-decoration:none;">${SUPPORT_EMAIL}</a>.<br />
-            HackPack · <a href="${SITE_URL}" style="color:#9ca3af;">${SITE_URL.replace(/^https?:\/\//, "")}</a>
+            Potřebujete pomoct? Napište nám na <a href="mailto:${SUPPORT_EMAIL}" style="color:${BRAND_INK};text-decoration:none;">${SUPPORT_EMAIL}</a>.<br />
+            SLINGR · <a href="${SITE_URL}" style="color:#9ca3af;">${SITE_URL.replace(/^https?:\/\//, "")}</a>
           </p>
         </td></tr>
       </table>
@@ -287,7 +291,7 @@ async function bankTransferBlock(order: Order): Promise<{ html: string; attachme
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
         ${summaryRow("Číslo účtu", `${account}${bankName ? ` (${bankName})` : ""}`, { bold: true })}
         ${summaryRow("Variabilní symbol", vs, { bold: true })}
-        ${summaryRow("Částka", formatPrice(order.total, currency), { bold: true, color: BRAND_COLOR })}
+        ${summaryRow("Částka", formatPrice(order.total, currency), { bold: true, color: BRAND_INK })}
       </table>
       ${qrBlock}
     </div>
@@ -330,7 +334,7 @@ export async function renderOrderConfirmationEmail(
     `,
   );
 
-  return { subject: `Objednávka #${vs} přijata — HackPack`, html, attachments };
+  return { subject: `Objednávka #${vs} přijata — SLINGR`, html, attachments };
 }
 
 export async function sendOrderConfirmationEmail(order: Order): Promise<boolean> {
@@ -363,7 +367,7 @@ export function renderPaymentReceivedEmail(order: Order): { subject: string; htm
     ${addressBlock(order)}
     `,
   );
-  return { subject: `Platba za objednávku #${vs} přijata — HackPack`, html };
+  return { subject: `Platba za objednávku #${vs} přijata — SLINGR`, html };
 }
 
 export async function sendPaymentReceivedEmail(order: Order): Promise<boolean> {
@@ -414,7 +418,7 @@ export function renderOrderShippedEmail(order: Order): { subject: string; html: 
     ${addressBlock(order)}
     `,
   );
-  return { subject: `Objednávka #${vs} je na cestě — HackPack`, html };
+  return { subject: `Objednávka #${vs} je na cestě — SLINGR`, html };
 }
 
 export async function sendOrderShippedEmail(order: Order): Promise<boolean> {
@@ -438,7 +442,7 @@ export function renderOrderDeliveredEmail(order: Order): { subject: string; html
     </p>
     `,
   );
-  return { subject: `Objednávka #${vs} doručena — HackPack`, html };
+  return { subject: `Objednávka #${vs} doručena — SLINGR`, html };
 }
 
 export async function sendOrderDeliveredEmail(order: Order): Promise<boolean> {
@@ -457,7 +461,7 @@ export function renderReviewThankYouEmail(name: string): { subject: string; html
     ${p(`Ahoj ${esc(name)}, díky, že sis udělal/a čas napsat recenzi. Vážíme si toho a moc nám to pomáhá.`)}
     `,
   );
-  return { subject: "Díky za recenzi — HackPack", html };
+  return { subject: "Díky za recenzi — SLINGR", html };
 }
 
 export async function sendReviewThankYouEmail(to: string, name: string): Promise<boolean> {
@@ -490,7 +494,7 @@ export function renderBackInStockEmail(params: { productName: string; slug: stri
     </p>
     `,
   );
-  return { subject: `${productName} je zpátky skladem — HackPack`, html };
+  return { subject: `${productName} je zpátky skladem — SLINGR`, html };
 }
 
 export async function sendBackInStockEmail(params: {
@@ -525,7 +529,7 @@ function claimLabel(map: Record<string, string>, value: string): string {
 
 function claimDetailsTable(claim: Claim): string {
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 16px;">
-    ${summaryRow("Číslo případu", esc(claim.ticket), { bold: true, color: BRAND_COLOR })}
+    ${summaryRow("Číslo případu", esc(claim.ticket), { bold: true, color: BRAND_INK })}
     ${summaryRow("Číslo objednávky", esc(claim.cisloObjednavky))}
     ${summaryRow("Typ žádosti", esc(claimLabel(CLAIM_TYPE_LABELS, claim.typZadosti)))}
     ${summaryRow("Způsob vyřízení", esc(claimLabel(CLAIM_RESOLUTION_LABELS, claim.zpusobVyrizeni)))}
@@ -545,7 +549,7 @@ export function renderClaimConfirmationEmail(claim: Claim): { subject: string; h
     ${sellerBlock()}
     `,
   );
-  return { subject: `Žádost ${claim.ticket} přijata — HackPack`, html };
+  return { subject: `Žádost ${claim.ticket} přijata — SLINGR`, html };
 }
 
 export async function sendClaimConfirmationEmail(claim: Claim): Promise<boolean> {
@@ -569,7 +573,7 @@ export function renderClaimAdminEmail(claim: Claim): { subject: string; html: st
     ${p("Odpovědět jde přímo odpovědí na tenhle e-mail.")}
     `,
   );
-  return { subject: `Nová žádost ${claim.ticket} od ${claim.jmeno} — HackPack`, html };
+  return { subject: `Nová žádost ${claim.ticket} od ${claim.jmeno} — SLINGR`, html };
 }
 
 export async function sendClaimAdminEmail(claim: Claim): Promise<boolean> {
@@ -601,10 +605,10 @@ export function renderNewMessageAdminEmail(params: {
     </table>
     <p style="margin:0 0 6px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#9ca3af;">Text zprávy</p>
     <div style="background:#f7f6f4;border-radius:12px;padding:14px 18px;margin:0 0 20px;font-size:13px;line-height:1.6;color:#3f3f46;white-space:pre-wrap;">${esc(text)}</div>
-    ${p(`Odpovědět jde přímo odpovědí na tenhle e-mail, nebo v <a href="${SITE_URL}/admin" style="color:${BRAND_COLOR};text-decoration:none;">adminu</a>.`)}
+    ${p(`Odpovědět jde přímo odpovědí na tenhle e-mail, nebo v <a href="${SITE_URL}/admin" style="color:${BRAND_INK};text-decoration:none;">adminu</a>.`)}
     `,
   );
-  return { subject: `Nová zpráva od ${name} — HackPack`, html };
+  return { subject: `Nová zpráva od ${name} — SLINGR`, html };
 }
 
 export async function sendNewMessageAdminEmail(params: {
@@ -628,13 +632,13 @@ export function renderMessageReplyEmail(params: { name: string; originalText: st
     "Odpověď na vaši zprávu",
     `
     ${h1("Odpověď na vaši zprávu")}
-    ${p(`Ahoj ${esc(name)}, reagujeme na tvou zprávu z webu HackPack:`)}
+    ${p(`Ahoj ${esc(name)}, reagujeme na tvou zprávu z webu SLINGR:`)}
     <div style="background:#f7f6f4;border-radius:12px;padding:14px 18px;margin:0 0 20px;font-size:13px;line-height:1.6;color:#3f3f46;white-space:pre-wrap;">${esc(replyText)}</div>
     <p style="margin:0 0 6px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#9ca3af;">Tvá původní zpráva</p>
     <div style="border-left:2px solid #e5e7eb;padding-left:14px;margin:0 0 8px;font-size:12px;line-height:1.6;color:#9ca3af;white-space:pre-wrap;">${esc(originalText)}</div>
     `,
   );
-  return { subject: "Odpověď na vaši zprávu — HackPack", html };
+  return { subject: "Odpověď na vaši zprávu — SLINGR", html };
 }
 
 export async function sendMessageReplyEmail(params: {

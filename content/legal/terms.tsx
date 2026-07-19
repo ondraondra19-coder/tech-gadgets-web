@@ -33,7 +33,7 @@ function TermsCs() {
   return (
     <>
       <Section title="1. Základní ustanovení">
-        <p>Tyto obchodní podmínky (dále jen „podmínky“) upravují vzájemná práva a povinnosti mezi prodávajícím a kupujícím při prodeji zboží prostřednictvím internetového obchodu <strong>HackPack</strong> provozovaného na adrese <strong>hackpack.cz</strong>.</p>
+        <p>Tyto obchodní podmínky (dále jen „podmínky“) upravují vzájemná práva a povinnosti mezi prodávajícím a kupujícím při prodeji zboží prostřednictvím internetového obchodu <strong>SLINGR</strong> provozovaného na adrese <strong>slingr.cz</strong>.</p>
         <p>Prodávající: <strong>{companyField(COMPANY.name, "NÁZEV FIRMY")}</strong>, IČO: <strong>{companyField(COMPANY.companyId, "IČO")}</strong>, se sídlem <strong>{companyField(COMPANY.address, "ADRESA SÍDLA")}</strong>, zapsaná v obchodním rejstříku vedeném <strong>{companyField(COMPANY.registration, "SOUD A ODDÍL")}</strong>.</p>
         <p>Kontaktní e-mail: <strong>{COMPANY.email}</strong><br />Telefon: <strong>{COMPANY.phone}</strong></p>
       </Section>
@@ -102,7 +102,7 @@ function TermsSk() {
   return (
     <>
       <Section title="1. Základné ustanovenia">
-        <p>Tieto obchodné podmienky (ďalej len „podmienky“) upravujú vzájomné práva a povinnosti medzi predávajúcim a kupujúcim pri predaji tovaru prostredníctvom internetového obchodu <strong>HackPack</strong> prevádzkovaného na adrese <strong>hackpack.cz</strong>.</p>
+        <p>Tieto obchodné podmienky (ďalej len „podmienky“) upravujú vzájomné práva a povinnosti medzi predávajúcim a kupujúcim pri predaji tovaru prostredníctvom internetového obchodu <strong>SLINGR</strong> prevádzkovaného na adrese <strong>slingr.cz</strong>.</p>
         <p>Predávajúci: <strong>{companyField(COMPANY.name, "NÁZOV FIRMY")}</strong>, IČO: <strong>{companyField(COMPANY.companyId, "IČO")}</strong>, so sídlom <strong>{companyField(COMPANY.address, "ADRESA SÍDLA")}</strong>, zapísaná v obchodnom registri vedenom <strong>{companyField(COMPANY.registration, "SÚD A ODDIEL")}</strong>.</p>
         <p>Kontaktný e-mail: <strong>{COMPANY.email}</strong><br />Telefón: <strong>{COMPANY.phone}</strong></p>
       </Section>
@@ -171,7 +171,7 @@ function TermsEn() {
   return (
     <>
       <Section title="1. Introductory provisions">
-        <p>These terms and conditions (the “Terms”) govern the mutual rights and obligations between the seller and the buyer in the sale of goods through the <strong>HackPack</strong> online store operated at <strong>hackpack.cz</strong>.</p>
+        <p>These terms and conditions (the “Terms”) govern the mutual rights and obligations between the seller and the buyer in the sale of goods through the <strong>SLINGR</strong> online store operated at <strong>slingr.cz</strong>.</p>
         <p>Seller: <strong>{companyField(COMPANY.name, "COMPANY NAME")}</strong>, Company ID: <strong>{companyField(COMPANY.companyId, "COMPANY ID")}</strong>, registered office at <strong>{companyField(COMPANY.address, "REGISTERED ADDRESS")}</strong>, entered in the Commercial Register maintained by <strong>{companyField(COMPANY.registration, "COURT AND SECTION")}</strong>.</p>
         <p>Contact e-mail: <strong>{COMPANY.email}</strong><br />Phone: <strong>{COMPANY.phone}</strong></p>
       </Section>

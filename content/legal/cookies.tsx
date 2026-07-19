@@ -36,9 +36,9 @@ const TWELVE_HOURS = { cs: "12 hodin", sk: "12 hodín", en: "12 hours" };
 
 export const STORAGE_LIST: StorageEntry[] = [
   {
-    name: "hackpack-cookie-consent",
+    name: "slingr-cookie-consent",
     storage: "localStorage",
-    provider: "HackPack",
+    provider: "SLINGR",
     purpose: {
       cs: "Uchovává vaši volbu souhlasu s cookies, aby se vás web neptal znovu.",
       sk: "Uchováva vašu voľbu súhlasu s cookies, aby sa vás web nepýtal znova.",
@@ -48,9 +48,9 @@ export const STORAGE_LIST: StorageEntry[] = [
     type: "necessary",
   },
   {
-    name: "hackpack-cookie-visited-details",
+    name: "slingr-cookie-visited-details",
     storage: "sessionStorage",
-    provider: "HackPack",
+    provider: "SLINGR",
     purpose: {
       cs: "Poznamená si, že jste viděli tuto stránku s detaily, a zmenší podle toho lištu se souhlasem.",
       sk: "Poznamená si, že ste videli túto stránku s detailmi, a zmenší podľa toho lištu so súhlasom.",
@@ -60,9 +60,9 @@ export const STORAGE_LIST: StorageEntry[] = [
     type: "necessary",
   },
   {
-    name: "hackpack-cart",
+    name: "slingr-cart",
     storage: "localStorage",
-    provider: "HackPack",
+    provider: "SLINGR",
     purpose: {
       cs: "Obsah nákupního košíku, aby vám zboží nezmizelo mezi stránkami ani po zavření prohlížeče.",
       sk: "Obsah nákupného košíka, aby vám tovar nezmizol medzi stránkami ani po zatvorení prehliadača.",
@@ -72,9 +72,9 @@ export const STORAGE_LIST: StorageEntry[] = [
     type: "necessary",
   },
   {
-    name: "hackpack-order",
+    name: "slingr-order",
     storage: "localStorage",
-    provider: "HackPack",
+    provider: "SLINGR",
     purpose: {
       cs: "Zvolená doprava a platba, aby se vám nastavení neztratilo mezi kroky objednávky.",
       sk: "Zvolená doprava a platba, aby sa vám nastavenie nestratilo medzi krokmi objednávky.",
@@ -84,9 +84,9 @@ export const STORAGE_LIST: StorageEntry[] = [
     type: "necessary",
   },
   {
-    name: "hackpack-info",
+    name: "slingr-info",
     storage: "sessionStorage",
-    provider: "HackPack",
+    provider: "SLINGR",
     purpose: {
       cs: "Rozepsané údaje z objednávkového formuláře, abyste je nemuseli vyplňovat znovu při návratu.",
       sk: "Rozpísané údaje z objednávkového formulára, aby ste ich nemuseli vypĺňať znova pri návrate.",
@@ -96,9 +96,9 @@ export const STORAGE_LIST: StorageEntry[] = [
     type: "necessary",
   },
   {
-    name: "hackpack-zbox",
+    name: "slingr-zbox",
     storage: "localStorage",
-    provider: "HackPack",
+    provider: "SLINGR",
     purpose: {
       cs: "Vybrané výdejní místo Zásilkovny.",
       sk: "Vybrané výdajné miesto Zásielkovne.",
@@ -108,9 +108,9 @@ export const STORAGE_LIST: StorageEntry[] = [
     type: "necessary",
   },
   {
-    name: "hackpack-order-snapshot",
+    name: "slingr-order-snapshot",
     storage: "sessionStorage",
-    provider: "HackPack",
+    provider: "SLINGR",
     purpose: {
       cs: "Kopie dokončené objednávky pro stránku s potvrzením.",
       sk: "Kópia dokončenej objednávky pre stránku s potvrdením.",
@@ -120,9 +120,9 @@ export const STORAGE_LIST: StorageEntry[] = [
     type: "necessary",
   },
   {
-    name: "hackpack-last-review",
+    name: "slingr-last-review",
     storage: "localStorage",
-    provider: "HackPack",
+    provider: "SLINGR",
     purpose: {
       cs: "Čas vašeho posledního odeslaného hodnocení — brání opakovanému rozesílání recenzí.",
       sk: "Čas vášho posledného odoslaného hodnotenia — bráni opakovanému rozosielaniu recenzií.",
@@ -134,7 +134,7 @@ export const STORAGE_LIST: StorageEntry[] = [
   {
     name: "review_device_id",
     storage: "Cookie (httpOnly)",
-    provider: "HackPack",
+    provider: "SLINGR",
     purpose: {
       cs: "Rozlišuje prohlížeč, ze kterého jste psali recenzi, aby limit nesdíleli lidé na stejné síti.",
       sk: "Rozlišuje prehliadač, z ktorého ste písali recenziu, aby limit nezdieľali ľudia na rovnakej sieti.",
@@ -144,9 +144,9 @@ export const STORAGE_LIST: StorageEntry[] = [
     type: "necessary",
   },
   {
-    name: "hackpack-currency",
+    name: "slingr-currency",
     storage: "localStorage",
-    provider: "HackPack",
+    provider: "SLINGR",
     purpose: {
       cs: "Měna, kterou jste si sami zvolili pro zobrazení cen.",
       sk: "Mena, ktorú ste si sami zvolili na zobrazenie cien.",
@@ -158,7 +158,7 @@ export const STORAGE_LIST: StorageEntry[] = [
   {
     name: "hp_lang",
     storage: "Cookie",
-    provider: "HackPack",
+    provider: "SLINGR",
     purpose: {
       cs: "Jazyk, který jste si sami zvolili pro zobrazení webu. Vzniká až ve chvíli, kdy jazyk přepnete — do té doby se web zobrazuje česky a žádná cookie se neukládá.",
       sk: "Jazyk, ktorý ste si sami zvolili na zobrazenie webu. Vzniká až vo chvíli, keď jazyk prepnete — dovtedy sa web zobrazuje česky a žiadna cookie sa neukladá.",
@@ -170,7 +170,7 @@ export const STORAGE_LIST: StorageEntry[] = [
   {
     name: "admin_session",
     storage: "Cookie (httpOnly)",
-    provider: "HackPack",
+    provider: "SLINGR",
     purpose: {
       cs: "Přihlášení do administrace e-shopu. Vzniká pouze správci obchodu, běžnému návštěvníkovi nikdy.",
       sk: "Prihlásenie do administrácie e-shopu. Vzniká iba správcovi obchodu, bežnému návštevníkovi nikdy.",
@@ -182,7 +182,7 @@ export const STORAGE_LIST: StorageEntry[] = [
   {
     name: "admin_hint",
     storage: "Cookie",
-    provider: "HackPack",
+    provider: "SLINGR",
     purpose: {
       cs: "Označuje přihlášeného správce, aby se jeho vlastní procházení e-shopu nezapočítávalo do statistik.",
       sk: "Označuje prihláseného správcu, aby sa jeho vlastné prehliadanie e-shopu nezapočítavalo do štatistík.",

@@ -11,7 +11,7 @@ import { LOCALE_TAGS, type Locale } from "@/lib/locale";
 const HCAPTCHA_SITE_KEY = "d5505d72-aa1a-4b50-a746-a1b0175c9092";
 // Poznámka: cooldown se nyní vynucuje na serveru (podle IP) přes Upstash Redis.
 // Tento klíč v localStorage slouží jen jako optimistická UX nápověda pro stejný prohlížeč.
-const LAST_REVIEW_KEY = "hackpack-last-review";
+const LAST_REVIEW_KEY = "slingr-last-review";
 const COOLDOWN_MS = 24 * 60 * 60 * 1000;
 
 const MAX_CHARS = 600;       // limit znaků v recenzi

@@ -3,8 +3,7 @@
 // Klientská komponenta kvůli jazyku (jazyk se čte z cookie až po hydrataci,
 // viz lib/locale.ts). Dřív byla serverová; texty jsou tu jen dva bloky, takže
 // rozdíl v bundlu je pár set bajtů.
-import { ArrowUpRight } from "lucide-react";
-import Image from "next/image";
+import { ArrowUpRight, ShieldCheck, Truck } from "lucide-react";
 import { useT } from "@/lib/useT";
 
 export default function CategoryGrid() {
@@ -21,13 +20,12 @@ export default function CategoryGrid() {
             <div className="absolute -right-8 -top-8 w-48 h-48 rounded-full bg-white/10" />
             <div className="absolute -right-4 -bottom-12 w-64 h-64 rounded-full bg-white/5" />
 
-            {/* Zdroj je 1408×768, ale vykresluje se ve výšce 240px (~440px šířky).
-                Syrový <img> stahoval celých 287 KB PNG; next/image doručí AVIF/WebP
-                ve správné velikosti. Dekorace → alt="". */}
-            <Image src="/images/page/panak.png" alt="" width={440} height={240} className="absolute right-0 bottom-0 h-60 w-auto object-contain object-bottom pointer-events-none" />
+            {/* Velká jemná ikona místo dřívějšího AI panáka — dekorace k tématu
+                (záruka = štít), laděná do stylu zbytku webu (lucide). */}
+            <ShieldCheck aria-hidden="true" strokeWidth={1.25} className="absolute -bottom-8 -right-6 w-56 h-56 text-on-primary/15 pointer-events-none" />
 
-            {/* Růžová #ff8ad0 je světlá — bílý text na ní má 2.14:1. Tmavý
-                text-on-primary dává 8.94:1 a pozadí zůstává značkově růžové. */}
+            {/* Tyrkys #28bfa6 je světlý — bílý text na něm má 2.32:1. Tmavý
+                text-on-primary dává 8.07:1 a pozadí zůstává značkově tyrkysové. */}
             <div className="relative z-10 max-w-[55%]">
               <h3 className="text-on-primary text-2xl font-extrabold leading-tight">
                 {t("warrantyTitle")}
@@ -48,7 +46,9 @@ export default function CategoryGrid() {
             <div className="absolute -left-8 -top-8 w-48 h-48 rounded-full bg-white/5" />
             <div className="absolute -left-4 -bottom-12 w-64 h-64 rounded-full bg-white/[0.03]" />
 
-            <Image src="/images/page/panak.png" alt="" width={440} height={240} className="absolute left-0 bottom-0 h-60 w-auto object-contain object-bottom pointer-events-none scale-x-[-1]" />
+            {/* Velká jemná ikona místo panáka — doprava = kamion, tyrkys pro
+                barevný akcent na tmavém pozadí. */}
+            <Truck aria-hidden="true" strokeWidth={1.25} className="absolute -bottom-8 -left-6 w-56 h-56 text-primary/25 pointer-events-none" />
 
             <div className="relative z-10 ml-auto text-right max-w-[55%]">
               <h3 className="text-white text-2xl font-extrabold leading-tight">

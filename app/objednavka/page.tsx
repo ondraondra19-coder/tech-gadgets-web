@@ -41,8 +41,8 @@ type PacketaPoint = {
   zip: string;
 };
 
-const ZBOX_KEY = "hackpack-zbox";
-export const ORDER_KEY = "hackpack-order";
+const ZBOX_KEY = "slingr-zbox";
+export const ORDER_KEY = "slingr-order";
 
 // Popisky pro zákazníka; do záznamu objednávky se ukládá české jméno
 // z SHIPPING_CANONICAL_NAMES / PAYMENT_CANONICAL_NAMES podle `id`.

@@ -129,7 +129,7 @@ export default function DashboardHome({
   if (!canSeeOrders && !canSeeAnalytics && !canSeeProducts) {
     return (
       <div className="space-y-2">
-        <h3 className="text-base font-bold text-[#0f0f10]">Vítej na administraci HackPack</h3>
+        <h3 className="text-base font-bold text-[#0f0f10]">Vítej na administraci SLINGR</h3>
         <p className="text-zinc-500 text-xs leading-relaxed max-w-md">
           Zeptej se hlavního účtu na přidělení oprávnění, ať tu vidíš přehled objednávek, tržeb a skladu.
         </p>
@@ -140,7 +140,7 @@ export default function DashboardHome({
   return (
     <div className="space-y-4">
       <div>
-        <h3 className="text-base font-bold text-[#0f0f10]">Vítej na administraci HackPack</h3>
+        <h3 className="text-base font-bold text-[#0f0f10]">Vítej na administraci SLINGR</h3>
         <p className="text-zinc-500 text-xs leading-relaxed max-w-md mt-0.5">Rychlý přehled za posledních 7 dní.</p>
       </div>
 

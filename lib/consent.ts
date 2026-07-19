@@ -10,9 +10,9 @@
 // Proto každý zápis musí jít přes saveConsent()/clearConsent() odsud —
 // notifikace je součástí zápisu a nejde ji zapomenout.
 
-export const CONSENT_STORAGE_KEY = "hackpack-cookie-consent";
-export const CONSENT_SESSION_KEY = "hackpack-cookie-visited-details";
-export const CONSENT_CHANGED_EVENT = "hackpack-consent-changed";
+export const CONSENT_STORAGE_KEY = "slingr-cookie-consent";
+export const CONSENT_SESSION_KEY = "slingr-cookie-visited-details";
+export const CONSENT_CHANGED_EVENT = "slingr-consent-changed";
 
 export type ConsentPreferences = {
   essential: true; // technické cookies nejdou vypnout, jsou nutné pro košík a pokladnu

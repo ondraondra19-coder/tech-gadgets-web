@@ -4,7 +4,7 @@
 import { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { CURRENCIES, type Currency, type CurrencyCode } from "@/lib/currency";
 
-const STORAGE_KEY = "hackpack-currency";
+const STORAGE_KEY = "slingr-currency";
 
 type CurrencyContextType = {
   currency: Currency;

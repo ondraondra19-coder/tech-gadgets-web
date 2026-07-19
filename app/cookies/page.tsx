@@ -77,7 +77,7 @@ export default function CookiesPage() {
 
   return (
     <>
-      <title>{`${COOKIES_TITLE[locale]} | HackPack`}</title>
+      <title>{`${COOKIES_TITLE[locale]} | SLINGR`}</title>
 
       <Header />
       <LegalLayout

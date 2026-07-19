@@ -21,8 +21,8 @@ import { useT } from "@/lib/useT";
 import { shippingLabel } from "@/lib/shippingLabels";
 import CheckoutStepper from "@/components/CheckoutStepper";
 
-const ORDER_KEY = "hackpack-order";
-const INFO_KEY = "hackpack-info";
+const ORDER_KEY = "slingr-order";
+const INFO_KEY = "slingr-info";
 
 // ── Typy ──────────────────────────────────────────────────────────────────────
 
@@ -545,7 +545,7 @@ function CheckRow({ checked, onChange, children }: { checked: boolean; onChange:
   return (
     /* Zaškrtávátko samo je 18px — dotykový cíl by byl pod 24×24. Obalové
        tlačítko je proto 44×44 a průhledné, kroužek kreslí vnitřní <span>.
-       Fajfka je tmavá: bílá na růžové #ff8ad0 má jen 2.14:1. */
+       Fajfka je tmavá: bílá na tyrkysu #28bfa6 má jen 2.32:1. */
     <label className="flex items-start gap-3 cursor-pointer group">
       <button type="button" onClick={onChange} role="checkbox" aria-checked={checked}
         className="-ml-3 -mt-3 w-11 h-11 flex items-center justify-center shrink-0">
@@ -716,7 +716,7 @@ export default function InformacePage() {
 
       // Snapshot košíku a info uložíme PŘED clearCart — success page ho přečte
       try {
-        localStorage.setItem("hackpack-order-snapshot", JSON.stringify({
+        localStorage.setItem("slingr-order-snapshot", JSON.stringify({
           items,
           info: dataToSave,
           orderData: parsedOrder,

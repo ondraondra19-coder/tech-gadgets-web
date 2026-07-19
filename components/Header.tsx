@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { ShoppingCart, Phone, Mail, ChevronDown, Menu, X, Globe } from "lucide-react";
+import { ShoppingCart, Phone, ChevronDown, Menu, X, Globe } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useCart } from "@/lib/cart";
@@ -35,9 +35,10 @@ export default function Header() {
     setLangOpen(false);
   }
 
+  // Blog a „O nás" žijí nově jen v patičce. V hlavičce zůstává Kontakt —
+  // na desktopu v horní liště, na mobilu (kde horní lišta není) ve spodku
+  // mobilního menu, proto ho držíme i tady.
   const navRight = [
-    { label: tn("blog"), href: "/blog" },
-    { label: tn("about"), href: "/o-nas" },
     { label: tn("contact"), href: "/kontakt" },
   ];
 
@@ -52,73 +53,6 @@ export default function Header() {
   return (
     /* OPRAVA: pt-[env(safe-area-inset-top)] zajistí, že na mobilu černé pozadí proteče až pod notch */
     <header className="w-full bg-header relative z-50 pt-[env(safe-area-inset-top)]">
-
-      {/* ── TOP BAR — pouze desktop ── */}
-      <div className="hidden lg:block pt-3">
-        <div className="max-w-screen-2xl mx-auto px-6 lg:px-12 flex items-center justify-between">
-          <div className="flex items-center gap-5 text-white/60 text-xs">
-            <a href="tel:+420737565577" className="inline-flex items-center gap-1.5 hover:text-white transition-colors">
-              <Phone size={11} />
-              <span>+420 737 565 577</span>
-            </a>
-            <a href="mailto:info@dodelat.cz" className="inline-flex items-center gap-1.5 hover:text-white transition-colors">
-              <Mail size={11} />
-              <span>info@dodelat.cz</span>
-            </a>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <button
-                onClick={() => { setCurrencyOpen(v => !v); setLangOpen(false); }}
-                aria-label={t("changeCurrency", { code: currencyMounted ? currency.code : "" })}
-                aria-expanded={currencyOpen}
-                aria-haspopup="menu"
-                className="inline-flex items-center gap-1 min-h-11 text-white/60 text-xs hover:text-white transition-colors"
-              >
-                <span>{currencyMounted ? currency.code : "···"}</span>
-                <ChevronDown size={11} aria-hidden="true" className={`transition-transform duration-150 ${currencyOpen ? "rotate-180" : ""}`} />
-              </button>
-              {currencyOpen && (
-                <div className="absolute right-0 top-full mt-1 bg-header border border-white/10 rounded-lg py-1 z-50 min-w-[72px] shadow-md">
-                  {(["CZK", "EUR", "USD"] as CurrencyCode[]).map(code => (
-                    <button key={code} onClick={() => { setCurrency(code); setCurrencyOpen(false); }} className={`block w-full text-left px-3 py-1.5 text-xs transition-colors ${code === currency.code ? "text-primary" : "text-white/50 hover:text-white"}`}>
-                      <span>{code}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-            <span aria-hidden="true" className="text-white/50">|</span>
-            <div className="relative">
-              <button
-                onClick={() => { setLangOpen(v => !v); setCurrencyOpen(false); }}
-                aria-label={t("changeLanguage", { current: LOCALE_LABELS[locale] })}
-                aria-expanded={langOpen}
-                aria-haspopup="menu"
-                className="inline-flex items-center gap-1 min-h-11 text-white/60 text-xs hover:text-white transition-colors"
-              >
-                <Globe size={11} aria-hidden="true" />
-                <span>{LOCALE_LABELS[locale]}</span>
-                <ChevronDown size={11} aria-hidden="true" className={`transition-transform duration-150 ${langOpen ? "rotate-180" : ""}`} />
-              </button>
-              {langOpen && (
-                <div className="absolute right-0 top-full mt-1 bg-header border border-white/10 rounded-lg py-1 z-50 min-w-[120px] shadow-md">
-                  {LOCALES.map(l => (
-                    <button
-                      key={l}
-                      lang={l}
-                      onClick={() => switchLanguage(l)}
-                      className={`block w-full text-left px-3 py-1.5 text-xs transition-colors ${l === locale ? "text-primary" : "text-white/50 hover:text-white"}`}
-                    >
-                      {LOCALE_LABELS[l]}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
 
       {/* ── MAIN HEADER ── */}
       <div className="max-w-screen-2xl mx-auto px-4 lg:px-12 flex items-center justify-between h-16 lg:h-20 gap-4 lg:gap-6">
@@ -150,7 +84,74 @@ export default function Header() {
         </div>
 
         {/* Pravá strana */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 lg:gap-3">
+
+          {/* Utility (měna · jazyk · kontakt) — jen desktop. Na mobilu (kde není
+              horní lišta) jsou tyhle přepínače dole ve vysouvacím menu. */}
+          <div className="hidden lg:flex items-center gap-3">
+            {/* Měna */}
+            <div className="relative">
+              <button
+                onClick={() => { setCurrencyOpen(v => !v); setLangOpen(false); }}
+                aria-label={t("changeCurrency", { code: currencyMounted ? currency.code : "" })}
+                aria-expanded={currencyOpen}
+                aria-haspopup="menu"
+                className="inline-flex items-center gap-1 text-white/60 text-xs hover:text-white transition-colors"
+              >
+                <span>{currencyMounted ? currency.code : "···"}</span>
+                <ChevronDown size={11} aria-hidden="true" className={`transition-transform duration-150 ${currencyOpen ? "rotate-180" : ""}`} />
+              </button>
+              {currencyOpen && (
+                <div className="absolute right-0 top-full mt-2 bg-header border border-white/10 rounded-lg py-1 z-50 min-w-[72px] shadow-md">
+                  {(["CZK", "EUR", "USD"] as CurrencyCode[]).map(code => (
+                    <button key={code} onClick={() => { setCurrency(code); setCurrencyOpen(false); }} className={`block w-full text-left px-3 py-1.5 text-xs transition-colors ${code === currency.code ? "text-primary" : "text-white/50 hover:text-white"}`}>
+                      <span>{code}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <span aria-hidden="true" className="text-white/20">|</span>
+
+            {/* Jazyk */}
+            <div className="relative">
+              <button
+                onClick={() => { setLangOpen(v => !v); setCurrencyOpen(false); }}
+                aria-label={t("changeLanguage", { current: LOCALE_LABELS[locale] })}
+                aria-expanded={langOpen}
+                aria-haspopup="menu"
+                className="inline-flex items-center gap-1 text-white/60 text-xs hover:text-white transition-colors"
+              >
+                <Globe size={11} aria-hidden="true" />
+                <span>{LOCALE_LABELS[locale]}</span>
+                <ChevronDown size={11} aria-hidden="true" className={`transition-transform duration-150 ${langOpen ? "rotate-180" : ""}`} />
+              </button>
+              {langOpen && (
+                <div className="absolute right-0 top-full mt-2 bg-header border border-white/10 rounded-lg py-1 z-50 min-w-[120px] shadow-md">
+                  {LOCALES.map(l => (
+                    <button
+                      key={l}
+                      lang={l}
+                      onClick={() => switchLanguage(l)}
+                      className={`block w-full text-left px-3 py-1.5 text-xs transition-colors ${l === locale ? "text-primary" : "text-white/50 hover:text-white"}`}
+                    >
+                      {LOCALE_LABELS[l]}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <span aria-hidden="true" className="text-white/20">|</span>
+
+            {/* Kontakt */}
+            <Link href="/kontakt" className="inline-flex items-center gap-1.5 text-white/60 text-xs hover:text-white transition-colors">
+              <Phone size={12} aria-hidden="true" />
+              <span>{tn("contact")}</span>
+            </Link>
+          </div>
+
           {/* Popisek "Košík" je pod sm: schovaný, takže na mobilu by z odkazu
               zbyla holá ikona bez názvu — aria-label ho drží vždy. */}
           <a
@@ -199,6 +200,9 @@ export default function Header() {
                 key={item.label}
                 className="relative"
                 onMouseEnter={() => {
+                  // Sekce bez produktů (zatím prázdné nové kategorie) nemají co
+                  // rozbalit — hover dropdown pak vůbec nearmujeme.
+                  if (item.children.length === 0) return;
                   if (hoverTimeout.current) clearTimeout(hoverTimeout.current);
                   if (openMenu) {
                     setOpenMenu(item.label);
@@ -212,16 +216,9 @@ export default function Header() {
                   className={`inline-flex items-center gap-1 px-3 py-3.5 text-sm font-medium transition-colors ${openMenu === item.label ? "text-primary" : "text-white/70 hover:text-white"}`}
                 >
                   {item.label}
-                  <ChevronDown size={13} className={`transition-transform duration-200 ${openMenu === item.label ? "rotate-180 text-primary" : ""}`} />
-                </a>
-              </li>
-            ))}
-          </ul>
-          <ul className="flex items-center gap-1">
-            {navRight.map(item => (
-              <li key={item.label}>
-                <a href={item.href} className="inline-flex items-center px-3 py-3.5 text-sm font-medium text-white/60 hover:text-white transition-colors">
-                  {item.label}
+                  {item.children.length > 0 && (
+                    <ChevronDown size={13} className={`transition-transform duration-200 ${openMenu === item.label ? "rotate-180 text-primary" : ""}`} />
+                  )}
                 </a>
               </li>
             ))}
@@ -231,7 +228,7 @@ export default function Header() {
         {/* Nav dropdown */}
         {openMenu && (() => {
           const active = navItems.find(i => i.label === openMenu);
-          if (!active) return null;
+          if (!active || active.children.length === 0) return null;
           return (
             <div className="absolute left-0 right-0 z-40 bg-header border-t border-b border-white/10 shadow-xl">
               <div className="max-w-screen-2xl mx-auto px-6 lg:px-12 py-6">
@@ -269,14 +266,16 @@ export default function Header() {
                   >
                     {item.label}
                   </a>
-                  <button
-                    className="px-4 py-4 min-w-11 min-h-11 text-white/55 hover:text-white transition-colors"
-                    onClick={() => setMobileExpanded(v => v === item.label ? null : item.label)}
-                    aria-label={mobileExpanded === item.label ? t("collapse", { name: item.label }) : t("expand", { name: item.label })}
-                    aria-expanded={mobileExpanded === item.label}
-                  >
-                    <ChevronDown size={14} aria-hidden="true" className={`transition-transform duration-200 ${mobileExpanded === item.label ? "rotate-180 text-primary" : ""}`} />
-                  </button>
+                  {item.children.length > 0 && (
+                    <button
+                      className="px-4 py-4 min-w-11 min-h-11 text-white/55 hover:text-white transition-colors"
+                      onClick={() => setMobileExpanded(v => v === item.label ? null : item.label)}
+                      aria-label={mobileExpanded === item.label ? t("collapse", { name: item.label }) : t("expand", { name: item.label })}
+                      aria-expanded={mobileExpanded === item.label}
+                    >
+                      <ChevronDown size={14} aria-hidden="true" className={`transition-transform duration-200 ${mobileExpanded === item.label ? "rotate-180 text-primary" : ""}`} />
+                    </button>
+                  )}
                 </div>
                 {mobileExpanded === item.label && (
                   <ul className="bg-white/5 pb-2">

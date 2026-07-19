@@ -2,7 +2,7 @@
   "header": {
     "cart": "Košík",
     "products": "produktov",
-    "logoAlt": "HackPack — domov",
+    "logoAlt": "SLINGR — domov",
     "changeLanguage": "Zmeniť jazyk — vybrané {current}",
     "changeCurrency": "Zmeniť menu — vybrané {code}",
     "currency": "Mena",
@@ -165,7 +165,7 @@
     "claims": "Reklamácie",
     "shippingPayment": "Doprava a platba",
     "faq": "FAQ",
-    "aboutHackpack": "O HackPack",
+    "aboutHackpack": "O SLINGR",
     "blog": "Blog",
     "contact": "Kontakt",
     "trustExpedition": "Expedícia do 24 h",
@@ -179,7 +179,7 @@
   },
   "infogrid": {
     "teamTitle": "Spoznaj náš tím",
-    "teamSubtitle": "HackPack",
+    "teamSubtitle": "SLINGR",
     "teamBtn": "Spoznať",
     "contactTitle": "Kontaktuj nás",
     "contactSubtitle": "sme tu pre teba",
@@ -223,6 +223,11 @@
     "next": "Ďalšie produkty",
     "pagination": "Stránkovanie produktov",
     "showGroup": "Zobraziť produkty {n}. skupiny z {total}"
+  },
+  "videohero": {
+    "headline": "Nabi a spusť paľbu",
+    "sub": "Praky na loptičky aj vodné balóny, zábava pre jedno aj viac detí.",
+    "cta": "Prezrieť zbrane"
   },
   "slider": {
     "prev": "Predchádzajúci slide",
@@ -287,15 +292,44 @@
     "goToShop": "Prejsť do obchodu",
     "approxNote": "* Orientačný prepočet. Podmienka platnosti kódu sa počíta v Kč."
   },
+  "productrow": {
+    "viewAll": "Zobrazit vše",
+    "prev": "Předchozí",
+    "next": "Další",
+    "inStock": "Skladem",
+    "outStock": "Není skladem"
+  },
+  "rows": {
+    "setyTitle": "Ušetři a vyraz ve dvou",
+    "setySub": "Sety, co dají víc zábavy za míň.",
+    "zbraneTitle": "Vyber si svůj blaster",
+    "zbraneSub": "Od začátečnických kousků po tahouny na max výkon.",
+    "municeTitle": "Bez munice to nevystřelí",
+    "municeSub": "Kuličky, náboje i vodní balónky vždy po ruce.",
+    "prislusenstviTitle": "Vylaď si výbavu",
+    "prislusenstviSub": "Terče, pouzdra a další vychytávky do akce."
+  },
+  "howitworks": {
+    "eyebrow": "Jak na to",
+    "title": "Připraveno k palbě raz dva tři",
+    "subtitle": "Nic se nešroubuje, nic se nekomplikuje. Tři kroky a jde se do akce.",
+    "step1Title": "Vyber si prak",
+    "step1Desc": "Začínáš, nebo chceš co největší dostřel? Poradíme ti s výběrem podle věku i stylu hraní a pošleme to rovnou k tobě.",
+    "step2Title": "Nachystej si munici",
+    "step2Desc": "Vodní kuličky zalij vodou a nech je pár hodin, nejlíp přes noc, pořádně nabobtnat do plné velikosti. A je nabito.",
+    "step3Title": "Vyraz do akce",
+    "step3Desc": "Kulička se při zásahu neškodně roztříští a zmizí. Žádné boule, žádný úklid — jen čistá zábava.",
+    "cta": "Vybrat si prak"
+  },
   "trustbar": {
-    "shippingTitle": "Expedícia do 24 hodín",
-    "shippingDesc": "Objednávky prijaté do 14:00 odosielame ešte v ten istý deň.",
-    "returnsTitle": "30 dní na vrátenie",
-    "returnsDesc": "Bez otázok. Tovar vrátite do 30 dní od doručenia.",
-    "warrantyTitle": "Záruka 2 roky",
-    "warrantyDesc": "Na všetok tovar poskytujeme zákonnú záruku 24 mesiacov.",
-    "supportTitle": "Podpora 7 dní v týždni",
-    "supportDesc": "Chat, e-mail alebo telefón — sme tu pre vás každý deň."
+    "safetyTitle": "Bezpečné pro děti",
+    "safetyDesc": "Měkká munice šetrná ke všem.",
+    "shippingTitle": "Doprava po ČR i SK",
+    "shippingDesc": "Doručení až k tobě domů.",
+    "returnsTitle": "Vrácení do 14 dní",
+    "returnsDesc": "Nesedlo? V klidu to vezmeme zpět.",
+    "supportTitle": "Poradíme s výběrem",
+    "supportDesc": "Nevíš který prak? Napiš nám."
   },
   "categorygrid": {
     "warrantyTitle": "Na všetok tovar dávame záruku",
@@ -408,11 +442,11 @@
   "about": {
     "home": "Domov",
     "title": "O nás",
-    "heroTitle": "Sme HackPack",
+    "heroTitle": "Sme SLINGR",
     "heroDesc": "Český e-shop s prémiovým príslušenstvom pre Apple. Fungujeme od roku 2023.",
     "storyEyebrow": "Náš príbeh",
     "storyTitle": "Začalo to frustráciou z nekvalitného príslušenstva",
-    "storyPara1": "Unavení z lacných náhrad, ktoré sa rozpadali po týždni, sme sa rozhodli vytvoriť obchod, kde kvalita nie je kompromis. HackPack vznikol s jediným cieľom — ponúknuť prémiové Apple príslušenstvo za férové ceny.",
+    "storyPara1": "Unavení z lacných náhrad, ktoré sa rozpadali po týždni, sme sa rozhodli vytvoriť obchod, kde kvalita nie je kompromis. SLINGR vznikol s jediným cieľom — ponúknuť prémiové Apple príslušenstvo za férové ceny.",
     "storyPara2": "Dnes zásobujeme stovky spokojných zákazníkov po celej Českej republike a Slovensku. Každý produkt v našom katalógu sme osobne otestovali.",
     "valuesEyebrow": "Prečo si vybrať nás",
     "valuesTitle": "Naše hodnoty",

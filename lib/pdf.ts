@@ -14,7 +14,9 @@ import { approxConvert } from "./discounts";
 import { orderIdToVariableSymbol } from "./qrPlatba";
 
 const FONT_PATH = path.join(process.cwd(), "assets/fonts/NotoSans-Regular.ttf");
-const BRAND_COLOR = "#ff8ad0";
+// Tmavý tyrkys — používá se jako barva textu (řádek "Celkem") na bílém papíře,
+// takže musí být čitelný: 5.35:1 na bílé (jasný značkový tyrkys #28bfa6 by měl 2.32:1).
+const BRAND_COLOR = "#0f766e";
 const DARK = "#0f0f10";
 const MUTED = "#3f3f46";
 const SUBTLE = "#9ca3af";
@@ -62,7 +64,7 @@ export async function generatePaymentReceiptPdf(order: Order): Promise<Buffer> {
   });
 
   // ── Hlavička ──────────────────────────────────────────────────────────
-  doc.fontSize(20).fillColor(DARK).text("HackPack", MARGIN, MARGIN);
+  doc.fontSize(20).fillColor(DARK).text("SLINGR", MARGIN, MARGIN);
   doc.fontSize(10).fillColor(SUBTLE).text(`Objednávka #${vs}`, MARGIN, MARGIN + 26);
   doc
     .fontSize(10)
@@ -162,7 +164,7 @@ export async function generatePaymentReceiptPdf(order: Order): Promise<Buffer> {
   doc
     .fontSize(8)
     .fillColor(SUBTLE)
-    .text("Potřebujete pomoct? Napište nám na info@hackpack.cz.", MARGIN, 780, { width: CONTENT_WIDTH, align: "center" });
+    .text("Potřebujete pomoct? Napište nám na info@slingr.cz.", MARGIN, 780, { width: CONTENT_WIDTH, align: "center" });
 
   doc.end();
   return done;

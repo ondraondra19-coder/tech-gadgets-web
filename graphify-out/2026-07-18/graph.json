@@ -22105,7 +22105,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "components/CategoryProductRows.tsx",
-      "source_location": "L25",
+      "source_location": "L17",
       "weight": 1.0,
       "source": "components_categoryproductrows_categoryproductrows",
       "target": "lib_langcontext_uselang"
@@ -22116,7 +22116,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "components/CategoryProductRows.tsx",
-      "source_location": "L52",
+      "source_location": "L41",
       "weight": 1.0,
       "source": "components_categoryproductrows_categoryproductrows",
       "target": "lib_products_getcategoryname"
@@ -22127,7 +22127,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "components/CategoryProductRows.tsx",
-      "source_location": "L26",
+      "source_location": "L18",
       "weight": 1.0,
       "source": "components_categoryproductrows_categoryproductrows",
       "target": "lib_uset_uset"
