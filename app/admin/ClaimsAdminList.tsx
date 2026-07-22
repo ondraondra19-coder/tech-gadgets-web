@@ -9,20 +9,6 @@ type ClaimsAdminListProps = {
   onChange: (claims: Claim[]) => void;
 };
 
-// Popisky musí sedět s hodnotami <option value> na /reklamace — stejné mapy
-// jsou i v lib/email.ts pro potvrzovací e-mail.
-const TYPE_LABELS: Record<string, string> = {
-  reklamace: "Reklamace",
-  vraceni: "Vrácení do 14 dnů",
-  vymena: "Výměna",
-};
-
-const RESOLUTION_LABELS: Record<string, string> = {
-  oprava: "Oprava",
-  penize: "Vrácení peněz",
-  sleva: "Sleva z ceny",
-};
-
 const STATUS_LABELS: Record<ClaimStatus, string> = {
   novy: "Nový",
   vyrizuje_se: "Vyřizuje se",
@@ -73,22 +59,25 @@ function ClaimCard({
 
           <div className="flex items-center gap-3 mb-2 flex-wrap text-[11px] text-zinc-500">
             <span className="inline-flex items-center gap-1">
-              <Package size={11} /> {TYPE_LABELS[claim.typZadosti] ?? claim.typZadosti}
-              <span className="text-zinc-300">·</span>
-              {RESOLUTION_LABELS[claim.zpusobVyrizeni] ?? claim.zpusobVyrizeni}
+              <Package size={11} /> Vrácení do 14 dnů
             </span>
             <span className="inline-flex items-center gap-1">
               obj. <span className="font-mono text-zinc-600">{claim.cisloObjednavky}</span>
             </span>
+            <span className="inline-flex items-center gap-1">
+              účet <span className="font-mono text-zinc-600">{claim.cisloUctu}</span>
+            </span>
           </div>
 
-          <p className="text-xs text-zinc-600 leading-relaxed whitespace-pre-wrap mb-2">
-            {claim.popis}
-          </p>
+          {claim.duvod && (
+            <p className="text-xs text-zinc-600 leading-relaxed whitespace-pre-wrap mb-2">
+              {claim.duvod}
+            </p>
+          )}
 
           <div className="flex items-center gap-3 flex-wrap">
             <a
-              href={`mailto:${claim.email}?subject=${encodeURIComponent(`Reklamace ${claim.ticket} — SLINGR`)}`}
+              href={`mailto:${claim.email}?subject=${encodeURIComponent(`Vrácení ${claim.ticket} — Slingr`)}`}
               className="inline-flex items-center gap-1 text-[11px] text-zinc-400 hover:text-[#0f0f10] hover:underline"
             >
               <Mail size={11} /> {claim.email}

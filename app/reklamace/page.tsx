@@ -5,8 +5,7 @@ import Footer from "@/components/Footer";
 import Link from "next/link";
 import React, { useState } from "react";
 import {
-    ChevronRight, Package, MapPin, Home, ShoppingCart,
-    ShieldCheck, Clock, CheckCircle2, ArrowRight,
+    ChevronRight, ShieldCheck, Clock, CheckCircle2, ArrowRight,
     HelpCircle, Banknote, Send, AlertCircle,
 } from "lucide-react";
 import { useT, type T } from "@/lib/useT";
@@ -24,25 +23,17 @@ function buildSteps(t: T) {
     ];
 }
 
-function buildReturnMethods(t: T) {
-    return [
-        { icon: Package,      title: t("return1Title"), desc: t("return1Desc"), isFree: true,  freeNote: t("return1Note") },
-        { icon: Home,         title: t("return2Title"), desc: t("return2Desc"), isFree: true,  freeNote: t("return2Note") },
-        { icon: MapPin,       title: t("return3Title"), desc: t("return3Desc"), isFree: false, freeNote: "" },
-        { icon: ShoppingCart, title: t("return4Title"), desc: t("return4Desc"), isFree: true,  freeNote: t("return4Note") },
-    ];
-}
-
 // ── Typy formuláře ────────────────────────────────────────────────────────────
+// Jen odstoupení od smlouvy do 14 dnů: žádný typ žádosti ani způsob vyřízení —
+// výsledek je vždy vrácení peněz na účet. Důvod je NEPOVINNÝ.
 
 type FormState = {
     jmeno: string;
     email: string;
     telefon: string;
     cisloObjednavky: string;
-    typZadosti: string;
-    zpusobVyrizeni: string;
-    popis: string;
+    cisloUctu: string;
+    duvod: string;
 };
 
 const defaultForm: FormState = {
@@ -50,9 +41,8 @@ const defaultForm: FormState = {
     email: "",
     telefon: "",
     cisloObjednavky: "",
-    typZadosti: "",
-    zpusobVyrizeni: "",
-    popis: "",
+    cisloUctu: "",
+    duvod: "",
 };
 
 // ── Komponenty ────────────────────────────────────────────────────────────────
@@ -98,48 +88,11 @@ function Field({
     );
 }
 
-function SelectField({
-    label, name, value, onChange, options, error, required = false
-}: {
-    label: string; name: string; value: string;
-    onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
-    options: { value: string; label: string }[];
-    error?: string; required?: boolean;
-}) {
-    return (
-        <div>
-            <label className="block text-xs font-bold text-text-muted mb-1.5 uppercase tracking-wide">
-                {label}{required && " *"}
-            </label>
-            <div className={`border rounded-xl overflow-hidden transition-colors ${
-                error ? "border-red-400" : "border-border focus-within:border-primary/50"
-            }`}>
-                <select
-                    name={name}
-                    value={value}
-                    onChange={onChange}
-                    className="w-full px-4 py-3 bg-surface text-sm focus:outline-none appearance-none cursor-pointer text-text-base"
-                >
-                    {options.map(o => (
-                        <option key={o.value} value={o.value}>{o.label}</option>
-                    ))}
-                </select>
-            </div>
-            {error && (
-                <p className="flex items-center gap-1 text-red-500 text-xs mt-1">
-                    <AlertCircle size={11} /> {error}
-                </p>
-            )}
-        </div>
-    );
-}
-
 // ── Stránka ───────────────────────────────────────────────────────────────────
 
 export default function ReklamaceAVraceniPage() {
     const t = useT("claims");
     const steps = buildSteps(t);
-    const returnMethods = buildReturnMethods(t);
     const [isSubmitted, setIsSubmitted] = useState(false);
     // Číslo případu přiděluje server (atomický INCR, viz lib/claims.ts) a vrací
     // ho v odpovědi. Dřív se tady losovalo přes Math.random(), takže se nikam
@@ -156,6 +109,8 @@ export default function ReklamaceAVraceniPage() {
         setErrors(prev => ({ ...prev, [name]: undefined }));
     }
 
+    // Důvod (duvod) SCHVÁLNĚ nevaliduji — u odstoupení do 14 dnů se nesmí
+    // vyžadovat. Ostatní pole jsou povinná (kdo vrací, co vrací, kam vrátit peníze).
     function validate() {
         const e: Partial<Record<keyof FormState, string>> = {};
         if (!form.jmeno.trim()) e.jmeno = t("errName");
@@ -163,9 +118,7 @@ export default function ReklamaceAVraceniPage() {
         else if (!isValidEmail(form.email)) e.email = t("errEmailFormat");
         if (!form.telefon.trim()) e.telefon = t("errPhone");
         if (!form.cisloObjednavky.trim()) e.cisloObjednavky = t("errOrderNumber");
-        if (!form.typZadosti) e.typZadosti = t("errRequestType");
-        if (!form.zpusobVyrizeni) e.zpusobVyrizeni = t("errResolution");
-        if (!form.popis.trim()) e.popis = t("errDescription");
+        if (!form.cisloUctu.trim()) e.cisloUctu = t("errAccount");
         return e;
     }
 
@@ -173,15 +126,13 @@ export default function ReklamaceAVraceniPage() {
     // kód spadne na obecné "nepovedlo se", ať nikdy neukážeme "claims.neco".
     function messageForCode(code: unknown, minutes: unknown): string {
         switch (code) {
-            case "invalid_name":        return t("errName");
-            case "invalid_email":       return t("errEmailFormat");
-            case "invalid_phone":       return t("errPhone");
-            case "invalid_order":       return t("errOrderNumber");
-            case "invalid_type":        return t("errRequestType");
-            case "invalid_resolution":  return t("errResolution");
-            case "invalid_description": return t("errDescription");
-            case "cooldown":            return t("errCooldown", { minutes: typeof minutes === "number" ? minutes : 5 });
-            default:                    return t("errFailed");
+            case "invalid_name":     return t("errName");
+            case "invalid_email":    return t("errEmailFormat");
+            case "invalid_phone":    return t("errPhone");
+            case "invalid_order":    return t("errOrderNumber");
+            case "invalid_account":  return t("errAccount");
+            case "cooldown":         return t("errCooldown", { minutes: typeof minutes === "number" ? minutes : 5 });
+            default:                 return t("errFailed");
         }
     }
 
@@ -268,7 +219,7 @@ export default function ReklamaceAVraceniPage() {
                     <section className="mb-16">
                         <SectionLabel>{t("howToEyebrow")}</SectionLabel>
                         <h2 className="text-2xl font-extrabold text-text-base tracking-tight mb-10">
-                            Reklamace krok za krokem
+                            {t("howToTitle")}
                         </h2>
 
                         <div className="flex flex-col gap-0">
@@ -294,41 +245,7 @@ export default function ReklamaceAVraceniPage() {
                         </div>
                     </section>
 
-                    {/* ── Způsoby vrácení ── */}
-                    <section className="mb-16">
-                        <SectionLabel>{t("returnsEyebrow")}</SectionLabel>
-                        <h2 className="text-2xl font-extrabold text-text-base tracking-tight mb-8">
-                            {t("returnsTitle")}
-                        </h2>
-
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                            {returnMethods.map(m => (
-                                <div
-                                    key={m.title}
-                                    className="flex gap-5 p-6 bg-white rounded-2xl border border-border shadow-sm hover:border-primary/20 hover:shadow-md transition-all duration-200"
-                                >
-                                    <div className="shrink-0 w-12 h-12 rounded-xl bg-surface border border-border flex items-center justify-center">
-                                        <m.icon size={20} className="text-text-muted" />
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex items-start justify-between gap-3 mb-1">
-                                            <h3 className="text-text-base font-bold text-sm">{m.title}</h3>
-                                            
-                                        </div>
-                                        <p className="text-text-muted text-sm leading-relaxed mb-2">{m.desc}</p>
-                                        {m.isFree && (
-                                            <div className="inline-flex items-center gap-1 text-primary-ink text-[11px] font-bold">
-                                                <CheckCircle2 size={11} />
-                                                {m.freeNote}
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </section>
-
-                    {/* ── Reklamační formulář ── */}
+                    {/* ── Formulář pro odstoupení ── */}
                     <section className="mb-16" id="formular">
                         <SectionLabel>{t("formEyebrow")}</SectionLabel>
                         <h2 className="text-2xl font-extrabold text-text-base tracking-tight mb-8">
@@ -361,55 +278,31 @@ export default function ReklamaceAVraceniPage() {
                                         <h3 className="text-sm font-bold text-text-base uppercase tracking-wider mb-2">{t("goodsHeading")}</h3>
                                         <Field
                                             label={t("orderNumber")} name="cisloObjednavky" value={form.cisloObjednavky}
-                                            onChange={handleChange} placeholder="TG-2024-XXXX"
+                                            onChange={handleChange} placeholder="SL-2026-XXXX"
                                             error={errors.cisloObjednavky} required
                                         />
-                                        <SelectField
-                                            label={t("requestType")} name="typZadosti" value={form.typZadosti}
-                                            onChange={handleChange}
-                                            options={[
-                                                { value: "", label: t("pickType") },
-                                                { value: "reklamace", label: t("typeDefect") },
-                                                { value: "vraceni", label: t("typeReturn") },
-                                                { value: "vymena", label: t("typeExchange") },
-                                            ]}
-                                            error={errors.typZadosti} required
-                                        />
-                                        <SelectField
-                                            label={t("resolution")} name="zpusobVyrizeni" value={form.zpusobVyrizeni}
-                                            onChange={handleChange}
-                                            options={[
-                                                { value: "", label: t("pickResolution") },
-                                                { value: "oprava", label: t("resolutionRepair") },
-                                                { value: "penize", label: t("resolutionRefund") },
-                                                { value: "sleva", label: t("resolutionDiscount") },
-                                            ]}
-                                            error={errors.zpusobVyrizeni} required
+                                        <Field
+                                            label={t("accountLabel")} name="cisloUctu" value={form.cisloUctu}
+                                            onChange={handleChange} placeholder={t("accountPlaceholder")}
+                                            error={errors.cisloUctu} required
                                         />
                                     </div>
 
                                     <div className="md:col-span-2 space-y-4">
                                         <div>
                                             <label className="block text-xs font-bold text-text-muted mb-1.5 uppercase tracking-wide">
-                                                {t("descriptionLabel")} <span aria-hidden="true">*</span>
+                                                {t("reasonLabel")}
                                             </label>
-                                            <div className={`border rounded-xl overflow-hidden transition-colors ${
-                                                errors.popis ? "border-red-400" : "border-border focus-within:border-primary/50"
-                                            }`}>
+                                            <div className="border rounded-xl overflow-hidden transition-colors border-border focus-within:border-primary/50">
                                                 <textarea
-                                                    name="popis"
-                                                    value={form.popis}
+                                                    name="duvod"
+                                                    value={form.duvod}
                                                     onChange={handleChange}
                                                     rows={4}
-                                                    placeholder={t("descriptionPlaceholder")}
+                                                    placeholder={t("reasonPlaceholder")}
                                                     className="w-full px-4 py-3 bg-surface text-sm focus:outline-none resize-none text-text-base placeholder-text-subtle"
                                                 />
                                             </div>
-                                            {errors.popis && (
-                                                <p className="flex items-center gap-1 text-red-500 text-xs mt-1">
-                                                    <AlertCircle size={11} /> {errors.popis}
-                                                </p>
-                                            )}
                                         </div>
                                     </div>
 

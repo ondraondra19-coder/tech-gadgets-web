@@ -1,6 +1,6 @@
 // lib/udaje.ts
 // ─────────────────────────────────────────────────────────────────────────────
-// JEDINÉ MÍSTO pro všechny firemní a kontaktní údaje SLINGR.
+// JEDINÉ MÍSTO pro všechny firemní a kontaktní údaje Slingr.
 //
 // Cokoli změníš tady, se propíše VŠUDE — do patičky, na stránku Kontakt,
 // do transakčních e-mailů i do právních textů (obchodní podmínky, ochrana
@@ -11,7 +11,7 @@
 
 export const UDAJE = {
   // ── Firma (jen pro právní texty) ──
-  name: "",              // Obchodní firma, např. "SLINGR s.r.o."
+  name: "",              // Obchodní firma, např. "Slingr s.r.o."
   companyId: "",         // IČO
   vatId: "",             // DIČ — nech prázdné, když nejsi plátce DPH
   registration: "",      // Spisová značka, např. "Městský soud v Praze, oddíl C, vložka 12345"

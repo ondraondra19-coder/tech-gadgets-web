@@ -3,26 +3,23 @@
 // Redis, viditelné v adminu (stejný vzor jako lib/messages.ts).
 import { getRedis } from "./redis";
 
-// Hodnoty musí přesně sedět s <option value> ve formuláři na /reklamace —
-// API je proti těmhle seznamům validuje.
-export type ClaimType = "reklamace" | "vraceni" | "vymena";
-export type ClaimResolution = "oprava" | "penize" | "sleva";
+// Formulář na /reklamace řeší JEN odstoupení od smlouvy do 14 dnů (vrácení
+// zboží bez udání důvodu). Reklamace vad a výměny se řeší mimo tento formulář
+// (e-mailem / přes kontakt), proto tu není žádný typ žádosti ani způsob
+// vyřízení — u odstoupení je výsledek vždycky vrácení peněz na účet zákazníka.
 export type ClaimStatus = "novy" | "vyrizuje_se" | "vyrizeno";
 
-export const CLAIM_TYPES: ClaimType[] = ["reklamace", "vraceni", "vymena"];
-export const CLAIM_RESOLUTIONS: ClaimResolution[] = ["oprava", "penize", "sleva"];
 export const CLAIM_STATUSES: ClaimStatus[] = ["novy", "vyrizuje_se", "vyrizeno"];
 
 export type Claim = {
   id: string;
-  ticket: string; // "TG-10001" — to, co zákazník vidí a čím se prokazuje
+  ticket: string; // "SL-10001" — to, co zákazník vidí a čím se prokazuje
   jmeno: string;
   email: string;
   telefon: string;
   cisloObjednavky: string;
-  typZadosti: ClaimType;
-  zpusobVyrizeni: ClaimResolution;
-  popis: string;
+  cisloUctu: string; // kam vrátit peníze (číslo účtu nebo IBAN)
+  duvod: string; // NEPOVINNÝ — u odstoupení do 14 dnů nesmíme důvod vyžadovat ("")
   date: string; // ISO
   status: ClaimStatus;
 };
@@ -37,12 +34,12 @@ const MAX_CLAIMS = 2000; // pojistka proti neomezenému růstu klíče
 // odvolává se na něj. Dřív se generovalo na klientovi přes Math.random(), takže
 // se po reloadu měnilo, mohlo kolidovat a nikde se neukládalo. INCR v Redisu je
 // atomický, takže dvě reklamace odeslané naráz nikdy nedostanou stejné číslo.
-const TICKET_OFFSET = 10000; // ať první případ není "TG-1"
+const TICKET_OFFSET = 10000; // ať první případ není "SL-1"
 
 async function nextTicket(): Promise<string> {
   const redis = getRedis();
   const n = await redis.incr(COUNTER_KEY);
-  return `TG-${TICKET_OFFSET + n}`;
+  return `SL-${TICKET_OFFSET + n}`;
 }
 
 // ── Čtení ───────────────────────────────────────────────────────────────────
@@ -80,9 +77,8 @@ export async function addClaim(input: NewClaimInput): Promise<Claim> {
     email: input.email.trim(),
     telefon: input.telefon.trim(),
     cisloObjednavky: input.cisloObjednavky.trim(),
-    typZadosti: input.typZadosti,
-    zpusobVyrizeni: input.zpusobVyrizeni,
-    popis: input.popis.trim(),
+    cisloUctu: input.cisloUctu.trim(),
+    duvod: input.duvod.trim(),
     date: new Date().toISOString(),
     status: "novy",
   };

@@ -1,18 +1,12 @@
 // app/api/claims/route.ts
-// Veřejný endpoint — reklamace / vrácení / výměna z formuláře na /reklamace.
+// Veřejný endpoint — odstoupení od smlouvy do 14 dnů (vrácení zboží bez udání
+// důvodu) z formuláře na /reklamace.
 //
 // Chyby vrací `code`, ne hotovou větu: text se skládá až na klientovi podle
 // zvoleného jazyka (messages/*.json → namespace `claims`). Stejný vzor jako
 // /api/messages a /api/newsletter.
 import { NextResponse } from "next/server";
-import {
-  addClaim,
-  checkAndSetClaimCooldown,
-  CLAIM_RESOLUTIONS,
-  CLAIM_TYPES,
-  type ClaimResolution,
-  type ClaimType,
-} from "@/lib/claims";
+import { addClaim, checkAndSetClaimCooldown } from "@/lib/claims";
 import { sendClaimAdminEmail, sendClaimConfirmationEmail } from "@/lib/email";
 import { getClientIp } from "@/lib/clientIp";
 import { isValidEmail } from "@/lib/emailValidation";
@@ -21,16 +15,16 @@ const MAX_NAME_LENGTH = 80;
 const MAX_EMAIL_LENGTH = 150;
 const MAX_PHONE_LENGTH = 40;
 const MAX_ORDER_LENGTH = 40;
-const MAX_DESC_LENGTH = 2000;
+const MAX_ACCOUNT_LENGTH = 50;
+const MAX_REASON_LENGTH = 2000;
 
 export type ClaimsErrorCode =
   | "invalid_name"
   | "invalid_email"
   | "invalid_phone"
   | "invalid_order"
-  | "invalid_type"
-  | "invalid_resolution"
-  | "invalid_description"
+  | "invalid_account"
+  | "invalid_reason"
   | "cooldown"
   | "failed";
 
@@ -45,7 +39,7 @@ function isFilled(value: unknown, max: number): value is string {
 export async function POST(req: Request) {
   try {
     const body = await req.json().catch(() => null);
-    const { jmeno, email, telefon, cisloObjednavky, typZadosti, zpusobVyrizeni, popis } = body ?? {};
+    const { jmeno, email, telefon, cisloObjednavky, cisloUctu, duvod } = body ?? {};
 
     // ── Validace vstupu ────────────────────────────────────────────────────
     // Server validuje znovu všechno, co hlídá i formulář — na klienta se
@@ -62,14 +56,14 @@ export async function POST(req: Request) {
     if (!isFilled(cisloObjednavky, MAX_ORDER_LENGTH)) {
       return fail("invalid_order", "Neplatné číslo objednávky.", 400);
     }
-    if (!CLAIM_TYPES.includes(typZadosti as ClaimType)) {
-      return fail("invalid_type", "Neplatný typ žádosti.", 400);
+    // Číslo účtu je povinné — bez něj nemáme kam vrátit peníze.
+    if (!isFilled(cisloUctu, MAX_ACCOUNT_LENGTH)) {
+      return fail("invalid_account", "Neplatné číslo účtu.", 400);
     }
-    if (!CLAIM_RESOLUTIONS.includes(zpusobVyrizeni as ClaimResolution)) {
-      return fail("invalid_resolution", "Neplatný způsob vyřízení.", 400);
-    }
-    if (!isFilled(popis, MAX_DESC_LENGTH)) {
-      return fail("invalid_description", "Popis je prázdný nebo příliš dlouhý.", 400);
+    // Důvod je NEPOVINNÝ (u odstoupení do 14 dnů ho zákon zakazuje vyžadovat) —
+    // validujeme jen délku, a jen když ho zákazník vyplní.
+    if (typeof duvod === "string" && duvod.trim().length > MAX_REASON_LENGTH) {
+      return fail("invalid_reason", "Důvod je příliš dlouhý.", 400);
     }
 
     // ── Anti-spam: 1 žádost / IP adresa / 5 minut ──────────────────────────
@@ -85,9 +79,8 @@ export async function POST(req: Request) {
       email,
       telefon,
       cisloObjednavky,
-      typZadosti: typZadosti as ClaimType,
-      zpusobVyrizeni: zpusobVyrizeni as ClaimResolution,
-      popis,
+      cisloUctu,
+      duvod: typeof duvod === "string" ? duvod : "",
     });
 
     // Žádost je uložená a číslo případu přidělené — od téhle chvíle nesmí

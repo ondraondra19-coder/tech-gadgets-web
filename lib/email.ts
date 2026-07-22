@@ -10,9 +10,9 @@ import { CURRENCIES, formatPrice, type Currency, type CurrencyCode } from "./cur
 import { approxConvert } from "./discounts";
 import { buildSpdString, orderIdToVariableSymbol } from "./qrPlatba";
 import { generatePaymentReceiptPdf } from "./pdf";
-import { UDAJE } from "./udaje";
+import { UDAJE, adresaSidla } from "./udaje";
 
-const FROM_ADDRESS = process.env.RESEND_FROM_EMAIL ?? `SLINGR <${UDAJE.email}>`;
+const FROM_ADDRESS = process.env.RESEND_FROM_EMAIL ?? `Slingr <${UDAJE.email}>`;
 const SUPPORT_EMAIL = UDAJE.email;
 // Kam chodí interní upozornění (nová zpráva, nová reklamace). Zatím shodné se
 // SUPPORT_EMAIL — až bude potřeba jiná adresa, stačí sáhnout sem.
@@ -108,7 +108,7 @@ function layout(previewText: string, bodyHtml: string): string {
         <tr><td style="padding:20px 32px;background:#f7f6f4;border-top:1px solid #e5e7eb;">
           <p style="margin:0;font-size:11px;color:#9ca3af;line-height:1.6;">
             Potřebujete pomoct? Napište nám na <a href="mailto:${SUPPORT_EMAIL}" style="color:${BRAND_INK};text-decoration:none;">${SUPPORT_EMAIL}</a>.<br />
-            SLINGR · <a href="${SITE_URL}" style="color:#9ca3af;">${SITE_URL.replace(/^https?:\/\//, "")}</a>
+            Slingr · <a href="${SITE_URL}" style="color:#9ca3af;">${SITE_URL.replace(/^https?:\/\//, "")}</a>
           </p>
         </td></tr>
       </table>
@@ -335,7 +335,7 @@ export async function renderOrderConfirmationEmail(
     `,
   );
 
-  return { subject: `Objednávka #${vs} přijata — SLINGR`, html, attachments };
+  return { subject: `Objednávka #${vs} přijata — Slingr`, html, attachments };
 }
 
 export async function sendOrderConfirmationEmail(order: Order): Promise<boolean> {
@@ -368,7 +368,7 @@ export function renderPaymentReceivedEmail(order: Order): { subject: string; htm
     ${addressBlock(order)}
     `,
   );
-  return { subject: `Platba za objednávku #${vs} přijata — SLINGR`, html };
+  return { subject: `Platba za objednávku #${vs} přijata — Slingr`, html };
 }
 
 export async function sendPaymentReceivedEmail(order: Order): Promise<boolean> {
@@ -419,7 +419,7 @@ export function renderOrderShippedEmail(order: Order): { subject: string; html: 
     ${addressBlock(order)}
     `,
   );
-  return { subject: `Objednávka #${vs} je na cestě — SLINGR`, html };
+  return { subject: `Objednávka #${vs} je na cestě — Slingr`, html };
 }
 
 export async function sendOrderShippedEmail(order: Order): Promise<boolean> {
@@ -443,7 +443,7 @@ export function renderOrderDeliveredEmail(order: Order): { subject: string; html
     </p>
     `,
   );
-  return { subject: `Objednávka #${vs} doručena — SLINGR`, html };
+  return { subject: `Objednávka #${vs} doručena — Slingr`, html };
 }
 
 export async function sendOrderDeliveredEmail(order: Order): Promise<boolean> {
@@ -462,7 +462,7 @@ export function renderReviewThankYouEmail(name: string): { subject: string; html
     ${p(`Ahoj ${esc(name)}, díky, že sis udělal/a čas napsat recenzi. Vážíme si toho a moc nám to pomáhá.`)}
     `,
   );
-  return { subject: "Díky za recenzi — SLINGR", html };
+  return { subject: "Díky za recenzi — Slingr", html };
 }
 
 export async function sendReviewThankYouEmail(to: string, name: string): Promise<boolean> {
@@ -495,7 +495,7 @@ export function renderBackInStockEmail(params: { productName: string; slug: stri
     </p>
     `,
   );
-  return { subject: `${productName} je zpátky skladem — SLINGR`, html };
+  return { subject: `${productName} je zpátky skladem — Slingr`, html };
 }
 
 export async function sendBackInStockEmail(params: {
@@ -538,7 +538,7 @@ export function renderWelcomeDiscountEmail(params: { code: string; percent: numb
     </p>
     `,
   );
-  return { subject: `Tvůj slevový kód na ${percent} % — SLINGR`, html };
+  return { subject: `Tvůj slevový kód na ${percent} % — Slingr`, html };
 }
 
 export async function sendWelcomeDiscountEmail(params: {
@@ -551,49 +551,50 @@ export async function sendWelcomeDiscountEmail(params: {
   return send(to, subject, html);
 }
 
-// ── 5b) Reklamace / vrácení / výměna ────────────────────────────────────────
-// Potvrzení zákazníkovi slouží i jako doklad, že žádost dorazila — proto v něm
-// musí být číslo případu a shrnutí toho, co vyplnil.
-
-const CLAIM_TYPE_LABELS: Record<string, string> = {
-  reklamace: "Reklamace (vada zboží)",
-  vraceni: "Vrácení do 14 dnů",
-  vymena: "Výměna",
-};
-
-const CLAIM_RESOLUTION_LABELS: Record<string, string> = {
-  oprava: "Oprava",
-  penize: "Vrácení peněz",
-  sleva: "Sleva z ceny",
-};
-
-function claimLabel(map: Record<string, string>, value: string): string {
-  return map[value] ?? value;
-}
+// ── 5b) Odstoupení od smlouvy do 14 dnů (vrácení zboží) ─────────────────────
+// Potvrzení zákazníkovi slouží i jako doklad, že oznámení dorazilo — proto v něm
+// musí být číslo případu, shrnutí a hlavně pokyny, jak zboží vrátit (Model A).
 
 function claimDetailsTable(claim: Claim): string {
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 16px;">
     ${summaryRow("Číslo případu", esc(claim.ticket), { bold: true, color: BRAND_INK })}
     ${summaryRow("Číslo objednávky", esc(claim.cisloObjednavky))}
-    ${summaryRow("Typ žádosti", esc(claimLabel(CLAIM_TYPE_LABELS, claim.typZadosti)))}
-    ${summaryRow("Způsob vyřízení", esc(claimLabel(CLAIM_RESOLUTION_LABELS, claim.zpusobVyrizeni)))}
+    ${summaryRow("Účet pro vrácení peněz", esc(claim.cisloUctu))}
   </table>`;
 }
 
+// Pokyny pro vrácení — jádro Modelu A. Adresa se bere ze skladu, a když není
+// vyplněná, spadne na sídlo (viz lib/udaje.ts), ať v mailu nikdy nechybí.
+function returnInstructionsBlock(): string {
+  const returnAddress = UDAJE.warehouseAddress || adresaSidla;
+  return `
+    <p style="margin:0 0 6px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#9ca3af;">Jak zboží vrátit</p>
+    <div style="background:#f7f6f4;border-radius:12px;padding:14px 18px;margin:0 0 20px;font-size:13px;line-height:1.8;color:#3f3f46;">
+      1. Zboží zabal tak, aby se cestou nepoškodilo — ideálně do původního obalu.<br />
+      2. Přilož kopii dokladu o koupi nebo číslo objednávky.<br />
+      3. Pošli na adresu <strong>${esc(returnAddress)}</strong>, a to do 14 dnů od tohoto oznámení.<br />
+      4. Zásilku prosím <strong>neposílej na dobírku</strong> — nemůžeme ji převzít.
+    </div>`;
+}
+
 export function renderClaimConfirmationEmail(claim: Claim): { subject: string; html: string } {
+  const reasonBlock = claim.duvod
+    ? `<p style="margin:0 0 6px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#9ca3af;">Uvedený důvod</p>
+       <div style="background:#f7f6f4;border-radius:12px;padding:14px 18px;margin:0 0 20px;font-size:13px;line-height:1.6;color:#3f3f46;white-space:pre-wrap;">${esc(claim.duvod)}</div>`
+    : "";
   const html = layout(
-    `Žádost ${claim.ticket} přijata`,
+    `Vrácení ${claim.ticket} přijato`,
     `
-    ${h1("Žádost jsme přijali")}
-    ${p(`Ahoj ${esc(claim.jmeno)}, potvrzujeme, že tvoje žádost dorazila. Číslo případu si prosím uschovej — budeme se na něj odkazovat.`)}
+    ${h1("Přijali jsme tvoje oznámení o vrácení")}
+    ${p(`Ahoj ${esc(claim.jmeno)}, potvrzujeme, že tvoje oznámení o odstoupení od smlouvy (vrácení do 14 dnů) dorazilo. Číslo případu si prosím uschovej — budeme se na něj odkazovat.`)}
     ${claimDetailsTable(claim)}
-    <p style="margin:0 0 6px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#9ca3af;">Popis</p>
-    <div style="background:#f7f6f4;border-radius:12px;padding:14px 18px;margin:0 0 20px;font-size:13px;line-height:1.6;color:#3f3f46;white-space:pre-wrap;">${esc(claim.popis)}</div>
-    ${p("Ozveme se ti nejpozději do 30 dnů, obvykle ale mnohem dřív. Pokud budeme potřebovat doplnit informace, napíšeme na tenhle e-mail.")}
+    ${reasonBlock}
+    ${returnInstructionsBlock()}
+    ${p("Peníze ti vrátíme do 14 dnů od doručení vráceného zboží, na účet uvedený výše. Pokud budeme potřebovat něco doplnit, napíšeme na tenhle e-mail.")}
     ${sellerBlock()}
     `,
   );
-  return { subject: `Žádost ${claim.ticket} přijata — SLINGR`, html };
+  return { subject: `Vrácení ${claim.ticket} přijato — Slingr`, html };
 }
 
 export async function sendClaimConfirmationEmail(claim: Claim): Promise<boolean> {
@@ -602,22 +603,25 @@ export async function sendClaimConfirmationEmail(claim: Claim): Promise<boolean>
 }
 
 export function renderClaimAdminEmail(claim: Claim): { subject: string; html: string } {
+  const reasonBlock = claim.duvod
+    ? `<p style="margin:0 0 6px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#9ca3af;">Uvedený důvod (nepovinný)</p>
+       <div style="background:#f7f6f4;border-radius:12px;padding:14px 18px;margin:0 0 20px;font-size:13px;line-height:1.6;color:#3f3f46;white-space:pre-wrap;">${esc(claim.duvod)}</div>`
+    : "";
   const html = layout(
-    `Nová žádost ${claim.ticket}`,
+    `Nové vrácení ${claim.ticket}`,
     `
-    ${h1("Nová reklamace / vrácení")}
+    ${h1("Nové vrácení do 14 dnů")}
     ${claimDetailsTable(claim)}
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 16px;">
       ${summaryRow("Jméno", esc(claim.jmeno), { bold: true })}
       ${summaryRow("E-mail", esc(claim.email))}
       ${summaryRow("Telefon", esc(claim.telefon))}
     </table>
-    <p style="margin:0 0 6px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#9ca3af;">Popis</p>
-    <div style="background:#f7f6f4;border-radius:12px;padding:14px 18px;margin:0 0 20px;font-size:13px;line-height:1.6;color:#3f3f46;white-space:pre-wrap;">${esc(claim.popis)}</div>
+    ${reasonBlock}
     ${p("Odpovědět jde přímo odpovědí na tenhle e-mail.")}
     `,
   );
-  return { subject: `Nová žádost ${claim.ticket} od ${claim.jmeno} — SLINGR`, html };
+  return { subject: `Nové vrácení ${claim.ticket} od ${claim.jmeno} — Slingr`, html };
 }
 
 export async function sendClaimAdminEmail(claim: Claim): Promise<boolean> {
@@ -652,7 +656,7 @@ export function renderNewMessageAdminEmail(params: {
     ${p(`Odpovědět jde přímo odpovědí na tenhle e-mail, nebo v <a href="${SITE_URL}/admin" style="color:${BRAND_INK};text-decoration:none;">adminu</a>.`)}
     `,
   );
-  return { subject: `Nová zpráva od ${name} — SLINGR`, html };
+  return { subject: `Nová zpráva od ${name} — Slingr`, html };
 }
 
 export async function sendNewMessageAdminEmail(params: {
@@ -676,13 +680,13 @@ export function renderMessageReplyEmail(params: { name: string; originalText: st
     "Odpověď na vaši zprávu",
     `
     ${h1("Odpověď na vaši zprávu")}
-    ${p(`Ahoj ${esc(name)}, reagujeme na tvou zprávu z webu SLINGR:`)}
+    ${p(`Ahoj ${esc(name)}, reagujeme na tvou zprávu z webu Slingr:`)}
     <div style="background:#f7f6f4;border-radius:12px;padding:14px 18px;margin:0 0 20px;font-size:13px;line-height:1.6;color:#3f3f46;white-space:pre-wrap;">${esc(replyText)}</div>
     <p style="margin:0 0 6px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#9ca3af;">Tvá původní zpráva</p>
     <div style="border-left:2px solid #e5e7eb;padding-left:14px;margin:0 0 8px;font-size:12px;line-height:1.6;color:#9ca3af;white-space:pre-wrap;">${esc(originalText)}</div>
     `,
   );
-  return { subject: "Odpověď na vaši zprávu — SLINGR", html };
+  return { subject: "Odpověď na vaši zprávu — Slingr", html };
 }
 
 export async function sendMessageReplyEmail(params: {
