@@ -124,9 +124,9 @@ export default function KontaktPage() {
                       to by po překladu přestalo platit a neděle by se vykreslila
                       jako otevřený den. */}
                   {[
-                    { day: t("weekdays"), time: "9:00 – 17:00",  closed: false },
-                    { day: t("saturday"), time: "10:00 – 14:00", closed: false },
-                    { day: t("sunday"),   time: t("closed"),     closed: true  },
+                    { day: t("weekdays"), time: UDAJE.openingHours.weekdays, closed: false },
+                    { day: t("saturday"), time: UDAJE.openingHours.saturday, closed: false },
+                    { day: t("sunday"),   time: t("closed"),                 closed: true  },
                   ].map((row) => (
                     <div key={row.day} className="flex items-center justify-between py-2 border-b border-border last:border-0">
                       <div className="flex items-center gap-2">

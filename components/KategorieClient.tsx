@@ -65,27 +65,30 @@ function DualRangeSlider({
   const pctMin = ((valueMin - min) / range) * 100;
   const pctMax = ((valueMax - min) / range) * 100;
 
-  function valueFromClientX(clientX: number): number {
+  // Spodní úchyt zaokrouhlujeme DOLŮ a horní NAHORU (ne na nejbližší) — díky
+  // tomu se rozsah vždy „rozšíří" na celé desítky ven a nejlevnější/nejdražší
+  // produkt z filtru nevypadne (např. 599 Kč: spodní mez drží na 590, ne 600).
+  function valueFromClientX(clientX: number, round: (n: number) => number): number {
     const rect = trackRef.current!.getBoundingClientRect();
     const frac = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
-    return Math.round((min + frac * range) / step) * step;
+    return round((min + frac * range) / step) * step;
   }
 
   // Pointer Capture API: jednou zachycený ukazatel posílá move/up eventy přímo
   // tomuto úchytu bez ohledu na to, co je pod kurzorem nebo jak se mezitím
   // překreslí okolí — na rozdíl od dvou překrytých native <input type="range">
   // (viz komentář u .range-slider v globals.css), tady se tah nikdy nepřeruší.
-  function startDrag(onChange: (v: number) => void, clamp: (v: number) => number) {
+  function startDrag(onChange: (v: number) => void, clamp: (v: number) => number, round: (n: number) => number) {
     return (e: React.PointerEvent<HTMLDivElement>) => {
       e.currentTarget.setPointerCapture(e.pointerId);
-      onChange(clamp(valueFromClientX(e.clientX)));
+      onChange(clamp(valueFromClientX(e.clientX, round)));
     };
   }
 
-  function handleDrag(onChange: (v: number) => void, clamp: (v: number) => number) {
+  function handleDrag(onChange: (v: number) => void, clamp: (v: number) => number, round: (n: number) => number) {
     return (e: React.PointerEvent<HTMLDivElement>) => {
       if (!e.currentTarget.hasPointerCapture(e.pointerId)) return;
-      onChange(clamp(valueFromClientX(e.clientX)));
+      onChange(clamp(valueFromClientX(e.clientX, round)));
     };
   }
 
@@ -117,8 +120,8 @@ function DualRangeSlider({
           aria-valuetext={`${valueMin} Kč`}
           className="absolute top-1/2 w-8 h-8 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center cursor-grab active:cursor-grabbing touch-none"
           style={{ left: `${pctMin}%` }}
-          onPointerDown={startDrag(onChangeMin, clampMin)}
-          onPointerMove={handleDrag(onChangeMin, clampMin)}
+          onPointerDown={startDrag(onChangeMin, clampMin, Math.floor)}
+          onPointerMove={handleDrag(onChangeMin, clampMin, Math.floor)}
           onKeyDown={e => {
             if (e.key === "ArrowRight") onChangeMin(clampMin(valueMin + step));
             if (e.key === "ArrowLeft") onChangeMin(Math.max(valueMin - step, min));
@@ -136,8 +139,8 @@ function DualRangeSlider({
           aria-valuetext={`${valueMax} Kč`}
           className="absolute top-1/2 w-8 h-8 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center cursor-grab active:cursor-grabbing touch-none"
           style={{ left: `${pctMax}%` }}
-          onPointerDown={startDrag(onChangeMax, clampMax)}
-          onPointerMove={handleDrag(onChangeMax, clampMax)}
+          onPointerDown={startDrag(onChangeMax, clampMax, Math.ceil)}
+          onPointerMove={handleDrag(onChangeMax, clampMax, Math.ceil)}
           onKeyDown={e => {
             if (e.key === "ArrowLeft") onChangeMax(clampMax(valueMax - step));
             if (e.key === "ArrowRight") onChangeMax(Math.min(valueMax + step, max));

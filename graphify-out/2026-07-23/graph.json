@@ -4022,7 +4022,7 @@
       "label": "ProductRow()",
       "file_type": "code",
       "source_file": "components/ProductRow.tsx",
-      "source_location": "L201",
+      "source_location": "L214",
       "_origin": "ast",
       "id": "components_productrow_productrow",
       "community": 6,
@@ -22416,7 +22416,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/page.tsx",
-      "source_location": "L25",
+      "source_location": "L26",
       "weight": 1.0,
       "source": "app_page_home",
       "target": "lib_stock_getstockmap"
@@ -25697,7 +25697,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "components/ProductRow.tsx",
-      "source_location": "L201",
+      "source_location": "L214",
       "weight": 1.0,
       "source": "components_productrow",
       "target": "components_productrow_productrow",
@@ -25948,7 +25948,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "components/ProductRow.tsx",
-      "source_location": "L157",
+      "source_location": "L167",
       "weight": 1.0,
       "source": "components_productrow_productcard",
       "target": "lib_products_getproductname"
@@ -25959,7 +25959,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "components/ProductRow.tsx",
-      "source_location": "L216",
+      "source_location": "L229",
       "weight": 1.0,
       "source": "components_productrow_productrow",
       "target": "lib_langcontext_uselang"
@@ -25970,7 +25970,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "components/ProductRow.tsx",
-      "source_location": "L217",
+      "source_location": "L230",
       "weight": 1.0,
       "source": "components_productrow_productrow",
       "target": "lib_uset_uset"
@@ -38388,5 +38388,5 @@
       "source_file": "README-stock.md"
     }
   ],
-  "built_at_commit": "f2b1dd07036d41110df20dbce20d6ada3921ac6c"
+  "built_at_commit": "7175a6365a4391e54b6931faf666d74d44544bb9"
 }

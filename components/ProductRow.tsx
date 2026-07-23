@@ -6,10 +6,11 @@
 // zelené „Odeslání do 24 hodin!" a u docházejících kusů „Zbývá N skladem".
 // Nadpis sekce vlevo, vpravo „Zobrazit vše" + šipky (desktop). Znovupoužitelné
 // pro libovolnou sekci (kategorie, novinky…).
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, ArrowRight, Star, Truck, Plus, Check } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ChevronLeft, ChevronRight, ArrowRight, Star, Truck, Plus } from "lucide-react";
 import type { Product } from "@/lib/products";
 import { getProductName } from "@/lib/products";
 import { useCurrency } from "@/lib/CurrencyContext";
@@ -64,8 +65,8 @@ function ProductCard({
   locale: string;
 }) {
   const { currency } = useCurrency();
-  const { addItem } = useCart();
-  const [added, setAdded] = useState(false);
+  const { addItem, items } = useCart();
+  const router = useRouter();
 
   const hasSale = !!product.discountPercent && !!product.originalPrice;
   const current = formatPrice(getPrice(product.price, currency), currency);
@@ -75,10 +76,16 @@ function ProductCard({
   // jinak fallback na statické product.inStock z katalogu.
   const known = available !== undefined;
   const inStock = known ? available > 0 : product.inStock;
-  const low = known && available > 0 && available <= LOW_STOCK_THRESHOLD;
 
-  // Produkty nemají volby, takže „+" přidá 1× rovnou do košíku (pokud je skladem).
-  const canQuickAdd = inStock;
+  // Kolik kusů už zákazník má v košíku — odečteme od skladu, ať karta ukazuje,
+  // kolik REÁLNĚ zbývá přidat (sklad 3, v košíku 2 → „Zbývá 1 skladem").
+  const inCartQty = items.find((i) => i.slug === product.slug)?.quantity ?? 0;
+  const remaining = known ? Math.max(0, available - inCartQty) : undefined;
+  const low = remaining !== undefined && remaining > 0 && remaining <= LOW_STOCK_THRESHOLD;
+
+  // Produkty nemají volby, takže „+" přidá 1× rovnou do košíku — ale jen když se
+  // tam ještě další kus vejde (zbývá > 0).
+  const canQuickAdd = known ? (remaining ?? 0) > 0 : product.inStock;
 
   function quickAdd(e: React.MouseEvent | React.KeyboardEvent) {
     e.preventDefault(); // nesmí navigovat na detail (jsme uvnitř <Link>)
@@ -93,8 +100,9 @@ function ProductCard({
       },
       available,
     );
-    setAdded(true);
-    window.setTimeout(() => setAdded(false), 1200);
+    // Po přidání rovnou do košíku (CartProvider je nad stránkou, takže položka
+    // v client-side navigaci nezmizí).
+    router.push("/kosik");
   }
 
   return (
@@ -133,30 +141,15 @@ function ProductCard({
           <span
             role="button"
             tabIndex={0}
-            aria-label={added ? t("added") : t("quickAdd")}
+            aria-label={t("quickAdd")}
             onClick={quickAdd}
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") quickAdd(e);
             }}
-            className={`absolute bottom-3 right-3 z-10 w-10 h-10 rounded-full flex items-center justify-center shadow-lg bg-primary text-on-primary transition-all duration-200 cursor-pointer opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 hover:brightness-110 active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary/40`}
+            className={`absolute bottom-3 right-3 z-10 w-10 h-10 rounded-full flex items-center justify-center shadow-lg bg-primary text-on-primary transition-all duration-200 cursor-pointer opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 hover:brightness-110 active:scale-90 focus:outline-none focus:ring-2 focus:ring-primary/40`}
           >
-            {/* Minimalistická potvrzovací animace: „+" jemně vyplyne, „✓" naplyne. */}
-            <span className="relative w-5 h-5" aria-hidden="true">
-              <Plus
-                size={20}
-                strokeWidth={2}
-                className={`absolute inset-0 transition-all duration-200 ease-out ${
-                  added ? "opacity-0 scale-75" : "opacity-100 scale-100"
-                }`}
-              />
-              <Check
-                size={20}
-                strokeWidth={2}
-                className={`absolute inset-0 transition-all duration-200 ease-out ${
-                  added ? "opacity-100 scale-100" : "opacity-0 scale-75"
-                }`}
-              />
-            </span>
+            {/* Bez potvrzovací ikony — zpětná vazba je jen zmáčknutí tlačítka. */}
+            <Plus size={20} strokeWidth={2} aria-hidden="true" />
           </span>
         ) : null}
       </div>
@@ -199,7 +192,7 @@ function ProductCard({
             </p>
             {low && (
               <p className="text-xs text-text-muted font-medium">
-                {t("stockLeft", { count: available ?? 0 })}
+                {t("stockLeft", { count: remaining ?? 0 })}
               </p>
             )}
           </div>

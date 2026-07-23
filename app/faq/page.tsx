@@ -13,7 +13,6 @@ import {
   CreditCard,
   Package,
   Headphones,
-  ChevronDown,
 } from "lucide-react";
 
 // ── Data ──────────────────────────────────────────────────────────────────────
@@ -49,7 +48,6 @@ function buildCategories(t: T): FaqCategory[] {
       questions: [
         { q: t("returnsQ1"), a: t("returnsA1") },
         { q: t("returnsQ2"), a: t("returnsA2") },
-        { q: t("returnsQ3"), a: t("returnsA3") },
         { q: t("returnsQ4"), a: t("returnsA4") },
       ],
     },
@@ -278,22 +276,6 @@ export default function FaqPage() {
                   );
                 })}
               </nav>
-
-              <div className="hidden lg:block mt-6 p-4 rounded-2xl bg-white border border-border shadow-sm">
-                <p className="text-text-base font-semibold text-sm mb-1">
-                  {t("sidebarTitle")}
-                </p>
-                <p className="text-text-muted text-xs leading-relaxed mb-3">
-                  {t("sidebarDesc")}
-                </p>
-                <a
-                  href="/kontakt"
-                  className="flex items-center justify-center gap-1.5 w-full py-2.5 rounded-xl bg-primary text-on-primary text-sm font-bold hover:brightness-105 transition-all"
-                >
-                  {t("sidebarCta")}
-                  <ChevronDown size={13} aria-hidden="true" className="-rotate-90" />
-                </a>
-              </div>
             </aside>
 
             {/* Obsah */}

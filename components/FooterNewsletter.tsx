@@ -60,6 +60,26 @@ export default function Newsletter() {
     }
   }
 
+  // Po úspěšném přihlášení nahradíme CELÝ blok čistým potvrzením — ať tam
+  // nezůstane viset výzva „Buďte první…", když už je uživatel přihlášený.
+  if (submitted) {
+    return (
+      <div className="border-b border-white/8">
+        <div className="max-w-screen-2xl mx-auto px-6 lg:px-12 py-10">
+          <div className="flex items-center gap-4">
+            <div className="w-11 h-11 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
+              <Check size={18} strokeWidth={2.5} className="text-primary" aria-hidden="true" />
+            </div>
+            <div>
+              <p className="text-white font-bold text-base">{t("subscribedTitle")}</p>
+              <p className="text-white/60 text-sm">{t("subscribedDesc")}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="border-b border-white/8">
       <div className="max-w-screen-2xl mx-auto px-6 lg:px-12 py-10">
@@ -77,13 +97,7 @@ export default function Newsletter() {
 
           {/* Form */}
           <div className="w-full lg:w-auto">
-            {submitted ? (
-              <div className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-green-500/15 border border-green-500/30 text-green-400 text-sm font-medium w-full sm:w-auto justify-center sm:justify-start">
-                <Check size={15} strokeWidth={2.5} />
-                <span>{t("subscribed")}</span>
-              </div>
-            ) : (
-              <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
                 <div className="relative w-full sm:w-auto">
                   <input
                     type="email"
@@ -115,7 +129,6 @@ export default function Newsletter() {
                   {!loading && <ArrowRight size={14} />}
                 </button>
               </div>
-            )}
           </div>
 
         </div>

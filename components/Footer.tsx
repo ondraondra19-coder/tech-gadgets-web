@@ -31,7 +31,7 @@ export default function Footer() {
   const trustItems = [
     { icon: Truck,       label: t("trustExpedition") },
     { icon: RotateCcw,   label: t("trustReturns")    },
-    { icon: ShieldCheck, label: t("trustWarranty")   },
+    { icon: ShieldCheck, label: t("trustSafety")     },
   ];
 
   const footerNav = [
@@ -127,7 +127,7 @@ export default function Footer() {
               </div>
               <div className="inline-flex items-start gap-2.5 text-white/60 text-sm">
                 <Clock size={13} className="text-primary shrink-0 mt-0.5" />
-                <span>{t("openingHours")}</span>
+                <span>{UDAJE.openingHours.line}</span>
               </div>
             </div>
 

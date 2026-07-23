@@ -250,8 +250,8 @@
     "semantic_hash": ""
   },
   "app/page.tsx": {
-    "mtime": 1784535263.4120915,
-    "ast_hash": "0f4aee006ca34ecd98a65219db9c1d50",
+    "mtime": 1784835385.865954,
+    "ast_hash": "fc54274d21e53aac9fd14f74e8f69c34",
     "semantic_hash": ""
   },
   "app/produkt/[slug]/page.tsx": {
@@ -270,8 +270,8 @@
     "semantic_hash": ""
   },
   "components/CategoryGrid.tsx": {
-    "mtime": 1784408995.8586197,
-    "ast_hash": "70046437db84b1e5c21ed3ac8df4e96c",
+    "mtime": 1784836812.0811374,
+    "ast_hash": "d590c5d167cd188041f8a2fb2207d330",
     "semantic_hash": ""
   },
   "components/ChatWidget.tsx": {
@@ -325,13 +325,13 @@
     "semantic_hash": ""
   },
   "components/Reviews.tsx": {
-    "mtime": 1784308279.545401,
-    "ast_hash": "11f09292b482dff942cb37e9170a5f5d",
+    "mtime": 1784836784.3246636,
+    "ast_hash": "0b59ea404348f33a28e1419c4d27a5e9",
     "semantic_hash": ""
   },
   "components/TrustBar.tsx": {
-    "mtime": 1784405417.4327676,
-    "ast_hash": "66275c31e7677400362b134899d8ed99",
+    "mtime": 1784836211.9692593,
+    "ast_hash": "5bbfcd781374ee51d7574266bd086a67",
     "semantic_hash": ""
   },
   "eslint.config.mjs": {
@@ -830,8 +830,8 @@
     "semantic_hash": ""
   },
   "components/ProductRow.tsx": {
-    "mtime": 1784833876.8945444,
-    "ast_hash": "c4d01686e8c964229b3e652a898089bb",
+    "mtime": 1784835398.3463142,
+    "ast_hash": "a763ee9780193baa9f7c358cdab4ddd5",
     "semantic_hash": ""
   },
   "components/HowItWorks.tsx": {

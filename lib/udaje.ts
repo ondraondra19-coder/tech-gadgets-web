@@ -33,6 +33,17 @@ export const UDAJE = {
   youtube: "https://youtube.com/@slingr",
   instagramHandle: "@slingr.cz",
 
+  // ── Otevírací doba (zákaznická podpora) ──
+  // JEDINÉ místo pro otevírací dobu — patička, homepage, Kontakt i FAQ ji berou
+  // odtud. TODO: nahraď skutečnými hodinami (tohle je zástupná hodnota).
+  openingHours: {
+    weekdays: "9–18 h",   // Po–Pá
+    saturday: "10–14 h",  // So
+    sundayClosed: true,   // Ne — zavřeno
+    // Jednořádkově do patičky a kartiček.
+    line: "Po–Pá 9–18 h · So 10–14 h",
+  },
+
   // ── Doprava ──
   freeShippingOverCZK: 0, // 0 = dopravu zdarma nenabízíme
 } as const;
