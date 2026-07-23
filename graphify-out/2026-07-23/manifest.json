@@ -190,8 +190,8 @@
     "semantic_hash": ""
   },
   "app/faq/page.tsx": {
-    "mtime": 1784308279.524784,
-    "ast_hash": "919637a171d3cba42a2a213ea7a2b9ec",
+    "mtime": 1784839737.6668308,
+    "ast_hash": "5e290f364cbcc1dd53169b93882a0e2a",
     "semantic_hash": ""
   },
   "app/informace/page.tsx": {
@@ -205,8 +205,8 @@
     "semantic_hash": ""
   },
   "app/kontakt/page.tsx": {
-    "mtime": 1784477952.101478,
-    "ast_hash": "6b71d5bdc2d87e13b762dbc1212eeeb9",
+    "mtime": 1784839700.7247782,
+    "ast_hash": "06cde171019220505623196bde86992a",
     "semantic_hash": ""
   },
   "app/kosik/page.tsx": {
@@ -270,8 +270,8 @@
     "semantic_hash": ""
   },
   "components/CategoryGrid.tsx": {
-    "mtime": 1784836812.0811374,
-    "ast_hash": "d590c5d167cd188041f8a2fb2207d330",
+    "mtime": 1784838809.0423615,
+    "ast_hash": "592d82b24c706a53f072a60e4f6a4628",
     "semantic_hash": ""
   },
   "components/ChatWidget.tsx": {
@@ -290,8 +290,8 @@
     "semantic_hash": ""
   },
   "components/Footer.tsx": {
-    "mtime": 1784736549.7072284,
-    "ast_hash": "9f865f238114d5da93017d532f90b115",
+    "mtime": 1784839677.903259,
+    "ast_hash": "b16ffeefcc1c260738adaea10ee6c603",
     "semantic_hash": ""
   },
   "components/Header.tsx": {
@@ -300,13 +300,13 @@
     "semantic_hash": ""
   },
   "components/InfoGrid.tsx": {
-    "mtime": 1784288340.1055405,
-    "ast_hash": "d72d1a7422ea6b3417834d6827c44ec3",
+    "mtime": 1784839691.7252877,
+    "ast_hash": "1a052f01736fdb7bbdcb266399c1bf0e",
     "semantic_hash": ""
   },
   "components/KategorieClient.tsx": {
-    "mtime": 1784758168.4115908,
-    "ast_hash": "1fa00ea3f6971e91e8f0e68239303b73",
+    "mtime": 1784838219.858827,
+    "ast_hash": "9c7f932a14fa3772858b36fec4f0b848",
     "semantic_hash": ""
   },
   "components/PostHogProvider.tsx": {
@@ -460,18 +460,18 @@
     "semantic_hash": ""
   },
   "messages/cs.json": {
-    "mtime": 1784754557.9267035,
-    "ast_hash": "d8fcd5ba35339efbd08dda9196cd5c01",
+    "mtime": 1784839998.687265,
+    "ast_hash": "34d28ab6cbc3c47133aa661ed333291b",
     "semantic_hash": ""
   },
   "messages/en.json": {
-    "mtime": 1784754563.7183685,
-    "ast_hash": "b45443f7b7360d53c21d4ba969a3517f",
+    "mtime": 1784839998.6924226,
+    "ast_hash": "df6cb3c6005d813ed04a1abfc6974b0d",
     "semantic_hash": ""
   },
   "messages/sk.json": {
-    "mtime": 1784754582.8685012,
-    "ast_hash": "5691aa1116e133352eb5df4a3e4f81a3",
+    "mtime": 1784839998.6954756,
+    "ast_hash": "2a12a91ad1025a882875a36acc92a64d",
     "semantic_hash": ""
   },
   "next.config.ts": {
@@ -740,13 +740,13 @@
     "semantic_hash": ""
   },
   "components/DopravaClient.tsx": {
-    "mtime": 1784308279.5408227,
-    "ast_hash": "8fb13b8976534d0acf7fa5a56e638ad0",
+    "mtime": 1784838960.6814835,
+    "ast_hash": "14fc31e328d845d02d19f4ba73d56d1f",
     "semantic_hash": ""
   },
   "components/FooterNewsletter.tsx": {
-    "mtime": 1784506103.7016895,
-    "ast_hash": "342e0367568942c5917f5effa200c819",
+    "mtime": 1784839668.9991763,
+    "ast_hash": "321b4f255d1efab1e8965e5a30a13b52",
     "semantic_hash": ""
   },
   "components/HomeLink.tsx": {
@@ -830,8 +830,8 @@
     "semantic_hash": ""
   },
   "components/ProductRow.tsx": {
-    "mtime": 1784835398.3463142,
-    "ast_hash": "a763ee9780193baa9f7c358cdab4ddd5",
+    "mtime": 1784838614.5191846,
+    "ast_hash": "c8f68df0294d2e36d41453e285bcc563",
     "semantic_hash": ""
   },
   "components/HowItWorks.tsx": {
@@ -880,8 +880,8 @@
     "semantic_hash": ""
   },
   "lib/udaje.ts": {
-    "mtime": 1784672582.2715383,
-    "ast_hash": "65904f9a5f07174503c59f0f19d2939a",
+    "mtime": 1784839623.353586,
+    "ast_hash": "8b48054c0c67473c77a6d1e5e664d76b",
     "semantic_hash": ""
   },
   "public/images/products/penove-plechovky/main.png": {

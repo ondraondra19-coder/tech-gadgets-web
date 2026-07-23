@@ -9,6 +9,7 @@ import {
   type PriceValue,
 } from "@/lib/products";
 import { formatPrice } from "@/lib/currency";
+import ProductOrderPanel from "./ProductOrderPanel";
 
 // Sjednotí PriceValue (může to být holé číslo NEBO objekt {CZK,EUR,USD})
 // do plného objektu, ať se s tím v editoru pracuje jednotně.
@@ -88,6 +89,8 @@ export default function ProductsAdminList({ products, stock, discounts, initialQ
   const [searchQuery, setSearchQuery] = useState(initialQuery ?? "");
   // Rozbalené sety — u kterých slugů je vidět rozpad na komponenty.
   const [expandedSets, setExpandedSets] = useState<Record<string, boolean>>({});
+  // Sbalitelný panel „Doporučené pořadí produktů".
+  const [orderOpen, setOrderOpen] = useState(false);
 
   const toggleSet = (slug: string) =>
     setExpandedSets((prev) => ({ ...prev, [slug]: !prev[slug] }));
@@ -420,6 +423,29 @@ export default function ProductsAdminList({ products, stock, discounts, initialQ
 
   return (
     <div className="space-y-6">
+      {/* ── Doporučené pořadí produktů (sbalitelné) ── */}
+      <div className="rounded-2xl border border-[#e5e7eb] bg-white overflow-hidden">
+        <button
+          type="button"
+          onClick={() => setOrderOpen((v) => !v)}
+          className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-[#fcfbf9] transition-colors"
+        >
+          <svg
+            className={`w-3.5 h-3.5 text-zinc-400 transition-transform ${orderOpen ? "rotate-90" : ""}`}
+            fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+          </svg>
+          <span className="text-xs font-bold text-[#0f0f10]">Doporučené pořadí produktů</span>
+          <span className="ml-auto text-[10px] font-mono text-zinc-400">homepage i kategorie</span>
+        </button>
+        {orderOpen && (
+          <div className="px-4 pb-4 pt-1 border-t border-[#e5e7eb]">
+            <ProductOrderPanel products={products} />
+          </div>
+        )}
+      </div>
+
       {/* Plovoucí lišta — "fixed" (ne "sticky"), takže nepatří do normálního toku stránky
           a její objevení/zmizení nezpůsobí posun zbytku obsahu. Zůstává viditelná a klikatelná
           i po scrollu, protože je ukotvená k viewportu, ne ke kontejneru seznamu. */}

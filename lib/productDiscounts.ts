@@ -13,6 +13,7 @@
 //   - "slug::modelId"   → sleva na cenu konkrétního modelu
 import { getRedis } from "./redis";
 import { getProductsWithPriceOverrides } from "./priceOverrides";
+import { getProductOrder, sortProductsByOrder } from "./productOrder";
 import type { Product, PriceValue } from "./products";
 
 const HASH_KEY = "products:discounts";
@@ -103,9 +104,12 @@ export function applyDiscountsToProducts(
 // stránky, které zákazníkovi ZOBRAZUJÍ ceny (homepage, kategorie, detail,
 // vyhledávání), i /api/checkout a /api/orders (aby se strhla zlevněná částka).
 export async function getProductsForDisplay(): Promise<Product[]> {
-  const [products, discounts] = await Promise.all([
+  const [products, discounts, order] = await Promise.all([
     getProductsWithPriceOverrides(),
     getProductDiscounts(),
+    getProductOrder(),
   ]);
-  return applyDiscountsToProducts(products, discounts);
+  // Doporučené pořadí z admina se aplikuje jako poslední — homepage i kategorie
+  // pak vidí produkty ve stejném, adminem řízeném pořadí.
+  return sortProductsByOrder(applyDiscountsToProducts(products, discounts), order);
 }
