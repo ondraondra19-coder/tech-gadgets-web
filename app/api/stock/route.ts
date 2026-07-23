@@ -2,7 +2,7 @@
 // Read-only endpoint — vrací aktuální sklad pro daný produkt z Upstash Redis
 // (viz lib/stock.ts). Žádné rezervace.
 import { NextResponse } from "next/server";
-import { getProductStock } from "@/lib/stock";
+import { getStock } from "@/lib/stock";
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -13,10 +13,10 @@ export async function GET(req: Request) {
   }
 
   try {
-    const stockData = await getProductStock(slug);
-    return NextResponse.json({ stockData });
+    const stock = await getStock(slug);
+    return NextResponse.json({ stock });
   } catch (error) {
     console.error("Stock fetch error:", error);
-    return NextResponse.json({ stockData: {} });
+    return NextResponse.json({ stock: 0 });
   }
 }

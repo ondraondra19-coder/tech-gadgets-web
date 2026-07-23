@@ -49,35 +49,20 @@ export async function getProductsWithPriceOverrides(): Promise<Product[]> {
 
   return catalogProducts.map((product) => {
     const productOverride = overrides[overrideKey(product.slug)];
-    const next: Product = productOverride ? { ...product, price: productOverride } : { ...product };
-
-    if (product.models && product.models.length > 0) {
-      next.models = product.models.map((model) => {
-        const modelOverride = overrides[overrideKey(product.slug, model.id)];
-        return modelOverride ? { ...model, price: modelOverride } : model;
-      });
-    }
-
-    return next;
+    return productOverride ? { ...product, price: productOverride } : product;
   });
 }
 
-// Cena JEDNOHO produktu/modelu — používají to /api/checkout a /api/orders,
-// aby částka, která se skutečně strhne, VŽDY odpovídala aktuální ceně
-// (nezávisle na tom, kdy naposledy proběhl deploy).
-export async function getEffectivePrice(slug: string, modelId?: string): Promise<PriceValue | null> {
+// Cena JEDNOHO produktu — používají to /api/checkout a /api/orders, aby částka,
+// která se skutečně strhne, VŽDY odpovídala aktuální ceně (nezávisle na tom,
+// kdy naposledy proběhl deploy).
+export async function getEffectivePrice(slug: string): Promise<PriceValue | null> {
   const overrides = await getPriceOverrides();
-  const override = overrides[overrideKey(slug, modelId)];
+  const override = overrides[overrideKey(slug)];
   if (override) return override;
 
   const product = catalogProducts.find((p) => p.slug === slug);
-  if (!product) return null;
-
-  if (modelId && product.models) {
-    const model = product.models.find((m) => m.id === modelId);
-    return model?.price ?? product.price;
-  }
-  return product.price;
+  return product ? product.price : null;
 }
 
 function getUnitAmountFor(price: PriceValue, code: string): number {
@@ -85,28 +70,9 @@ function getUnitAmountFor(price: PriceValue, code: string): number {
   return (price as Record<string, number>)[code] ?? price.CZK ?? 0;
 }
 
-// Dopočítá skutečnou jednotkovou cenu položky košíku — VČETNĚ modelu (u
-// produktů s variantami typu "models", každý model může mít jinou cenu) a
-// VČETNĚ příplatku za namíchané barvy u vrstvených produktů (tělo ≠ hlavička).
-// `product` už musí mít aplikované price overrides (viz getProductsWithPriceOverrides).
-// Tohle je to samé, co počítá ProduktClient.tsx na klientovi — ale běží to
-// znovu na serveru, aby nešlo cenu ovlivnit úpravou požadavku v prohlížeči.
-export function resolveItemUnitPrice(
-  product: Product,
-  variants: Record<string, string> | undefined,
-  currencyCode: string,
-): number {
-  if (product.models && product.models.length > 0 && variants?.Model) {
-    const model = product.models.find((m) => m.label === variants.Model);
-    if (model) {
-      let amount = getUnitAmountFor(model.price, currencyCode);
-      const bodyColor = variants["Tělo"];
-      const capColor = variants["Hlavička"];
-      if (model.layered && bodyColor && capColor && bodyColor !== capColor && model.comboExtra) {
-        amount += getUnitAmountFor(model.comboExtra, currencyCode);
-      }
-      return amount;
-    }
-  }
+// Jednotková cena položky košíku v dané měně. `product` už musí mít aplikované
+// price overrides (viz getProductsWithPriceOverrides). Běží i na serveru, aby
+// nešlo cenu ovlivnit úpravou požadavku v prohlížeči.
+export function resolveItemUnitPrice(product: Product, currencyCode: string): number {
   return getUnitAmountFor(product.price, currencyCode);
 }

@@ -13,7 +13,7 @@
 //   - "slug::modelId"   → sleva na cenu konkrétního modelu
 import { getRedis } from "./redis";
 import { getProductsWithPriceOverrides } from "./priceOverrides";
-import type { Product, ProductModel, PriceValue } from "./products";
+import type { Product, PriceValue } from "./products";
 
 const HASH_KEY = "products:discounts";
 
@@ -91,26 +91,11 @@ export function applyDiscountsToProducts(
   if (Object.keys(discounts).length === 0) return products;
 
   return products.map((product) => {
-    const next: Product = { ...product };
-
     const basePercent = discounts[discountKey(product.slug)];
-    if (basePercent) {
-      const { discounted, original, percent } = applyDiscountToPrice(product.price, basePercent);
-      next.price = discounted;
-      next.originalPrice = original;
-      next.discountPercent = percent;
-    }
+    if (!basePercent) return product;
 
-    if (product.models && product.models.length > 0) {
-      next.models = product.models.map((model): ProductModel => {
-        const modelPercent = discounts[discountKey(product.slug, model.id)];
-        if (!modelPercent) return model;
-        const { discounted, original, percent } = applyDiscountToPrice(model.price, modelPercent);
-        return { ...model, price: discounted, originalPrice: original, discountPercent: percent };
-      });
-    }
-
-    return next;
+    const { discounted, original, percent } = applyDiscountToPrice(product.price, basePercent);
+    return { ...product, price: discounted, originalPrice: original, discountPercent: percent };
   });
 }
 

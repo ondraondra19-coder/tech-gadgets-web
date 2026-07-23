@@ -5,10 +5,8 @@ import { useState, useEffect, useCallback } from "react";
 
 const POLL_INTERVAL_MS = 6000;
 
-export type StockData = Record<string, number>;
-
 export function useStockPolling(slug: string) {
-  const [stockData, setStockData] = useState<StockData>({});
+  const [stock, setStock] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchStock = useCallback(async () => {
@@ -20,7 +18,7 @@ export function useStockPolling(slug: string) {
       );
       if (!res.ok) return;
       const json = await res.json();
-      setStockData(json.stockData ?? {});
+      setStock(typeof json.stock === "number" ? json.stock : 0);
       setLoading(false);
     } catch {
       setLoading(false);
@@ -28,12 +26,12 @@ export function useStockPolling(slug: string) {
   }, [slug]);
 
   useEffect(() => {
-    // Iniciální načtení skladu; setStockData běží až po fetchi (async).
+    // Iniciální načtení skladu; setStock běží až po fetchi (async).
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchStock();
     const interval = setInterval(fetchStock, POLL_INTERVAL_MS);
     return () => clearInterval(interval);
   }, [fetchStock]);
 
-  return { stockData, loading, refetch: fetchStock };
+  return { stock, loading, refetch: fetchStock };
 }

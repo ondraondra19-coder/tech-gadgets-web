@@ -1,56 +1,10 @@
 // ─── Typy ───────────────────────────────────────────
 
-export type Variant = {
-  label: string;
-  value: string;
-};
-
-export type ModelColor = {
-  label: string;
-  value: string;
-  img: string;
-  hex?: string;
-};
-
-export type ModelColorLayered = {
-  label: string;
-  value: string;
-  body: string;
-  cap: string;
-  hex?: string;
-};
-
 export type PriceValue = number | { CZK: number; EUR?: number; USD?: number };
-
-export type ProductModel = {
-  id: string;
-  label: string;
-  price: PriceValue;
-  colors: ModelColor[] | ModelColorLayered[];
-  layered?: boolean;
-  comboExtra?: PriceValue;
-  // Doplněno za běhu vrstvou slev (lib/productDiscounts.ts). Když je na modelu
-  // sleva, `price` už drží zlevněnou cenu, `originalPrice` je cena před slevou
-  // (přeškrtnutá) a `discountPercent` je zaokrouhlené procento pro odznak.
-  originalPrice?: PriceValue;
-  discountPercent?: number;
-};
 
 export type MediaItem =
   | { type: "image"; src: string }
   | { type: "video"; src: string; poster?: string };
-
-export type ProductColor = {
-  label: string;
-  value: string;
-  hex?: string;
-  img?: string;
-};
-
-export type ProductSize = {
-  label: string;
-  value: string;
-};
 
 // Položka setu — odkaz na jiný produkt a kolik jeho kusů set obsahuje.
 export type BundleItem = {
@@ -74,15 +28,7 @@ export type Product = {
   inStock: boolean;
   stock: number;
   tags?: string[];
-  colors?: ProductColor[];
-  sizes?: ProductSize[];
-  sizesLabel?: string;
   media?: MediaItem[];
-  variants?: {
-    type: string;
-    options: Variant[];
-  }[];
-  models?: ProductModel[];
   related?: string[];
   // Volitelné hodnocení pro produktovou kartu (hvězdičky + počet recenzí).
   // Recenze na webu jsou celowebové, ne per-produkt, takže tohle je editorial
@@ -279,60 +225,6 @@ export function getProductsByCategory(slug: string): Product[] {
 
 export function getCategoryBySlug(slug: string) {
   return categories.find((c) => c.slug === slug);
-}
-
-// Vyjmenuje všechny prodejné varianty produktu (barva/velikost/model,
-// včetně vrstvených barev tělo+hlavička) — používá se pro editaci skladu
-// v adminu (ProductsAdminList) i pro přehled nízkého skladu na dashboardu.
-// Stock klíč pro danou kombinaci je `${product.slug}|${c.color ?? "-"}|${c.size ?? "-"}`
-// (stejný formát jako lib/stock.ts:makeKey).
-export type ProductCombination = {
-  color?: string;
-  size?: string;
-};
-
-export function getProductCombinations(product: Product): ProductCombination[] {
-  const combos: ProductCombination[] = [];
-
-  if (product.models && product.models.length > 0) {
-    product.models.forEach((model) => {
-      if (model.colors && model.colors.length > 0) {
-        model.colors.forEach((color) => {
-          if (model.layered) {
-            combos.push({ color: `${color.value}__body`, size: model.id });
-            combos.push({ color: `${color.value}__cap`, size: model.id });
-          } else {
-            combos.push({ color: color.value, size: model.id });
-          }
-        });
-      } else {
-        combos.push({ size: model.id });
-      }
-    });
-  } else {
-    const hasColors = product.colors && product.colors.length > 0;
-    const hasSizes = product.sizes && product.sizes.length > 0;
-
-    if (hasColors && hasSizes) {
-      product.colors!.forEach((color) => {
-        product.sizes!.forEach((size) => {
-          combos.push({ color: color.value, size: size.value });
-        });
-      });
-    } else if (hasColors) {
-      product.colors!.forEach((color) => {
-        combos.push({ color: color.value });
-      });
-    } else if (hasSizes) {
-      product.sizes!.forEach((size) => {
-        combos.push({ size: size.value });
-      });
-    } else {
-      combos.push({});
-    }
-  }
-
-  return combos;
 }
 
 export function getProductBySlug(slug: string): Product | undefined {

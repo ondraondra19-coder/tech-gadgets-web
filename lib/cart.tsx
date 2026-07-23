@@ -25,16 +25,14 @@ export type CartItem = {
   priceCZK: number;
   priceRaw: PriceRaw;
   img: string;
-  variants?: Record<string, string>;
   quantity: number;
-  stockKey?: string | string[]; // klíč (nebo víc klíčů u vrstvených barev) ve formátu "color|size" pro lookup skladu
 };
 
 type CartContext = {
   items: CartItem[];
   addItem: (item: Omit<CartItem, "quantity">, maxQuantity?: number) => void;
-  removeItem: (slug: string, variants?: Record<string, string>) => void;
-  updateQuantity: (slug: string, quantity: number, variants?: Record<string, string>, maxQuantity?: number) => void;
+  removeItem: (slug: string) => void;
+  updateQuantity: (slug: string, quantity: number, maxQuantity?: number) => void;
   clearCart: () => void;
   totalItems: number;
   totalPriceCZK: number;
@@ -49,10 +47,6 @@ type CartContext = {
 };
 
 const CartCtx = createContext<CartContext | null>(null);
-
-function itemKey(slug: string, variants?: Record<string, string>) {
-  return slug + JSON.stringify(variants ?? {});
-}
 
 const STORAGE_KEY = "slingr-cart";
 const DISCOUNT_KEY = "slingr-discount";
@@ -103,11 +97,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const addItem = useCallback((item: Omit<CartItem, "quantity">, maxQuantity?: number) => {
     setItems((prev) => {
-      const key = itemKey(item.slug, item.variants);
-      const exists = prev.find((i) => itemKey(i.slug, i.variants) === key);
+      const exists = prev.find((i) => i.slug === item.slug);
       if (exists) {
         return prev.map((i) => {
-          if (itemKey(i.slug, i.variants) !== key) return i;
+          if (i.slug !== item.slug) return i;
           const newQty = i.quantity + 1;
           if (maxQuantity !== undefined && newQty > maxQuantity) return i; // nepřekroč sklad
           return { ...i, quantity: newQty };
@@ -118,15 +111,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
-  const removeItem = useCallback((slug: string, variants?: Record<string, string>) => {
-    setItems((prev) => prev.filter((i) => itemKey(i.slug, i.variants) !== itemKey(slug, variants)));
+  const removeItem = useCallback((slug: string) => {
+    setItems((prev) => prev.filter((i) => i.slug !== slug));
   }, []);
 
-  const updateQuantity = useCallback((slug: string, quantity: number, variants?: Record<string, string>, maxQuantity?: number) => {
+  const updateQuantity = useCallback((slug: string, quantity: number, maxQuantity?: number) => {
     if (quantity < 1) return;
     const clamped = maxQuantity !== undefined ? Math.min(quantity, maxQuantity) : quantity;
     setItems((prev) =>
-      prev.map((i) => itemKey(i.slug, i.variants) === itemKey(slug, variants) ? { ...i, quantity: clamped } : i)
+      prev.map((i) => i.slug === slug ? { ...i, quantity: clamped } : i)
     );
   }, []);
 

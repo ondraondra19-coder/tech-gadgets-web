@@ -4,7 +4,6 @@ import React, { useState } from "react";
 import Image from "next/image";
 import {
   getProductBySlug,
-  getProductCombinations,
   isBundle,
   type Product,
   type PriceValue,
@@ -46,14 +45,11 @@ function percentFromSale(baseCZK: number, saleCZK: number): number {
 }
 
 export default function ProductsAdminList({ products, stock, discounts, initialQuery }: ProductsAdminListProps) {
+  // Každý produkt = jedna skladová položka pod klíčem = jeho slug (viz lib/stock.ts).
   const buildInitialStock = () => {
     const initial: Record<string, number> = {};
     products.forEach((p) => {
-      const combos = getProductCombinations(p);
-      combos.forEach((c) => {
-        const key = `${p.slug}|${c.color ?? "-"}|${c.size ?? "-"}`;
-        initial[key] = stock[key] ?? 0;
-      });
+      initial[p.slug] = stock[p.slug] ?? 0;
     });
     return initial;
   };
@@ -62,15 +58,11 @@ export default function ProductsAdminList({ products, stock, discounts, initialQ
   // Poslední potvrzený (uložený) stav — proti tomuhle se porovnává, jestli je varianta "změněná".
   const [savedStock, setSavedStock] = useState<Record<string, number>>(buildInitialStock);
 
-  // Ceny — klíč je buď "slug" (základní cena produktu), nebo "slug::modelId"
-  // (cena konkrétního modelu u produktů s variantami typu "models").
+  // Ceny — klíč je slug produktu.
   const buildInitialPrices = () => {
     const initial: Record<string, { CZK: number; EUR?: number; USD?: number }> = {};
     products.forEach((p) => {
       initial[p.slug] = normalizePrice(p.price);
-      p.models?.forEach((m) => {
-        initial[`${p.slug}::${m.id}`] = normalizePrice(m.price);
-      });
     });
     return initial;
   };
@@ -84,10 +76,6 @@ export default function ProductsAdminList({ products, stock, discounts, initialQ
     const initial: Record<string, number> = {};
     products.forEach((p) => {
       initial[p.slug] = saleFromPercent(normalizePrice(p.price).CZK, discounts[p.slug]);
-      p.models?.forEach((m) => {
-        const key = `${p.slug}::${m.id}`;
-        initial[key] = saleFromPercent(normalizePrice(m.price).CZK, discounts[key]);
-      });
     });
     return initial;
   };
@@ -167,15 +155,7 @@ export default function ProductsAdminList({ products, stock, discounts, initialQ
       const requests: Promise<Response>[] = [];
 
       if (changedStockKeys.length > 0) {
-        const entries = changedStockKeys.map((key) => {
-          const [slug, color, size] = key.split("|");
-          return {
-            slug,
-            color: color === "-" ? undefined : color,
-            size: size === "-" ? undefined : size,
-            value: currentStock[key],
-          };
-        });
+        const entries = changedStockKeys.map((slug) => ({ slug, value: currentStock[slug] }));
         requests.push(
           fetch("/api/admin/stock", {
             method: "POST",
@@ -186,10 +166,7 @@ export default function ProductsAdminList({ products, stock, discounts, initialQ
       }
 
       if (changedPriceKeys.length > 0) {
-        const entries = changedPriceKeys.map((key) => {
-          const [slug, modelId] = key.split("::");
-          return { slug, modelId: modelId || undefined, price: currentPrices[key] };
-        });
+        const entries = changedPriceKeys.map((slug) => ({ slug, price: currentPrices[slug] }));
         requests.push(
           fetch("/api/admin/prices", {
             method: "POST",
@@ -202,11 +179,10 @@ export default function ProductsAdminList({ products, stock, discounts, initialQ
       if (changedSaleKeys.length > 0) {
         // Zlevněnou cenu (CZK) převedeme na procento z aktuální základní ceny.
         // 0 / >= základ = sleva se zruší (percent 0 → server smaže).
-        const entries = changedSaleKeys.map((key) => {
-          const [slug, modelId] = key.split("::");
-          const baseCZK = currentPrices[key]?.CZK ?? 0;
-          const percent = percentFromSale(baseCZK, currentSale[key] ?? 0);
-          return { slug, modelId: modelId || undefined, percent };
+        const entries = changedSaleKeys.map((slug) => {
+          const baseCZK = currentPrices[slug]?.CZK ?? 0;
+          const percent = percentFromSale(baseCZK, currentSale[slug] ?? 0);
+          return { slug, percent };
         });
         requests.push(
           fetch("/api/admin/product-discounts", {
@@ -243,14 +219,13 @@ export default function ProductsAdminList({ products, stock, discounts, initialQ
     );
   });
 
-  const renderVariantControls = (comboKey: string) => {
-    const currentQty = currentStock[comboKey] ?? 0;
-    const hasChanged = currentQty !== (savedStock[comboKey] ?? 0);
+  const renderStockControls = (slug: string) => {
+    const currentQty = currentStock[slug] ?? 0;
+    const hasChanged = currentQty !== (savedStock[slug] ?? 0);
 
     // Sklad setu se needituje — dopočítává se z komponent (lib/stock.ts).
     // Ukazujeme ho jen pro čtení, ať je vidět, kolik setů zrovna jde složit;
     // server by zápis stejně zahodil a editovatelné pole by jen mátlo.
-    const slug = comboKey.split("|")[0];
     const product = getProductBySlug(slug);
     if (product && isBundle(product)) {
       const parts = product.bundle!.map((b) => `${b.quantity}× ${b.slug}`).join(" + ");
@@ -276,7 +251,7 @@ export default function ProductsAdminList({ products, stock, discounts, initialQ
         >
           <button
             type="button"
-            onClick={() => handleStockChange(comboKey, currentQty - 1)}
+            onClick={() => handleStockChange(slug, currentQty - 1)}
             className="w-5 h-5 rounded bg-white flex items-center justify-center text-[10px] font-bold text-zinc-600 hover:bg-zinc-100 shadow-sm active:scale-95 transition-all"
           >
             –
@@ -284,12 +259,12 @@ export default function ProductsAdminList({ products, stock, discounts, initialQ
           <input
             type="number"
             value={currentQty}
-            onChange={(e) => handleStockChange(comboKey, parseInt(e.target.value) || 0)}
+            onChange={(e) => handleStockChange(slug, parseInt(e.target.value) || 0)}
             className="w-8 bg-transparent text-center text-xs font-bold font-mono focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
           />
           <button
             type="button"
-            onClick={() => handleStockChange(comboKey, currentQty + 1)}
+            onClick={() => handleStockChange(slug, currentQty + 1)}
             className="w-5 h-5 rounded bg-white flex items-center justify-center text-[10px] font-bold text-zinc-600 hover:bg-zinc-100 shadow-sm active:scale-95 transition-all"
           >
             +
@@ -345,7 +320,7 @@ export default function ProductsAdminList({ products, stock, discounts, initialQ
     const items = (product.bundle ?? []).map((part) => {
       const comp = getProductBySlug(part.slug);
       const unit = currentPrices[part.slug]?.CZK ?? 0;
-      const compStock = currentStock[`${part.slug}|-|-`] ?? 0;
+      const compStock = currentStock[part.slug] ?? 0;
       const perSet = Math.max(1, Math.floor(part.quantity));
       return {
         part,
@@ -504,15 +479,9 @@ export default function ProductsAdminList({ products, stock, discounts, initialQ
             ) : (
               filteredProducts.map((product) => {
                 // Katalog praků nemá barvy, velikosti ani modely — každý produkt
-                // je jediná skladová položka pod klíčem `slug|-|-`, takže se cena
+                // je jediná skladová položka pod klíčem = jeho slug, takže se cena
                 // i sklad edituje rovnou v řádku a nic se nerozklikává.
-                const comboKey = `${product.slug}|-|-`;
-                const qty = currentStock[comboKey] ?? 0;
-
-                // Pojistka pro případ, že by někdo do katalogu vrátil varianty:
-                // řádek by editoval jen první kombinaci a zbytek by tiše zmizel,
-                // proto radši řekneme rovnou, že na tenhle produkt tabulka nestačí.
-                const hasVariants = getProductCombinations(product).length > 1;
+                const qty = currentStock[product.slug] ?? 0;
 
                 const bundle = isBundle(product);
                 const expanded = bundle && expandedSets[product.slug];
@@ -566,23 +535,17 @@ export default function ProductsAdminList({ products, stock, discounts, initialQ
                       </td>
 
                       <td className="py-3">
-                        {hasVariants ? (
-                          <div className="text-right text-[10px] font-mono text-amber-700">
-                            produkt má varianty — uprav v kódu
-                          </div>
-                        ) : (
-                          renderPriceCell(product.slug, product.name)
-                        )}
+                        {renderPriceCell(product.slug, product.name)}
                       </td>
 
                       <td className="py-3 pr-2">
                         <div className="flex items-center justify-end gap-2">
-                          {!hasVariants && qty === 0 && (
+                          {qty === 0 && (
                             <span className="text-[9px] font-bold font-mono px-1.5 py-0.5 rounded bg-rose-50 text-rose-700 uppercase tracking-wider">
                               Vyprodáno
                             </span>
                           )}
-                          {!hasVariants && renderVariantControls(comboKey)}
+                          {renderStockControls(product.slug)}
                         </div>
                       </td>
                     </tr>

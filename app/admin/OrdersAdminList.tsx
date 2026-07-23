@@ -316,7 +316,7 @@ export default function OrdersAdminList({ initialQuery, initialExpandId }: Order
                     <div className="space-y-1">
                       {order.items.map((item, i) => (
                         <div key={i} className="flex justify-between text-xs text-zinc-600">
-                          <span>{item.quantity}× {item.name}{item.variants ? ` (${Object.values(item.variants).join(" | ")})` : ""}</span>
+                          <span>{item.quantity}× {item.name}</span>
                           <span className="tabular-nums">{formatMoney(item.unitPrice * item.quantity, order.currency)}</span>
                         </div>
                       ))}

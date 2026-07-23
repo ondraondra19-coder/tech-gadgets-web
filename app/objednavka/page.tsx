@@ -356,7 +356,7 @@ export default function ObjednavkaPage() {
                 </div>
                 <div className="px-5 py-3 flex flex-col gap-3 max-h-52 overflow-y-auto">
                   {items.map((item) => (
-                    <div key={item.slug + JSON.stringify(item.variants)} className="flex items-center gap-3">
+                    <div key={item.slug} className="flex items-center gap-3">
                       <div className="relative w-10 h-10 rounded-lg bg-dark/5 border border-border shrink-0 overflow-hidden">
                         <Image src={item.img} alt="" fill className="object-contain p-1" />
                       </div>

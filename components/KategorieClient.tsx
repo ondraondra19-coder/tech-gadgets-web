@@ -15,8 +15,7 @@ import { useT } from "@/lib/useT";
 import { useLang } from "@/lib/LangContext";
 import { LOCALE_TAGS } from "@/lib/locale";
 
-// stockData: { [slug]: Record<"color|size", number> }
-// předáno ze server componentu kategorie page.tsx
+// stockData: { [slug]: number } — předáno ze server componentu kategorie page.tsx
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -30,21 +29,15 @@ const TILE_STYLE: React.CSSProperties = {
     "repeating-linear-gradient(-45deg, rgba(40,191,166,0.07) 0 16px, rgba(40,191,166,0.15) 16px 32px)",
 };
 
-function anyInStock(product: Product, stockData: Record<string, Record<string, number>>): boolean {
-  const sd = stockData[product.slug];
-  // Pokud máme skladová data pro tento produkt
-  if (sd && Object.keys(sd).length > 0) {
-    return Object.values(sd).some(v => v > 0);
-  }
-  // Fallback na products.ts
-  return product.inStock && product.stock > 0;
+function anyInStock(product: Product, stockData: Record<string, number>): boolean {
+  const s = stockData[product.slug];
+  if (s !== undefined) return s > 0;
+  return product.inStock && product.stock > 0; // fallback na katalog
 }
 
-function maxStock(product: Product, stockData: Record<string, Record<string, number>>): number {
-  const sd = stockData[product.slug];
-  if (sd && Object.keys(sd).length > 0) {
-    return Math.max(...Object.values(sd));
-  }
+function maxStock(product: Product, stockData: Record<string, number>): number {
+  const s = stockData[product.slug];
+  if (s !== undefined) return s;
   return product.inStock ? product.stock : 0;
 }
 
@@ -166,7 +159,7 @@ export default function KategorieClient({
 }: {
   category: Category;
   products: Product[];
-  stockData?: Record<string, Record<string, number>>;
+  stockData?: Record<string, number>;
 }) {
   const { currency } = useCurrency();
   const t = useT("category");

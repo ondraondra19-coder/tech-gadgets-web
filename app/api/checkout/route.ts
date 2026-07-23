@@ -17,8 +17,6 @@ const MAX_ITEM_QUANTITY = 50;
 type CheckoutItem = {
   slug: string;
   quantity: number;
-  variants?: Record<string, string>;
-  stockKey?: string | string[];
   img?: string;
 };
 
@@ -67,15 +65,11 @@ export async function POST(req: Request) {
       const realProduct = products.find(p => p.slug === cartItem.slug);
       if (!realProduct) throw new Error(`Produkt ${cartItem.slug} nenalezen.`);
 
-      const unitAmount = resolveItemUnitPrice(realProduct, cartItem.variants, currencyCode);
+      const unitAmount = resolveItemUnitPrice(realProduct, currencyCode);
       if (!unitAmount || unitAmount <= 0) {
         throw new Error(`Neplatná cena pro produkt ${cartItem.slug} v měně ${currencyCode}`);
       }
       subtotal += unitAmount * cartItem.quantity;
-
-      const variantLabel = cartItem.variants
-        ? ` (${Object.values(cartItem.variants).join(' | ')})`
-        : '';
 
       const imageUrl = cartItem.img?.startsWith('http')
         ? cartItem.img
@@ -85,7 +79,7 @@ export async function POST(req: Request) {
         price_data: {
           currency: currencyCode.toLowerCase(),
           product_data: {
-            name: `${realProduct.name}${variantLabel}`,
+            name: realProduct.name,
             images: imageUrl ? [imageUrl] : [],
           },
           unit_amount: Math.round(unitAmount * 100),
@@ -132,11 +126,11 @@ export async function POST(req: Request) {
       items,
       (i) => {
         const p = products.find(pr => pr.slug === i.slug);
-        return p ? resolveItemUnitPrice(p, i.variants, 'CZK') : 0;
+        return p ? resolveItemUnitPrice(p, 'CZK') : 0;
       },
       (i) => {
         const p = products.find(pr => pr.slug === i.slug);
-        return p ? resolveItemUnitPrice(p, i.variants, currencyCode) : 0;
+        return p ? resolveItemUnitPrice(p, currencyCode) : 0;
       },
     );
 
@@ -189,9 +183,7 @@ export async function POST(req: Request) {
           slug: i.slug,
           name: realProduct?.name ?? i.slug,
           quantity: i.quantity,
-          unitPrice: realProduct ? resolveItemUnitPrice(realProduct, i.variants, currencyCode) : 0,
-          variants: i.variants,
-          stockKey: i.stockKey,
+          unitPrice: realProduct ? resolveItemUnitPrice(realProduct, currencyCode) : 0,
         };
       }),
       subtotal,

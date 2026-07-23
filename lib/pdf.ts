@@ -112,14 +112,11 @@ export async function generatePaymentReceiptPdf(order: Order): Promise<Buffer> {
 
   for (const item of order.items) {
     const rowY = doc.y;
-    const variants = item.variants ? Object.values(item.variants).join(" · ") : "";
 
-    // Levý sloupec (název + volitelně varianta) určuje výšku celého řádku —
-    // dopočítá se AŽ PO něm, protože qty/cena kreslené na pevné rowY by jinak
-    // (tím, že taky posouvají kurzor doc.y) tenhle spodní okraj přepsaly zpátky
-    // nahoru a další řádek by se pak kreslil moc brzo (přes variantu).
+    // Levý sloupec (název) určuje výšku celého řádku — dopočítá se AŽ PO něm,
+    // protože qty/cena kreslené na pevné rowY by jinak (tím, že taky posouvají
+    // kurzor doc.y) tenhle spodní okraj přepsaly zpátky nahoru.
     doc.fontSize(10).fillColor(DARK).text(item.name, MARGIN, rowY, { width: colQty - MARGIN - 10 });
-    if (variants) doc.fontSize(8).fillColor(SUBTLE).text(variants, MARGIN, doc.y);
     const bottomY = doc.y;
 
     doc.fontSize(10).fillColor(MUTED).text(String(item.quantity), colQty, rowY, { width: 40, align: "right" });

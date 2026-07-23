@@ -4,7 +4,7 @@
 import type { Metadata } from "next";
 import { products as staticProducts } from "@/lib/products";
 import { getProductsForDisplay } from "@/lib/productDiscounts";
-import { getProductStock } from "@/lib/stock";
+import { getStock } from "@/lib/stock";
 import { notFound } from "next/navigation";
 import Header from "@/components/Header";
 import ProduktClient from "@/components/ProduktClient";
@@ -66,9 +66,8 @@ export default async function ProduktPage({
     ? product.related.map((s) => products.find((p) => p.slug === s)).filter((p): p is typeof product => !!p).slice(0, 4)
     : products.filter((p) => p.slug !== product.slug && p.categories.some((c) => product.categories.includes(c))).slice(0, 4);
 
-  // Fetchni skladovost pro tento produkt z Redisu
-  // Vrátí objekt jako: { "black|-": 12, "red|-": 0, ... }
-  const stockData = await getProductStock(slug);
+  // Skladovost tohoto produktu z Redisu (klíč = slug).
+  const stock = await getStock(slug);
 
   return (
     <>
@@ -76,7 +75,7 @@ export default async function ProduktPage({
       <ProduktClient
         product={product}
         related={related}
-        stockData={stockData}
+        stock={stock}
       />
     </>
   );

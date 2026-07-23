@@ -6,7 +6,7 @@ import { useCart } from "@/lib/cart";
 import Header from "@/components/Header";
 import Image from "next/image";
 import { Minus, Plus, Trash2, ShoppingBag, ArrowRight, ChevronRight, Tag } from "lucide-react";
-import { products as staticProducts, getProductName, type ModelColorLayered } from "@/lib/products";
+import { products as staticProducts, getProductName } from "@/lib/products";
 import { useLang } from "@/lib/LangContext";
 import { useCurrency } from "@/lib/CurrencyContext";
 import { formatPrice, getPrice } from "@/lib/currency";
@@ -14,23 +14,6 @@ import type { Currency } from "@/lib/currency";
 import DiscountWidget from "@/components/DiscountWidget";
 import CheckoutStepper from "@/components/CheckoutStepper";
 import { useT } from "@/lib/useT";
-import { variantLabel, variantAttr } from "@/lib/variantLabels";
-
-function getProductImgs(slug: string, variants?: Record<string, string>): { img: string; img2?: string } | null {
-  const product = staticProducts.find(p => p.slug === slug);
-  if (!product?.models || !variants) return null;
-  const modelId = Object.values(variants)[0];
-  const model = product.models.find(m => m.label === modelId || m.id === modelId);
-  if (!model?.layered) return null;
-  const bodyVal = variants["Tělo"];
-  const capVal = variants["Hlavička"];
-  if (!bodyVal || !capVal) return null;
-  // model.layered je true (viz guard výše), takže barvy jsou vrstvené (body/cap).
-  const bodyColor = model.colors.find(c => c.value === bodyVal) as ModelColorLayered | undefined;
-  const capColor = model.colors.find(c => c.value === capVal) as ModelColorLayered | undefined;
-  if (bodyColor && capColor) return { img: bodyColor.body, img2: capColor.cap };
-  return null;
-}
 
 // Kurátorské pořadí bestsellerů. Slugy musí existovat v lib/products.ts —
 // neexistující se tiše zahodí, proto se seznam níž doplňuje zbytkem katalogu,
@@ -83,7 +66,6 @@ export default function KosikPage() {
   } = useCart();
   const { currency } = useCurrency();
   const t = useT("cart");
-  const tv = useT("variants");
   const tc = useT("common");
   const { locale } = useLang();
   const [mounted, setMounted] = useState(false);
@@ -102,18 +84,18 @@ export default function KosikPage() {
       .catch(() => {});
   }, []);
 
-  // Sklad pro každý produkt v košíku — omezí + tlačítko
-  const [stockMap, setStockMap] = useState<Record<string, Record<string, number>>>({});
+  // Sklad pro každý produkt v košíku (slug → počet kusů) — omezí + tlačítko
+  const [stockMap, setStockMap] = useState<Record<string, number>>({});
 
   const fetchStockForItems = useCallback(async () => {
     const slugs = [...new Set(items.map(i => i.slug))];
-    const results: Record<string, Record<string, number>> = {};
+    const results: Record<string, number> = {};
     await Promise.all(slugs.map(async (slug) => {
       try {
         const res = await fetch(`/api/stock?slug=${encodeURIComponent(slug)}`, { cache: "no-store" });
         if (res.ok) {
           const json = await res.json();
-          results[slug] = json.stockData ?? {};
+          if (typeof json.stock === "number") results[slug] = json.stock;
         }
       } catch {}
     }));
@@ -128,42 +110,15 @@ export default function KosikPage() {
 
 
 
-  // Vrátí max dostupné množství pro konkrétní variantu — používá stockKey uložený při addItem.
-  // Pokud stejný podzdroj (např. "šedé tělo") používá i jiná položka v košíku, odečte se
-  // jí už rezervované množství, ať se dvě varianty nepřebijí přes společný sklad.
-  // Strop 50 ks/položku musí odpovídat MAX_ITEM_QUANTITY na serveru
-  // (app/api/orders/route.ts, app/api/checkout/route.ts) — jinak zákazník
-  // dojde až na poslední krok checkoutu a tam dostane nejasnou chybu.
+  // Max dostupné množství položky. Strop 50 ks/položku musí odpovídat
+  // MAX_ITEM_QUANTITY na serveru (app/api/orders/route.ts, checkout) — jinak
+  // zákazník dojde až na poslední krok checkoutu a tam dostane nejasnou chybu.
   const MAX_ITEM_QUANTITY = 50;
 
   function getMaxQty(item: (typeof items)[0]): number {
-    const slugStock = stockMap[item.slug];
-    if (!slugStock || Object.keys(slugStock).length === 0) return MAX_ITEM_QUANTITY; // fallback dokud nenačte / bez sledování skladu
-
-    if (item.stockKey) {
-      const keys = Array.isArray(item.stockKey) ? item.stockKey : [item.stockKey];
-      let minRemaining: number | undefined;
-
-      for (const key of keys) {
-        const totalStock = slugStock[key];
-        if (totalStock === undefined) continue;
-
-        const reservedByOthers = items.reduce((sum, other) => {
-          if (other === item || other.slug !== item.slug || !other.stockKey) return sum;
-          const otherKeys = Array.isArray(other.stockKey) ? other.stockKey : [other.stockKey];
-          return otherKeys.includes(key) ? sum + other.quantity : sum;
-        }, 0);
-
-        const remaining = totalStock - reservedByOthers;
-        minRemaining = minRemaining === undefined ? remaining : Math.min(minRemaining, remaining);
-      }
-
-      if (minRemaining !== undefined) return Math.min(MAX_ITEM_QUANTITY, Math.max(0, minRemaining));
-    }
-
-    // Fallback pro starší položky bez stockKey — vezmi součet přes všechny varianty
-    const vals = Object.values(slugStock);
-    return vals.length > 0 ? Math.min(MAX_ITEM_QUANTITY, Math.max(...vals)) : MAX_ITEM_QUANTITY;
+    const stock = stockMap[item.slug];
+    if (stock === undefined) return MAX_ITEM_QUANTITY; // fallback dokud sklad nenačte
+    return Math.min(MAX_ITEM_QUANTITY, Math.max(0, stock));
   }
 
   const isEmpty = items.length === 0;
@@ -196,75 +151,35 @@ export default function KosikPage() {
     ? t("relatedSubtitle", { name: getProductName(singleProduct, locale) })
     : t("bestsellersSubtitle");
 
-  // Při přechodu na objednávku ověří sklad a ořízne množství na reálné maximum
+  // Při přechodu na objednávku ověří sklad a ořízne množství na reálné maximum.
+  // Každý produkt = jedna skladová položka (číslo kusů), viz lib/stock.ts.
   async function handleCheckout() {
-    // Fetchneme aktuální sklad pro všechny produkty v košíku
     const slugs = [...new Set(items.map(i => i.slug))];
-    const freshStock: Record<string, Record<string, number>> = {};
+    const freshStock: Record<string, number> = {};
     await Promise.all(slugs.map(async (slug) => {
       try {
         const res = await fetch(`/api/stock?slug=${encodeURIComponent(slug)}`, { cache: "no-store" });
         if (res.ok) {
           const json = await res.json();
-          freshStock[slug] = json.stockData ?? {};
+          if (typeof json.stock === "number") freshStock[slug] = json.stock;
         }
       } catch {}
     }));
 
-    // Ořízni každou položku na skutečně dostupné množství. Položky se stejným
-    // podzdrojem (např. dvě varianty používající "šedé tělo") si sklad reálně
-    // dělí — zpracujeme je v pořadí v košíku a odečítáme z jednoho společného
-    // "poolu" na (slug, klíč), ať se nestane, že si dvě položky navzájem
-    // odsouhlasí víc kusů, než kolik jich reálně na skladě je.
-    const remainingBySlugKey: Record<string, number> = {};
-
     for (const item of items) {
-      const slugStock = freshStock[item.slug] ?? {};
-      let max = MAX_ITEM_QUANTITY;
-
-      if (Object.keys(slugStock).length > 0) {
-        const keys = item.stockKey
-          ? (Array.isArray(item.stockKey) ? item.stockKey : [item.stockKey])
-          : null;
-
-        if (keys) {
-          let minRemaining: number | undefined;
-          for (const key of keys) {
-            const poolKey = `${item.slug}::${key}`;
-            if (!(poolKey in remainingBySlugKey)) {
-              remainingBySlugKey[poolKey] = slugStock[key] ?? 0;
-            }
-            const remaining = remainingBySlugKey[poolKey];
-            minRemaining = minRemaining === undefined ? remaining : Math.min(minRemaining, remaining);
-          }
-          max = Math.min(MAX_ITEM_QUANTITY, minRemaining ?? MAX_ITEM_QUANTITY);
-        } else {
-          const vals = Object.values(slugStock);
-          max = vals.length > 0 ? Math.min(MAX_ITEM_QUANTITY, Math.max(...vals)) : 0;
-        }
-      }
+      const stock = freshStock[item.slug];
+      if (stock === undefined) continue; // sklad se nepodařilo načíst — nech být
+      const max = Math.min(MAX_ITEM_QUANTITY, Math.max(0, stock));
 
       if (max <= 0) {
         // Vyprodáno — odeber z košíku
-        removeItem(item.slug, item.variants);
+        removeItem(item.slug);
         continue;
       }
 
-      const finalQty = Math.min(item.quantity, max);
-      if (finalQty !== item.quantity) {
+      if (item.quantity > max) {
         // Více kusů než je reálně na skladě — ořízni
-        updateQuantity(item.slug, finalQty, item.variants);
-      }
-
-      // Odečti spotřebované kusy ze společného poolu, ať je vidí i další položky
-      if (item.stockKey) {
-        const keys = Array.isArray(item.stockKey) ? item.stockKey : [item.stockKey];
-        for (const key of keys) {
-          const poolKey = `${item.slug}::${key}`;
-          if (poolKey in remainingBySlugKey) {
-            remainingBySlugKey[poolKey] -= finalQty;
-          }
-        }
+        updateQuantity(item.slug, max);
       }
     }
 
@@ -324,31 +239,20 @@ export default function KosikPage() {
                       {items.map((item) => {
                         const itemPrice = getItemPrice(item, currency);
                         return (
-                          <div key={item.slug + JSON.stringify(item.variants)} className="flex gap-3 sm:gap-5 p-3 sm:p-5 bg-secondary border border-border rounded-2xl">
+                          <div key={item.slug} className="flex gap-3 sm:gap-5 p-3 sm:p-5 bg-secondary border border-border rounded-2xl">
                             <Link href={`/produkt/${item.slug}`} className="shrink-0">
-                              {(() => {
-                                const layered = getProductImgs(item.slug, item.variants);
-                                return (
-                                  <div className="relative w-20 h-20 sm:w-32 sm:h-32 rounded-xl overflow-hidden bg-surface">
-                                    <Image src={layered?.img ?? item.img} alt="" fill sizes="128px" className="object-contain p-3" />
-                                    {layered?.img2 && <Image src={layered.img2} alt="" fill sizes="128px" className="object-contain p-3" />}
-                                  </div>
-                                );
-                              })()}
+                              <div className="relative w-20 h-20 sm:w-32 sm:h-32 rounded-xl overflow-hidden bg-surface">
+                                <Image src={item.img} alt="" fill sizes="128px" className="object-contain p-3" />
+                              </div>
                             </Link>
                             <div className="flex-1 min-w-0 py-1">
                               <Link href={`/produkt/${item.slug}`}>
                                 <p className="text-text-base font-semibold text-base leading-snug hover:text-primary-ink transition-colors">{item.name}</p>
                               </Link>
-                              {item.variants && Object.entries(item.variants).length > 0 && (
-                                <p className="text-text-subtle text-sm mt-1.5">
-                                  {Object.entries(item.variants).map(([k, v]) => `${variantAttr(tv, k)}: ${variantLabel(tv, v)}`).join(" · ")}
-                                </p>
-                              )}
                               <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
                                 <div className="flex items-center gap-1 border border-border rounded-xl overflow-hidden">
                                   <button
-                                    onClick={() => updateQuantity(item.slug, item.quantity - 1, item.variants)}
+                                    onClick={() => updateQuantity(item.slug, item.quantity - 1)}
                                     disabled={item.quantity <= 1}
                                     aria-label={t("decrease", { name: item.name })}
                                     className={`w-11 h-11 flex items-center justify-center transition-colors ${
@@ -363,7 +267,7 @@ export default function KosikPage() {
                                     <span className="sr-only">{t("quantity")}</span>{item.quantity}
                                   </span>
                                   <button
-                                    onClick={() => updateQuantity(item.slug, item.quantity + 1, item.variants)}
+                                    onClick={() => updateQuantity(item.slug, item.quantity + 1)}
                                     disabled={item.quantity >= getMaxQty(item)}
                                     aria-label={t("increase", { name: item.name })}
                                     className={`w-11 h-11 flex items-center justify-center transition-colors ${
@@ -378,7 +282,7 @@ export default function KosikPage() {
                                 <div className="flex items-center gap-4">
                                   <p className="text-primary-ink font-extrabold text-xl">{formatPrice(itemPrice * item.quantity, currency)}</p>
                                   <button
-                                    onClick={() => removeItem(item.slug, item.variants)}
+                                    onClick={() => removeItem(item.slug)}
                                     aria-label={t("remove", { name: item.name })}
                                     className="w-11 h-11 flex items-center justify-center rounded-lg text-text-subtle hover:text-red-500 hover:bg-red-50 transition-colors"
                                   >

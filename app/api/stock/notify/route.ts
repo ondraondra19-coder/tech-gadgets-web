@@ -18,12 +18,6 @@ export type StockNotifyErrorCode =
   | "rate_limited"
   | "failed";
 
-// Klíč varianty ve tvaru "color|size" — přesně jak ho počítá ProduktClient
-// (stockKeys) a jak ho skládá lib/stock.ts (makeKey). Pouštíme dál jen tenhle
-// tvar, ať si nikdo nezaregistruje hlídání na vymyšlené pole.
-const STOCK_KEY_REGEX = /^[^|]+\|[^|]+$/;
-const MAX_KEYS = 2; // vrstvené barvy = tělo + hlavička, víc jich nikdy není
-
 function fail(code: StockNotifyErrorCode, error: string, status: number) {
   return NextResponse.json({ code, error }, { status });
 }
@@ -31,7 +25,7 @@ function fail(code: StockNotifyErrorCode, error: string, status: number) {
 export async function POST(req: Request) {
   try {
     const body = await req.json().catch(() => null);
-    const { email, slug, stockKeys } = body ?? {};
+    const { email, slug } = body ?? {};
 
     if (!isValidWatchEmail(email)) {
       return fail("invalid_email", "Zadejte platný e-mail.", 400);
@@ -43,26 +37,18 @@ export async function POST(req: Request) {
       return fail("invalid_product", "Neznámý produkt.", 400);
     }
 
-    const keys: unknown[] = Array.isArray(stockKeys) ? stockKeys : [stockKeys];
-    if (
-      keys.length === 0 ||
-      keys.length > MAX_KEYS ||
-      !keys.every((k) => typeof k === "string" && STOCK_KEY_REGEX.test(k))
-    ) {
-      return fail("invalid_product", "Neplatná varianta.", 400);
-    }
-
     // 10 hlídání z jedné IP za hodinu — pokrývá i člověka, který si proklikne
-    // několik vyprodaných variant, ale zastaví skript.
+    // několik vyprodaných produktů, ale zastaví skript.
     const ip = getClientIp(req);
     if (!(await checkRateLimit(`stocknotify:${ip}`, 10, 3600))) {
       return fail("rate_limited", "Příliš mnoho pokusů. Zkuste to prosím později.", 429);
     }
 
+    // Sklad je klíčovaný slugem produktu — hlídané pole je tedy jen slug.
     await addWatcher({
       email,
       slug,
-      fields: (keys as string[]).map((k) => `${slug}|${k}`),
+      fields: [slug],
     });
 
     return NextResponse.json({ ok: true });

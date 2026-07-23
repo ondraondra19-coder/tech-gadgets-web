@@ -77,16 +77,8 @@ function ProductCard({
   const inStock = known ? available > 0 : product.inStock;
   const low = known && available > 0 && available <= LOW_STOCK_THRESHOLD;
 
-  // Rychlé přidání „+" dává smysl jen u produktů BEZ voleb — u variant/barev/
-  // velikostí/modelů musí zákazník nejdřív vybrat, takže tam „+" nechá proklik
-  // na detail. Set (bundle) bez voleb se přidá stejně jako obyčejný produkt.
-  const needsConfig = !!(
-    product.variants?.length ||
-    product.colors?.length ||
-    product.sizes?.length ||
-    product.models?.length
-  );
-  const canQuickAdd = inStock && !needsConfig;
+  // Produkty nemají volby, takže „+" přidá 1× rovnou do košíku (pokud je skladem).
+  const canQuickAdd = inStock;
 
   function quickAdd(e: React.MouseEvent | React.KeyboardEvent) {
     e.preventDefault(); // nesmí navigovat na detail (jsme uvnitř <Link>)
@@ -98,7 +90,6 @@ function ProductCard({
         priceCZK: getPrice(product.price, CURRENCIES.CZK),
         priceRaw: product.price,
         img: product.img,
-        stockKey: "-|-", // produkt bez variant, stejný klíč jako na detailu
       },
       available,
     );
@@ -157,10 +148,6 @@ function ProductCard({
               <Plus size={20} strokeWidth={2.5} aria-hidden="true" />
             )}
           </span>
-        ) : inStock ? (
-          <span className="absolute bottom-3 right-3 z-10 w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center shadow-lg opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-200">
-            <Plus size={20} strokeWidth={2.5} aria-hidden="true" />
-          </span>
         ) : null}
       </div>
 
@@ -186,7 +173,7 @@ function ProductCard({
               <span className="text-sm font-medium text-text-subtle line-through">{original}</span>
             </>
           ) : (
-            <span className="text-lg font-extrabold text-text-base leading-none">{current}</span>
+            <span className="text-lg font-normal text-text-base leading-none">{current}</span>
           )}
         </div>
 

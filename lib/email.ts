@@ -129,10 +129,9 @@ function p(text: string): string {
 function itemsTable(items: OrderItem[], currency: Currency): string {
   const rows = items
     .map((item) => {
-      const variants = item.variants ? Object.values(item.variants).join(" · ") : "";
       return `<tr>
         <td style="padding:10px 0;border-bottom:1px solid #f1f1f3;font-size:13px;color:#0f0f10;">
-          <strong>${esc(item.name)}</strong>${variants ? `<br /><span style="color:#9ca3af;font-size:12px;">${esc(variants)}</span>` : ""}
+          <strong>${esc(item.name)}</strong>
           <br /><span style="color:#9ca3af;font-size:12px;">${item.quantity}&nbsp;ks</span>
         </td>
         <td style="padding:10px 0;border-bottom:1px solid #f1f1f3;font-size:13px;color:#0f0f10;text-align:right;white-space:nowrap;">

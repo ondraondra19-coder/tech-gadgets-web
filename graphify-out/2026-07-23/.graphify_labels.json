@@ -77,11 +77,5 @@
   "75": "Vercel Platform (deployment target)",
   "76": "posthog-js",
   "77": "posthog-node",
-  "78": "resend",
-  "79": "page.tsx",
-  "80": "WelcomeDiscountPopup.tsx",
-  "81": "BlogList.tsx",
-  "82": "next",
-  "83": "react-dom",
-  "84": "@stripe/stripe-js"
+  "78": "resend"
 }

@@ -35,13 +35,13 @@
     "semantic_hash": ""
   },
   "app/admin/OrdersAdminList.tsx": {
-    "mtime": 1784834005.6815262,
-    "ast_hash": "7e6e4cb439aa61a34e0135301bbf5ae3",
+    "mtime": 1784237468.9304717,
+    "ast_hash": "651585367aba53eda914961276a85f55",
     "semantic_hash": ""
   },
   "app/admin/ProductsAdminList.tsx": {
-    "mtime": 1784834211.8747253,
-    "ast_hash": "676bc0b23a11d80bc71a58bb68d74491",
+    "mtime": 1784754828.6360178,
+    "ast_hash": "3d2bec4cbb30f47666c883c2e82ba86a",
     "semantic_hash": ""
   },
   "app/admin/login/page.tsx": {
@@ -120,9 +120,9 @@
     "semantic_hash": "0f77b2a35d65498a4a18fc56ca7af944"
   },
   "app/api/admin/stock/route.ts": {
-    "mtime": 1784757194.5995572,
-    "ast_hash": "8594e49a8914ba86ad83b20fba297372",
-    "semantic_hash": ""
+    "mtime": 1783363918.3060067,
+    "ast_hash": "91e9f46888a5f3971bfff0030fc108e7",
+    "semantic_hash": "91e9f46888a5f3971bfff0030fc108e7"
   },
   "app/api/adresa/route.ts": {
     "mtime": 1784308279.516774,
@@ -130,8 +130,8 @@
     "semantic_hash": ""
   },
   "app/api/checkout/route.ts": {
-    "mtime": 1784757772.3678093,
-    "ast_hash": "5835ecf9ffb9c3309fdeaf2c9cccca3b",
+    "mtime": 1784452343.8734424,
+    "ast_hash": "80ea6df8a3f6f0c7a334dfa75ee56507",
     "semantic_hash": ""
   },
   "app/api/checkout/session/route.ts": {
@@ -145,8 +145,8 @@
     "semantic_hash": ""
   },
   "app/api/orders/route.ts": {
-    "mtime": 1784757826.3021035,
-    "ast_hash": "8dd9374a1a313a2a609d2ce48d46dc12",
+    "mtime": 1784452350.5793731,
+    "ast_hash": "efdd081c9b146ea7d1169f21bda8bddd",
     "semantic_hash": ""
   },
   "app/api/products/route.ts": {
@@ -160,8 +160,8 @@
     "semantic_hash": ""
   },
   "app/api/stock/route.ts": {
-    "mtime": 1784757613.4601872,
-    "ast_hash": "5d522caf345f85546dfe56f77b9146fe",
+    "mtime": 1784308279.516774,
+    "ast_hash": "23d5a3e5f124f869790f4ddd67052d13",
     "semantic_hash": ""
   },
   "app/api/webhooks/stripe/route.ts": {
@@ -195,13 +195,13 @@
     "semantic_hash": ""
   },
   "app/informace/page.tsx": {
-    "mtime": 1784834011.9716685,
-    "ast_hash": "8618d358f42d6fceda523d8fd8396b7a",
+    "mtime": 1784506276.5167668,
+    "ast_hash": "0a2e64aadc54650a947ea6ca8cb5c52e",
     "semantic_hash": ""
   },
   "app/kategorie/[slug]/page.tsx": {
-    "mtime": 1784758186.2660685,
-    "ast_hash": "d3df0a0bb94b28d8d5f4ac57d58a9b20",
+    "mtime": 1784672580.9856186,
+    "ast_hash": "ab80ac3ce624bc81e8574266dc524c12",
     "semantic_hash": ""
   },
   "app/kontakt/page.tsx": {
@@ -210,8 +210,8 @@
     "semantic_hash": ""
   },
   "app/kosik/page.tsx": {
-    "mtime": 1784834300.445486,
-    "ast_hash": "9473a6cea1bc10cf972cdc4cc38e4a07",
+    "mtime": 1784535080.395078,
+    "ast_hash": "1a614029aa4d1350d6ba267841c7af91",
     "semantic_hash": ""
   },
   "app/layout.tsx": {
@@ -235,8 +235,8 @@
     "semantic_hash": ""
   },
   "app/objednavka/page.tsx": {
-    "mtime": 1784834021.0708003,
-    "ast_hash": "cba04945401323e56110cc01d940ec7b",
+    "mtime": 1784396965.1070197,
+    "ast_hash": "85f3f6e71714c9fd3bd57a4d57a5defb",
     "semantic_hash": ""
   },
   "app/objednavka/uspech/page.tsx": {
@@ -255,8 +255,8 @@
     "semantic_hash": ""
   },
   "app/produkt/[slug]/page.tsx": {
-    "mtime": 1784758095.1400063,
-    "ast_hash": "b3f832c44c650acbc482f020e57d442e",
+    "mtime": 1784672581.3199434,
+    "ast_hash": "8100135a44f6b4b9e478eca03c28ee83",
     "semantic_hash": ""
   },
   "app/reklamace/page.tsx": {
@@ -305,8 +305,8 @@
     "semantic_hash": ""
   },
   "components/KategorieClient.tsx": {
-    "mtime": 1784758168.4115908,
-    "ast_hash": "1fa00ea3f6971e91e8f0e68239303b73",
+    "mtime": 1784535263.462539,
+    "ast_hash": "2b3f3efcf31512cd246ba3ffdf75b41c",
     "semantic_hash": ""
   },
   "components/PostHogProvider.tsx": {
@@ -315,8 +315,8 @@
     "semantic_hash": ""
   },
   "components/ProduktClient.tsx": {
-    "mtime": 1784758062.5899136,
-    "ast_hash": "43cfb505a9d72e4f7f49463f1bbc3f7e",
+    "mtime": 1784535263.5241892,
+    "ast_hash": "952f025c04fb5a70989b9b22457f4966",
     "semantic_hash": ""
   },
   "components/RatingWidget.tsx": {
@@ -375,8 +375,8 @@
     "semantic_hash": ""
   },
   "lib/cart.tsx": {
-    "mtime": 1784757673.2140124,
-    "ast_hash": "70f98c8b63b5f0835928d4ec82eaf775",
+    "mtime": 1784396965.8770084,
+    "ast_hash": "f8480c17713c82df1fd53b36163930fe",
     "semantic_hash": ""
   },
   "lib/currency.ts": {
@@ -395,8 +395,8 @@
     "semantic_hash": ""
   },
   "lib/orders.ts": {
-    "mtime": 1784757681.4419634,
-    "ast_hash": "e148ea7c68ee19f7a5baf85337e224c3",
+    "mtime": 1784752866.6404903,
+    "ast_hash": "9b5067f821bdd9142e45bf6aba04324f",
     "semantic_hash": ""
   },
   "lib/parseUserAgent.ts": {
@@ -420,13 +420,13 @@
     "semantic_hash": ""
   },
   "lib/priceOverrides.ts": {
-    "mtime": 1784757716.8584306,
-    "ast_hash": "143ff8ea704d8e313dcccf549ad609ef",
-    "semantic_hash": ""
+    "mtime": 1783775577.9951582,
+    "ast_hash": "d065b21ff55437301501288e27496632",
+    "semantic_hash": "d065b21ff55437301501288e27496632"
   },
   "lib/products.ts": {
-    "mtime": 1784757093.7719316,
-    "ast_hash": "a2e838834b0000e322a235a056d9a21f",
+    "mtime": 1784674151.798691,
+    "ast_hash": "261f0db8e790d62827aeac2ab682fd06",
     "semantic_hash": ""
   },
   "lib/redis.ts": {
@@ -445,13 +445,13 @@
     "semantic_hash": "a34859c2bc932e3753c6011374ea6c6e"
   },
   "lib/stock.ts": {
-    "mtime": 1784757159.2919292,
-    "ast_hash": "372f72cfd3ea899ab1cb68c36b667940",
+    "mtime": 1784505400.4053853,
+    "ast_hash": "f4de14056c54a7984091b5e54bc5a16d",
     "semantic_hash": ""
   },
   "lib/useStockPolling.ts": {
-    "mtime": 1784757636.4216895,
-    "ast_hash": "f4d2f50191ee1fa3555566f75c434aac",
+    "mtime": 1784308279.589465,
+    "ast_hash": "4656a4ade027adc8fac0901ec9307343",
     "semantic_hash": ""
   },
   "lib/useT.ts": {
@@ -530,8 +530,8 @@
     "semantic_hash": ""
   },
   "app/admin/DashboardHome.tsx": {
-    "mtime": 1784834064.6852717,
-    "ast_hash": "30dc543987a60e8a738543680f131b98",
+    "mtime": 1784672580.6361406,
+    "ast_hash": "c3fcb264f8a998f376b980143baa0910",
     "semantic_hash": ""
   },
   "app/admin/adminWidgets.tsx": {
@@ -640,8 +640,8 @@
     "semantic_hash": ""
   },
   "lib/email.ts": {
-    "mtime": 1784757954.9076333,
-    "ast_hash": "ed2ede1cb2a913415cff022ebbc10b7a",
+    "mtime": 1784752259.792465,
+    "ast_hash": "72472c666c21b5c2ce87ccca3c70cc2c",
     "semantic_hash": ""
   },
   "lib/analytics.ts": {
@@ -650,8 +650,8 @@
     "semantic_hash": ""
   },
   "lib/pdf.ts": {
-    "mtime": 1784757927.4541738,
-    "ast_hash": "72ad11198c55c5faee59a398c117b000",
+    "mtime": 1784672581.9687707,
+    "ast_hash": "034716bcc8491a17e130dbe3b4b9eee8",
     "semantic_hash": ""
   },
   "assets/fonts/OFL.txt": {
@@ -720,8 +720,8 @@
     "semantic_hash": ""
   },
   "app/api/stock/notify/route.ts": {
-    "mtime": 1784757887.955314,
-    "ast_hash": "13720ab5915626b70f5013164dcc1909",
+    "mtime": 1784308279.516774,
+    "ast_hash": "2854f6d656559959c59f77d68d54b828",
     "semantic_hash": ""
   },
   "components/BlogList.tsx": {
@@ -809,6 +809,11 @@
     "ast_hash": "aa5cbefca7b6ab347b6419e253a2fddc",
     "semantic_hash": ""
   },
+  "lib/variantLabels.ts": {
+    "mtime": 1784288340.2171755,
+    "ast_hash": "024e541e65f2c7b5bb6b18191e1e20ce",
+    "semantic_hash": ""
+  },
   "scripts/check-messages.mjs": {
     "mtime": 1784288340.2308238,
     "ast_hash": "60889f6e82767f825c626da4a8002c7a",
@@ -830,8 +835,8 @@
     "semantic_hash": ""
   },
   "components/ProductRow.tsx": {
-    "mtime": 1784833876.8945444,
-    "ast_hash": "c4d01686e8c964229b3e652a898089bb",
+    "mtime": 1784754541.3032603,
+    "ast_hash": "e274180648085b055ca23c59fb718386",
     "semantic_hash": ""
   },
   "components/HowItWorks.tsx": {
@@ -850,8 +855,8 @@
     "semantic_hash": ""
   },
   "lib/productDiscounts.ts": {
-    "mtime": 1784757908.6065776,
-    "ast_hash": "bc3e3c3f28c2695e44fd01620e9a8fff",
+    "mtime": 1784452269.2470436,
+    "ast_hash": "f6806ee21b19bc54a0848434fe466f1d",
     "semantic_hash": ""
   },
   "public/images/help/background-product.jpg": {

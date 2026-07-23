@@ -8,7 +8,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { AlertTriangle, ArrowRight } from "lucide-react";
-import { getProductCombinations, type Product } from "@/lib/products";
+import { type Product } from "@/lib/products";
 import { ORDER_STATUS_LABELS, type Order } from "@/lib/orders";
 import type { AnalyticsSummary } from "@/lib/posthog-query";
 import type { Tab } from "./AdminDashboard";
@@ -30,38 +30,8 @@ type DashboardHomeProps = {
 type LowStockEntry = {
   key: string;
   productName: string;
-  variantLabel: string | null;
   qty: number;
 };
-
-// Sestaví čitelný název varianty ze stejné logiky, jakou k výpisu barev/velikostí
-// používá ProductsAdminList — jen tady jde jen o label, ne o editační ovládání.
-function comboLabel(product: Product, combo: { color?: string; size?: string }): string | null {
-  if (product.models && product.models.length > 0) {
-    const model = product.models.find((m) => m.id === combo.size);
-    if (!model) return combo.size ?? null;
-
-    if (combo.color && (combo.color.endsWith("__body") || combo.color.endsWith("__cap"))) {
-      const isBody = combo.color.endsWith("__body");
-      const baseValue = combo.color.replace(/__(body|cap)$/, "");
-      const color = model.colors.find((c) => c.value === baseValue);
-      return `${model.label}${color ? ` — ${color.label}` : ""} (${isBody ? "Tělo" : "Hlava"})`;
-    }
-    if (combo.color) {
-      const color = model.colors.find((c) => c.value === combo.color);
-      return `${model.label}${color ? ` — ${color.label}` : ""}`;
-    }
-    return model.label;
-  }
-
-  const color = combo.color ? product.colors?.find((c) => c.value === combo.color) : undefined;
-  const size = combo.size ? product.sizes?.find((s) => s.value === combo.size) : undefined;
-
-  if (color && size) return `${color.label} / ${size.label}`;
-  if (color) return color.label;
-  if (size) return size.label;
-  return null;
-}
 
 export default function DashboardHome({
   products,
@@ -111,12 +81,9 @@ export default function DashboardHome({
     if (!canSeeProducts) return [];
     const entries: LowStockEntry[] = [];
     for (const product of products) {
-      for (const combo of getProductCombinations(product)) {
-        const key = `${product.slug}|${combo.color ?? "-"}|${combo.size ?? "-"}`;
-        const qty = stock[key] ?? 0;
-        if (qty <= LOW_STOCK_THRESHOLD) {
-          entries.push({ key, productName: product.name, variantLabel: comboLabel(product, combo), qty });
-        }
+      const qty = stock[product.slug] ?? 0;
+      if (qty <= LOW_STOCK_THRESHOLD) {
+        entries.push({ key: product.slug, productName: product.name, qty });
       }
     }
     return entries.sort((a, b) => a.qty - b.qty).slice(0, LOW_STOCK_LIMIT);
@@ -211,7 +178,6 @@ export default function DashboardHome({
                       {entry.qty === 0 && <AlertTriangle size={12} className="text-rose-500 shrink-0" />}
                       <div className="min-w-0">
                         <p className="text-[#0f0f10] font-medium truncate">{entry.productName}</p>
-                        {entry.variantLabel && <p className="text-zinc-400 text-[10px] truncate">{entry.variantLabel}</p>}
                       </div>
                     </div>
                     <span className={`font-semibold shrink-0 ${entry.qty === 0 ? "text-rose-600" : "text-amber-600"}`}>{entry.qty} ks</span>

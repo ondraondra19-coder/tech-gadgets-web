@@ -3,10 +3,10 @@ import { NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/session";
 import { setStockBulk } from "@/lib/stock";
 
-type StockEntryInput = { slug?: string; color?: string; size?: string; value?: number };
+type StockEntryInput = { slug?: string; value?: number };
 
-// POST /api/admin/stock — hromadně uloží skladovost pro více variant najednou.
-// Tělo: { entries: [{ slug, color?, size?, value }, ...] }
+// POST /api/admin/stock — hromadně uloží skladovost pro více produktů najednou.
+// Tělo: { entries: [{ slug, value }, ...] }
 // Musí být přihlášený A mít oprávnění "products" (hlavní účet má vždy).
 export async function POST(req: Request) {
   const session = await getCurrentSession();
@@ -29,12 +29,12 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Chybí seznam změn." }, { status: 400 });
   }
 
-  const parsed: { key: { slug: string; color?: string; size?: string }; value: number }[] = [];
+  const parsed: { slug: string; value: number }[] = [];
   for (const entry of entries) {
     if (!entry.slug || typeof entry.value !== "number" || !Number.isFinite(entry.value)) {
       return NextResponse.json({ error: "Neplatná položka v seznamu změn." }, { status: 400 });
     }
-    parsed.push({ key: { slug: entry.slug, color: entry.color, size: entry.size }, value: entry.value });
+    parsed.push({ slug: entry.slug, value: entry.value });
   }
 
   try {

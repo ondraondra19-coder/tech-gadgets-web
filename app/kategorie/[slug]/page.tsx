@@ -48,22 +48,14 @@ export default async function KategoriePage({
   const allProducts = await getProductsForDisplay();
   const products = allProducts.filter((p) => p.categories.includes(slug));
 
-  // Fetchni celou stock mapu jedním voláním (je cachovaná)
-  // a sestav { [slug]: { "color|size": number } } pro produkty v kategorii
-  const stockData: Record<string, Record<string, number>> = {};
+  // Fetchni celou stock mapu jedním voláním (je cachovaná) a sestav
+  // { [slug]: number } pro produkty v kategorii (klíč skladu = slug).
+  const stockData: Record<string, number> = {};
   try {
     const stockMap = await getStockMap();
     for (const product of products) {
-      const productStock: Record<string, number> = {};
-      for (const [key, count] of stockMap.entries()) {
-        const [keySlug, color, size] = key.split("|");
-        if (keySlug === product.slug) {
-          productStock[`${color}|${size}`] = count;
-        }
-      }
-      if (Object.keys(productStock).length > 0) {
-        stockData[product.slug] = productStock;
-      }
+      const count = stockMap.get(product.slug);
+      if (count !== undefined) stockData[product.slug] = count;
     }
   } catch (e) {
     // Redis nedostupný — fallback na products.ts inStock/stock

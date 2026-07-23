@@ -22,8 +22,6 @@ const MAX_ITEM_QUANTITY = 50;
 type OrderReqItem = {
   slug: string;
   quantity: number;
-  variants?: Record<string, string>;
-  stockKey?: string | string[];
 };
 
 export async function POST(req: Request) {
@@ -74,15 +72,13 @@ export async function POST(req: Request) {
     let subtotal = 0;
     const resolvedItems = items.map((i: OrderReqItem) => {
       const realProduct = effectiveProducts.find((p) => p.slug === i.slug);
-      const unitPrice = realProduct ? resolveItemUnitPrice(realProduct, i.variants, currencyCode) : 0;
+      const unitPrice = realProduct ? resolveItemUnitPrice(realProduct, currencyCode) : 0;
       subtotal += unitPrice * i.quantity;
       return {
         slug: i.slug,
         name: realProduct?.name ?? i.slug,
         quantity: i.quantity,
         unitPrice,
-        variants: i.variants,
-        stockKey: i.stockKey,
       };
     });
 
@@ -100,11 +96,11 @@ export async function POST(req: Request) {
       items,
       (i) => {
         const p = effectiveProducts.find((pr) => pr.slug === i.slug);
-        return p ? resolveItemUnitPrice(p, i.variants, "CZK") : 0;
+        return p ? resolveItemUnitPrice(p, "CZK") : 0;
       },
       (i) => {
         const p = effectiveProducts.find((pr) => pr.slug === i.slug);
-        return p ? resolveItemUnitPrice(p, i.variants, currencyCode) : 0;
+        return p ? resolveItemUnitPrice(p, currencyCode) : 0;
       },
     );
     const discountInCurrency = resolvedDiscount.discountInCurrency;

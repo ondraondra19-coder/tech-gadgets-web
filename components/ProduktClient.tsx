@@ -4,8 +4,8 @@ import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ShoppingCart, Check, ChevronRight, RefreshCw, ChevronLeft, Bell, Play, X, Star, Truck } from "lucide-react";
-import type { Product, ModelColor, ModelColorLayered } from "@/lib/products";
-import { useCart, type PriceRaw } from "@/lib/cart";
+import type { Product } from "@/lib/products";
+import { useCart } from "@/lib/cart";
 import { useCurrency } from "@/lib/CurrencyContext";
 import { formatPrice, getPrice, CURRENCIES } from "@/lib/currency";
 import { useStockPolling } from "@/lib/useStockPolling";
@@ -13,33 +13,12 @@ import { trackEvent } from "@/lib/analytics";
 import { useT } from "@/lib/useT";
 import { useLang } from "@/lib/LangContext";
 import { getProductName, getProductDescription, getCategoryName, categories } from "@/lib/products";
-import { variantLabel, variantAttr, translateOptions } from "@/lib/variantLabels";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
 export type MediaItem =
   | { type: "image"; src: string }
   | { type: "video"; src: string; poster?: string };
-
-function isLayeredColor(c: ModelColor | ModelColorLayered): c is ModelColorLayered {
-  return "body" in c;
-}
-
-// ── Color map ────────────────────────────────────────────────────────────────
-
-const COLOR_MAP: Record<string, string> = {
-  cerna: "#1a1a1a", bila: "#ffffff", modra: "#4a90d9", ruzova: "#f9a8d4",
-  zelena: "#86efac", cervena: "#f87171", zluta: "#fde047", hneda: "#92400e",
-  bezova: "#e5d5b0", stribrna: "#d1d5db", fialova: "#c084fc",
-  black: "#1a1a1a", white: "#ffffff", grey: "#a4a09d", pink: "#fecaca",
-  green: "#aae8c7", darkblue: "#132739", armygreen: "#454f10", purple: "#eacfec",
-  small: "#94a3b8", large: "#64748b",
-  gen1: "#6366f1", gen2: "#8b5cf6",
-  s: "#bfdbfe", m: "#93c5fd", l: "#60a5fa", set: "#3b82f6",
-  transparent: "#e0f2fe",
-};
-
-// ── Stock badge ──────────────────────────────────────────────────────────────
 
 // Brandová šrafovaná dlaždice pod fotkou — stejná jako v ProductRow / kategorii.
 const TILE_STYLE: React.CSSProperties = {
@@ -48,108 +27,23 @@ const TILE_STYLE: React.CSSProperties = {
     "repeating-linear-gradient(-45deg, rgba(40,191,166,0.07) 0 16px, rgba(40,191,166,0.15) 16px 32px)",
 };
 
-function StockBadge({ available, anyInStock }: { available: number; anyInStock: boolean }) {
+// ── Stock badge ──────────────────────────────────────────────────────────────
+
+function StockBadge({ available }: { available: number }) {
   const t = useT("product");
-  const state = !anyInStock ? "none" : available === 0 ? "variant" : available >= 5 ? "plenty" : "low";
-  // Obdélníkový rámeček (ne oválná pilulka) bez tečky. Tři stavy:
-  // dost skladem / poslední kusy / nedostupné — každý svou barvou rámečku.
+  const state = available <= 0 ? "none" : available >= 5 ? "plenty" : "low";
   const chipClass =
     state === "plenty" ? "border-emerald-200 bg-emerald-50 text-emerald-700" :
     state === "low"    ? "border-amber-200 bg-amber-50 text-amber-700" :
                          "border-rose-200 bg-rose-50 text-rose-700";
   const label =
-    state === "none"    ? t("stockNone") :
-    state === "variant" ? t("stockVariant") :
-    state === "plenty"  ? t("stockPlenty") :
-                          t.plural(available, "stockLow");
+    state === "none"   ? t("stockNone") :
+    state === "plenty" ? t("stockPlenty") :
+                         t.plural(available, "stockLow");
   return (
     <span key={state} className={`inline-flex items-center rounded-md border px-2.5 py-1 text-xs font-bold ${chipClass}`}>
       {label}
     </span>
-  );
-}
-
-// ── Color swatch ─────────────────────────────────────────────────────────────
-
-// `label` je povinný — dřív měl výchozí "Barva", což byl jediný český řetězec,
-// který by se do UI protekl i v anglické verzi. Všechna volání ho stejně předávají.
-function ColorSwatch({
-  colors,
-  selected,
-  onChange,
-  label,
-}: {
-  colors: { label: string; value: string; hex?: string }[];
-  selected: string;
-  onChange: (value: string) => void;
-  label: string;
-}) {
-  return (
-    /* radiogroup: výběr barvy je jedna volba z několika — čtečka pak ohlásí
-       "1 z 7" a vybraný stav. Samotný title= přístupný název spolehlivě nedává. */
-    <div className="flex flex-wrap gap-2.5" role="radiogroup" aria-label={label}>
-      {colors.map((c) => {
-        const hex = c.hex ?? COLOR_MAP[c.value] ?? "#cccccc";
-        const bright = parseInt(hex.replace("#", ""), 16) > 0xbbbbbb;
-        return (
-          <button
-            key={c.value}
-            onClick={() => onChange(c.value)}
-            title={c.label}
-            role="radio"
-            aria-checked={selected === c.value}
-            aria-label={c.label}
-            className={`relative w-10 h-10 rounded-full transition-all duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text-base ring-offset-2 ring-offset-white ${
-              selected === c.value
-                ? "ring-2 ring-primary scale-110 shadow-md"
-                : "ring-1 ring-border-strong hover:scale-105"
-            }`}
-            style={{ backgroundColor: hex }}
-          >
-            {selected === c.value && (
-              <span className="absolute inset-0 flex items-center justify-center">
-                <Check size={13} strokeWidth={3} className={bright ? "text-gray-700" : "text-white"} />
-              </span>
-            )}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
-// ── Size / type pill buttons ─────────────────────────────────────────────────
-
-function SizePills({
-  options,
-  selected,
-  onChange,
-  label = "Varianta",
-}: {
-  options: { label: string; value: string }[];
-  selected: string;
-  onChange: (value: string) => void;
-  label?: string;
-}) {
-  return (
-    <div className="flex flex-wrap gap-2" role="radiogroup" aria-label={label}>
-      {options.map((opt) => (
-        <button
-          key={opt.value}
-          onClick={() => onChange(opt.value)}
-          role="radio"
-          aria-checked={selected === opt.value}
-          /* min-h-11 = 44px: varianty produktu jsou na mobilu častý cíl překliku */
-          className={`px-4 py-2 min-h-11 rounded-xl text-sm font-medium border transition-all duration-150 ${
-            selected === opt.value
-              ? "bg-primary text-on-primary border-primary"
-              : "bg-secondary text-text-muted border-border hover:border-border-strong hover:text-text-base"
-          }`}
-        >
-          <span>{opt.label}</span>
-        </button>
-      ))}
-    </div>
   );
 }
 
@@ -171,58 +65,21 @@ function VideoThumb({ poster }: { poster?: string }) {
   );
 }
 
-function Gallery({
-  items,
-  layeredBody,
-  layeredCap,
-  productName,
-}: {
-  items: MediaItem[];
-  layeredBody?: string;
-  layeredCap?: string;
-  productName: string;
-}) {
+function Gallery({ items, productName }: { items: MediaItem[]; productName: string }) {
   const t = useT("product");
   const [active, setActive] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
-
-  // Při výměně galerie (jiná barva/model) se vracíme na první snímek. Dřív to
-  // dělal useEffect, jenže ten běží až PO renderu: jeden snímek se stihl
-  // vykreslit se starým indexem proti novým položkám. Mezi vrstveným a
-  // nevrstveným modelem se navíc mění i POČET položek (viz galleryItems), takže
-  // index mohl ukázat mimo pole a hlavní obrázek na jeden render zmizel.
-  // Úprava stavu přímo v renderu je na tohle doporučený postup Reactu —
-  // komponenta se přepočítá hned, bez commitu mezikroku.
-  const itemKey = items.map(i => i.src).join("|");
-  const [prevItemKey, setPrevItemKey] = useState(itemKey);
-  if (itemKey !== prevItemKey) {
-    setPrevItemKey(itemKey);
-    setActive(0);
-  }
 
   const current = items[active];
 
   function prev() { setActive(i => (i - 1 + items.length) % items.length); }
   function next() { setActive(i => (i + 1) % items.length); }
 
-  function handleThumbClick(i: number) {
-    setActive(i);
-  }
-
   return (
     <div className="flex flex-col gap-3">
-
       {/* ── Main frame ── */}
       <div className="relative aspect-square rounded-2xl overflow-hidden bg-surface">
-
-        {layeredBody ? (
-          <>
-            {/* Tělo nese popis celého produktu, hlavička je jen druhá vrstva
-                téhož obrázku — proto u ní alt="" (jinak by čtečka četla dvakrát). */}
-            <Image src={layeredBody} alt={productName} fill sizes="(max-width: 1024px) 100vw, 50vw" className="object-contain" priority />
-            {layeredCap && <Image src={layeredCap} alt="" fill sizes="(max-width: 1024px) 100vw, 50vw" className="object-contain" />}
-          </>
-        ) : current?.type === "video" ? (
+        {current?.type === "video" ? (
           <video
             ref={videoRef}
             key={current.src}
@@ -244,8 +101,7 @@ function Gallery({
           />
         ) : null}
 
-        {/* Arrow nav */}
-        {!layeredBody && items.length > 1 && (
+        {items.length > 1 && (
           <>
             <button
               onClick={prev}
@@ -266,12 +122,12 @@ function Gallery({
       </div>
 
       {/* ── Thumbnails ── */}
-      {!layeredBody && items.length > 1 && (
+      {items.length > 1 && (
         <div className="flex gap-2 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
           {items.map((item, i) => (
             <button
               key={i}
-              onClick={() => handleThumbClick(i)}
+              onClick={() => setActive(i)}
               aria-label={item.type === "video" ? t("playVideo", { n: i + 1 }) : t("showPhoto", { n: i + 1, total: items.length })}
               aria-current={i === active}
               className={`relative shrink-0 w-16 h-16 rounded-xl overflow-hidden border-2 transition-all ${
@@ -305,13 +161,8 @@ function AddedModal({ productName, productImg, onClose }: {
       aria-label={t("addedModalLabel")}
       className="fixed inset-0 z-[200] flex items-center justify-center px-4"
     >
-      {/* Backdrop — dekorace, klik zavírá; čtečka ho ignoruje (tlačítko Zavřít je níž) */}
       <div aria-hidden="true" className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={onClose} />
-
-      {/* Panel */}
       <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden">
-
-        {/* Zavřít */}
         <button
           onClick={onClose}
           aria-label={t("close")}
@@ -319,10 +170,7 @@ function AddedModal({ productName, productImg, onClose }: {
         >
           <X size={18} aria-hidden="true" />
         </button>
-
-        {/* Obsah */}
         <div className="p-8">
-          {/* Produkt */}
           <div className="flex items-center gap-5 mb-8">
             <div className="relative w-20 h-20 rounded-2xl overflow-hidden bg-surface border border-border shrink-0">
               <Image src={productImg} alt="" fill sizes="80px" className="object-contain p-2" />
@@ -337,8 +185,6 @@ function AddedModal({ productName, productImg, onClose }: {
               <p className="text-text-muted text-sm leading-snug">{productName}</p>
             </div>
           </div>
-
-          {/* Tlačítka */}
           <div className="flex items-center gap-3">
             <button
               onClick={onClose}
@@ -354,7 +200,6 @@ function AddedModal({ productName, productImg, onClose }: {
             </a>
           </div>
         </div>
-
       </div>
     </div>
   );
@@ -362,15 +207,7 @@ function AddedModal({ productName, productImg, onClose }: {
 
 // ── Notify modal ──────────────────────────────────────────────────────────────
 
-function NotifyModal({
-  onClose,
-  slug,
-  stockKeys,
-}: {
-  onClose: () => void;
-  slug: string;
-  stockKeys: string | string[];
-}) {
+function NotifyModal({ onClose, slug }: { onClose: () => void; slug: string }) {
   const t = useT("product");
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
@@ -379,8 +216,6 @@ function NotifyModal({
 
   const canSubmit = !!email.trim() && !sending;
 
-  // API vrací kód, ne hotovou větu — text vybíráme tady podle jazyka. Neznámý
-  // kód spadne na obecné "nepovedlo se", ať nikdy neukážeme "product.neco".
   function messageForCode(code: unknown): string {
     switch (code) {
       case "invalid_email":   return t("notifyErrorInvalidEmail");
@@ -392,22 +227,18 @@ function NotifyModal({
 
   async function handleSubmit() {
     if (!canSubmit) return;
-
     setSending(true);
     setError(null);
-
     try {
       const res = await fetch("/api/stock/notify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim(), slug, stockKeys }),
+        body: JSON.stringify({ email: email.trim(), slug }),
       });
-
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error(messageForCode(data?.code));
       }
-
       setSent(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : t("notifyErrorFailed"));
@@ -423,15 +254,8 @@ function NotifyModal({
       aria-label={t("notifyTitle")}
       className="fixed inset-0 z-[100] flex items-center justify-center px-4"
     >
-      {/* Backdrop */}
-      <div
-        aria-hidden="true"
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-        onClick={onClose}
-      />
-      {/* Panel */}
+      <div aria-hidden="true" className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
       <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
-        {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-border">
           <div className="flex items-center gap-2.5">
             <Bell size={16} className="text-primary-ink" />
@@ -503,16 +327,15 @@ function NotifyModal({
 export default function ProduktClient({
   product,
   related,
-  stockData = {},
+  stock: initialStock = 0,
 }: {
   product: Product;
   related: Product[];
-  stockData?: Record<string, number>;
+  stock?: number;
 }) {
   const { items: cartItems, addItem } = useCart();
   const { currency, mounted: currencyMounted } = useCurrency();
-  const t  = useT("product");
-  const tv = useT("variants");
+  const t = useT("product");
   const { locale } = useLang();
 
   const productName = getProductName(product, locale);
@@ -521,292 +344,66 @@ export default function ProduktClient({
     return category ? getCategoryName(category, locale) : product.categories[0];
   })();
 
-  // Popisky voleb chodí z katalogu česky ("Tmavě modrá"). Klíčem k překladu je
-  // syrová hodnota ("darkblue") — viz lib/variantLabels.ts.
-  const newColors:  { label: string; value: string; hex?: string; img?: string }[] =
-    translateOptions(tv, product.colors ?? []);
-  const newSizes:   { label: string; value: string }[] = translateOptions(tv, product.sizes ?? []);
-  const extraMedia: MediaItem[]                        = product.media ?? [];
-  const sizesLabel: string = product.sizesLabel
-    ? variantLabel(tv, product.sizesLabel, product.sizesLabel)
-    : t("size");
-
-  const hasNewColors = newColors.length > 0;
-  const hasNewSizes  = newSizes.length  > 0;
-
-  const hasModels   = !!product.models?.length;
-  const hasVariants = !!product.variants?.length;
-
-  const [colorValue, setColorValue] = useState(newColors[0]?.value ?? "");
-  const [sizeValue,  setSizeValue]  = useState(newSizes[0]?.value  ?? "");
-
-  const [modelId,     setModelId]     = useState(product.models?.[0]?.id ?? "");
-  const [legacyColor, setLegacyColor] = useState(product.models?.[0]?.colors[0]?.value ?? "");
-  const [combo,       setCombo]       = useState(false);
-  const [bodyValue,   setBodyValue]   = useState(product.models?.find(m => m.layered)?.colors[0]?.value ?? "");
-  const [capValue,    setCapValue]    = useState(product.models?.find(m => m.layered)?.colors[0]?.value ?? "");
-
-  const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({});
+  const extraMedia: MediaItem[] = product.media ?? [];
+  const descriptionText = getProductDescription(product, locale);
 
   const [added, setAdded] = useState(false);
   const [qty, setQty] = useState(1);
   const [notifyOpen, setNotifyOpen] = useState(false);
   const [descOpen, setDescOpen] = useState(false);
 
-  // Popis produktu — v info panelu jen zkrácený náhled, plný text ve výsuvném
-  // panelu po kliknutí na „Číst dále".
-  const descriptionText = getProductDescription(product, locale);
-
-  const model     = product.models?.find(m => m.id === modelId);
-  const isLayered = model?.layered ?? false;
-
-  const rawBasePrice  = model ? model.price : product.price;
-  const rawComboExtra = model?.comboExtra ?? 0;
-
   const CZK = CURRENCIES.CZK;
-  const basePrice  = getPrice(rawBasePrice, currency);
-  const comboExtra = (isLayered && combo && bodyValue !== capValue)
-    ? getPrice(rawComboExtra, currency)
-    : 0;
-  const totalPrice = basePrice + comboExtra;
+  const totalPrice = getPrice(product.price, currency);
+  const totalPriceCZK = getPrice(product.price, CZK);
 
-  const basePriceCZK  = getPrice(rawBasePrice, CZK);
-  const comboExtraCZK = (isLayered && combo && bodyValue !== capValue)
-    ? getPrice(rawComboExtra, CZK)
-    : 0;
-  const totalPriceCZK = basePriceCZK + comboExtraCZK;
+  const hasSale = !!product.discountPercent && !!product.originalPrice;
+  const originalTotalPrice = hasSale ? getPrice(product.originalPrice!, currency) : 0;
 
-  // Sleva na aktuální variantě — u produktů s modely ji nese vybraný model,
-  // jinak samotný produkt (doplnil ji server ve vrstvě lib/productDiscounts.ts).
-  // Příplatek za kombinaci (comboExtra) se neslevuje, přičte se k původní ceně.
-  const rawOriginalPrice = model ? model.originalPrice : product.originalPrice;
-  const discountPercent  = model ? model.discountPercent : product.discountPercent;
-  const hasSale = !!discountPercent && !!rawOriginalPrice;
-  const originalTotalPrice = hasSale ? getPrice(rawOriginalPrice, currency) + comboExtra : 0;
-
-  // Jedno "product_viewed" za návštěvu detailu — čeká na currencyMounted, ať
-  // se neposílá s cenou v (možná chybné) výchozí měně před hydratací.
+  // Jedno "product_viewed" za návštěvu detailu — čeká na currencyMounted.
   useEffect(() => {
     if (!currencyMounted) return;
     trackEvent("product_viewed", {
       slug: product.slug,
       name: product.name,
-      price: basePrice,
+      price: totalPrice,
       currency: currency.code,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product.slug, currencyMounted]);
 
-  // U vrstvené kombinace se k základní ceně přičítá comboExtra, a to v každé
-  // měně zvlášť — do košíku proto musí jít objekt se všemi měnami, ne jedno
-  // číslo. Dřív se skládal přes Object.fromEntries, jenže ten vrací
-  // { [k: string]: number }, což do PriceRaw nesedí — a řešilo se to `as any`.
-  // Vypsané klíče typ splní samy a navíc je hned vidět, co se do košíku uloží.
-  const comboExtraRaw = model?.comboExtra;
-  const priceRawForCart: PriceRaw = (isLayered && combo && bodyValue !== capValue && comboExtraRaw)
-    ? (typeof rawBasePrice === "number"
-        ? totalPriceCZK
-        : {
-            CZK: getPrice(rawBasePrice, CURRENCIES.CZK) + getPrice(comboExtraRaw, CURRENCIES.CZK),
-            EUR: getPrice(rawBasePrice, CURRENCIES.EUR) + getPrice(comboExtraRaw, CURRENCIES.EUR),
-            USD: getPrice(rawBasePrice, CURRENCIES.USD) + getPrice(comboExtraRaw, CURRENCIES.USD),
-          })
-    : rawBasePrice;
+  // Sklad — živý polling z /api/stock, fallback na server-side prop / katalog.
+  const { stock: liveStock, loading: stockLoading } = useStockPolling(product.slug);
+  const stockCeiling = !stockLoading && liveStock !== null ? liveStock : initialStock;
 
-  const allLegacyVariantsSelected = !hasVariants ||
-    product.variants!.every(v => selectedVariants[v.type]);
-
-  const canAddToCart = hasModels
-    ? true
-    : hasVariants
-      ? allLegacyVariantsSelected
-      : true;
-
-  const hasSheetData = Object.keys(stockData).length > 0;
-
-  // Klíč(e) ve stejném formátu jako klíče skladu v Redisu — "color|size".
-  // U vrstvených barev (tělo + hlavička) vrací dva klíče najednou, protože
-  // dostupné množství je omezené tou barvou, které je skladem méně.
-  const stockKeys: string | string[] = (() => {
-    if (isLayered) {
-      const activeBody = combo ? bodyValue : legacyColor;
-      const activeCap  = combo ? capValue  : legacyColor;
-      const size = modelId;
-      return [`${activeBody}__body|${size}`, `${activeCap}__cap|${size}`];
-    }
-    const activeColor = hasNewColors ? colorValue
-      : hasModels ? legacyColor
-      : undefined;
-    const activeSize = hasNewSizes ? sizeValue
-      : hasModels ? modelId
-      : undefined;
-    return `${activeColor ?? "-"}|${activeSize ?? "-"}`;
-  })();
-
-  // Porovná dvě sady stockKey — použito k rozpoznání, že řádka v košíku je
-  // přesně ta samá varianta, kterou má uživatel právě vybranou (tu nepočítáme
-  // jako "cizí rezervaci").
-  function stockKeysEqual(a: string | string[], b: string | string[]): boolean {
-    const arrA = Array.isArray(a) ? a : [a];
-    const arrB = Array.isArray(b) ? b : [b];
-    if (arrA.length !== arrB.length) return false;
-    return arrA.every(v => arrB.includes(v));
-  }
-
-  // Kolik kusů daného skladového klíče (např. "grey__body|usbc") už zabírají
-  // JINÉ varianty téhož produktu v košíku — ty si sklad reálně dělí s tím, co
-  // uživatel právě vybírá.
-  function reservedByOtherCartLines(key: string): number {
-    return cartItems.reduce((sum, item) => {
-      if (item.slug !== product.slug || !item.stockKey) return sum;
-      if (stockKeysEqual(item.stockKey, stockKeys)) return sum; // stejná varianta jako právě vybraná
-      const keys = Array.isArray(item.stockKey) ? item.stockKey : [item.stockKey];
-      return keys.includes(key) ? sum + item.quantity : sum;
-    }, 0);
-  }
-
-  function resolveStock(data: Record<string, number>, keys: string | string[]): number {
-    const list = Array.isArray(keys) ? keys : [keys];
-    return Math.min(...list.map(k => {
-      const total = data[k] ?? 0;
-      const reserved = reservedByOtherCartLines(k);
-      return Math.max(0, total - reserved);
-    }));
-  }
-
-  // Kolik kusů přesně této vybrané varianty už mám v košíku (může to být jedna
-  // řádka, sečteme pro jistotu, kdyby jich bylo víc).
-  function ownCartQtyForCurrentSelection(): number {
-    return cartItems.reduce((sum, item) => {
-      if (item.slug !== product.slug || !item.stockKey) return sum;
-      return stockKeysEqual(item.stockKey, stockKeys) ? sum + item.quantity : sum;
-    }, 0);
-  }
-
-  // Polling skladu z /api/stock — jednoduchý, bez rezervací
-  const { stockData: liveStockData, loading: stockLoading } = useStockPolling(product.slug);
-
-  // Skutečný celkový strop pro tuto variantu = reálný sklad minus to, co si
-  // "zabírají" jiné varianty téhož produktu v košíku. Tohle je horní hranice,
-  // na kterou se nikdy nemá dostat celkové množství této varianty v košíku.
-  const stockCeiling = (() => {
-    if (!stockLoading && Object.keys(liveStockData).length > 0) {
-      return resolveStock(liveStockData, stockKeys);
-    }
-    // Fallback na server-side prop dokud polling nenačte
-    if (hasSheetData) {
-      return resolveStock(stockData, stockKeys);
-    }
-    return product.inStock ? product.stock : 0;
-  })();
-
-  // To, co se zobrazuje jako "skladem" a co lze ještě přidat = strop minus to,
-  // co už mám z téhle přesné varianty v košíku.
-  const ownQtyInCart = ownCartQtyForCurrentSelection();
+  // Kolik kusů tohohle produktu už mám v košíku.
+  const ownQtyInCart = cartItems.reduce(
+    (sum, item) => (item.slug === product.slug ? sum + item.quantity : sum),
+    0,
+  );
   const currentStock = Math.max(0, stockCeiling - ownQtyInCart);
-
-  const availableQty = currentStock;
-  const canAddMoreQty = currentStock;
   const isOutOfStock = currentStock === 0;
 
-  // Když se změní varianta a nový sklad je nižší než zvolené množství, ořízneme
-  // ho. Stejně jako v Gallery to dřív dělal useEffect, takže se jeden render
-  // stihl vykreslit s množstvím vyšším, než kolik je skladem.
-  //
-  // Druhá větev tu byla `else if (canAddMoreQty === 0 && !isOutOfStock) setQty(1)`
-  // a nešlo ji vykonat: canAddMoreQty i isOutOfStock se počítají z téhož
-  // currentStock, takže `canAddMoreQty === 0` znamená `isOutOfStock === true`
-  // a podmínka `!isOutOfStock` byla vždy nepravdivá. Odstraněno — chování to
-  // nemění, jen tu přestává strašit mrtvý kód.
-  const [prevCanAddMoreQty, setPrevCanAddMoreQty] = useState(canAddMoreQty);
-  if (canAddMoreQty !== prevCanAddMoreQty) {
-    setPrevCanAddMoreQty(canAddMoreQty);
-    if (canAddMoreQty > 0 && qty > canAddMoreQty) setQty(canAddMoreQty);
+  // Když se sníží sklad pod zvolené množství, ořízneme ho ještě v renderu.
+  const [prevStock, setPrevStock] = useState(currentStock);
+  if (currentStock !== prevStock) {
+    setPrevStock(currentStock);
+    if (currentStock > 0 && qty > currentStock) setQty(currentStock);
   }
 
-  const anyInStock = hasSheetData
-    ? Object.values(stockData).some(v => v > 0)
-    : product.inStock && product.stock > 0;
-
-  const selectedColorObj = newColors.find(c => c.value === colorValue);
-  const mainImgSrc = selectedColorObj?.img ?? product.img;
-
-  // Bez `as any` funguje type guard, jak má: ve větvi !isLayeredColor(...) si
-  // TypeScript sám zúží typ na ModelColor, takže druhý cast u .img odpadá.
-  const legacyColorObj  = model?.colors.find(c => c.value === legacyColor);
-  const legacyImgSrc    = legacyColorObj && !isLayeredColor(legacyColorObj)
-    ? legacyColorObj.img
-    : product.img;
-
-  const galleryItems: MediaItem[] = isLayered
-    ? extraMedia
-    : hasModels
-      ? [{ type: "image", src: legacyImgSrc }, ...extraMedia]
-      : [{ type: "image", src: mainImgSrc },  ...extraMedia];
-
-  const bVal = combo ? bodyValue : legacyColor;
-  const cVal = combo ? capValue  : legacyColor;
-  const layeredBodySrc = isLayered
-    ? (model?.colors.find(c => c.value === bVal) as ModelColorLayered | undefined)?.body
-    : undefined;
-  const layeredCapSrc = isLayered
-    ? (model?.colors.find(c => c.value === cVal) as ModelColorLayered | undefined)?.cap
-    : undefined;
-
-  function handleModelChange(id: string) {
-    const m = product.models?.find(m => m.id === id);
-    setModelId(id);
-    setLegacyColor(m?.colors[0]?.value ?? "");
-    setCombo(false);
-    setBodyValue(m?.colors[0]?.value ?? "");
-    setCapValue(m?.colors[0]?.value ?? "");
-  }
+  const galleryItems: MediaItem[] = [{ type: "image", src: product.img }, ...extraMedia];
 
   function handleAddToCart() {
     if (isOutOfStock) {
       setNotifyOpen(true);
       return;
     }
-    if (!canAddToCart) return;
-
-    let variantInfo: Record<string, string> = {};
-
-    if (hasModels) {
-      variantInfo = {
-        Model: model?.label ?? "",
-        ...(isLayered && combo && bodyValue !== capValue
-          ? { Tělo: bodyValue, Hlavička: capValue }
-          : { Barva: legacyColor }),
-      };
-    } else if (hasVariants) {
-      variantInfo = selectedVariants;
-    } else {
-      if (hasNewColors && colorValue) {
-        variantInfo["Barva"] = newColors.find(c => c.value === colorValue)?.label ?? colorValue;
-      }
-      if (hasNewSizes && sizeValue) {
-        variantInfo[sizesLabel] = newSizes.find(s => s.value === sizeValue)?.label ?? sizeValue;
-      }
-    }
-
-    const imgForCart = isLayered
-      ? layeredBodySrc ?? product.img
-      : hasModels
-        ? legacyImgSrc
-        : mainImgSrc;
-
-    // Přidáme qty kusů do košíku, maxQuantity = stockCeiling (skutečný celkový
-    // strop pro tuto variantu) jako ochrana — addItem si sám sečte s tím, co
-    // už v košíku je.
     for (let i = 0; i < qty; i++) {
       addItem({
         slug: product.slug,
         name: product.name,
         priceCZK: totalPriceCZK,
-        priceRaw: priceRawForCart,
-        img: imgForCart,
-        variants: Object.keys(variantInfo).length > 0 ? variantInfo : undefined,
-        stockKey: stockKeys, // přesný klíč (nebo dva u vrstvených barev) pro lookup skladu v košíku
+        priceRaw: product.price,
+        img: product.img,
       }, stockCeiling);
     }
     trackEvent("add_to_cart", {
@@ -819,18 +416,11 @@ export default function ProduktClient({
     setAdded(true);
   }
 
-
   // ── Render ────────────────────────────────────────────────────────────────
   return (
     <>
-      {added && <AddedModal productName={productName} productImg={mainImgSrc} onClose={() => { setAdded(false); setQty(1); }} />}
-      {notifyOpen && (
-        <NotifyModal
-          onClose={() => setNotifyOpen(false)}
-          slug={product.slug}
-          stockKeys={stockKeys}
-        />
-      )}
+      {added && <AddedModal productName={productName} productImg={product.img} onClose={() => { setAdded(false); setQty(1); }} />}
+      {notifyOpen && <NotifyModal onClose={() => setNotifyOpen(false)} slug={product.slug} />}
 
       <main className="min-h-screen bg-surface">
         <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 py-6 lg:py-10">
@@ -841,8 +431,6 @@ export default function ProduktClient({
             <ChevronRight size={11} className="text-border" aria-hidden="true" />
             {product.categories[0] && (
               <>
-                {/* Dřív se tu sázel slug s pomlčkami nahrazenými mezerami
-                    ("pouzdra obaly") — katalog má skutečný název i s překlady. */}
                 <a href={`/kategorie/${product.categories[0]}`} className="hover:text-text-muted transition-colors">
                   {breadcrumbCategory}
                 </a>
@@ -856,12 +444,7 @@ export default function ProduktClient({
 
             {/* ── Gallery — sticky on desktop ── */}
             <div className="lg:sticky lg:top-6 lg:self-start">
-              <Gallery
-                items={galleryItems}
-                layeredBody={layeredBodySrc}
-                layeredCap={layeredCapSrc}
-                productName={productName}
-              />
+              <Gallery items={galleryItems} productName={productName} />
             </div>
 
             {/* ── Info panel ── */}
@@ -873,7 +456,6 @@ export default function ProduktClient({
                   {productName}
                 </h1>
 
-                {/* Volitelné hodnocení pod názvem (jen když produkt má data) */}
                 {product.rating !== undefined && (
                   <div className="flex items-center gap-2 mt-2.5" aria-label={t("ratingAria", { rating: product.rating })}>
                     <span className="flex">
@@ -895,7 +477,6 @@ export default function ProduktClient({
                   </div>
                 )}
 
-                {/* Cena — zlevněná v obdélníkovém rámečku, přeškrtnutá původní, Včetně DPH */}
                 <div className="mt-4 flex items-center gap-3 flex-wrap">
                   {!currencyMounted ? (
                     <span className="text-3xl sm:text-4xl font-extrabold opacity-0">—</span>
@@ -919,169 +500,15 @@ export default function ProduktClient({
                   )}
                 </div>
 
-                {/* Sklad — obdélníkový rámeček bez tečky */}
                 <div className="mt-3">
-                  <StockBadge available={availableQty} anyInStock={anyInStock} />
+                  <StockBadge available={currentStock} />
                 </div>
-
-                {comboExtra > 0 && (
-                  <p className="mt-2.5 text-xs text-text-subtle">
-                    {t("comboExtra", {
-                      base: formatPrice(basePrice, currency),
-                      extra: formatPrice(comboExtra, currency),
-                    })}
-                  </p>
-                )}
               </div>
 
               <div className="h-px bg-border" />
 
-              {/* ── NEW: colour swatches ── */}
-              {hasNewColors && (
-                <div>
-                  <p className="text-text-base font-semibold text-sm mb-3">
-                    {t("color")}
-                    <span className="text-text-muted font-normal ml-2">
-                      — {newColors.find(c => c.value === colorValue)?.label}
-                    </span>
-                  </p>
-                  <ColorSwatch colors={newColors} selected={colorValue} label={t("color")} onChange={(v) => { setColorValue(v); setQty(1); }} />
-                </div>
-              )}
-
-              {/* ── NEW: size / type pills ── */}
-              {hasNewSizes && (
-                <div>
-                  <p className="text-text-base font-semibold text-sm mb-3">
-                    {sizesLabel}
-                    <span className="text-text-muted font-normal ml-2">
-                      — {newSizes.find(s => s.value === sizeValue)?.label}
-                    </span>
-                  </p>
-                  <SizePills options={newSizes} selected={sizeValue} label={sizesLabel} onChange={(v) => { setSizeValue(v); setQty(1); }} />
-                </div>
-              )}
-
-              {/* ── LEGACY: models (pencil) ── */}
-              {hasModels && model && (
-                <>
-                  {!combo && model.colors.length > 0 && (
-                    <div>
-                      <p className="text-text-base font-semibold text-sm mb-3">
-                        {t("color")}
-                        <span className="text-text-muted font-normal ml-2">
-                          — {variantLabel(tv, legacyColor, model.colors.find(c => c.value === legacyColor)?.label)}
-                        </span>
-                      </p>
-                      <ColorSwatch
-                        colors={translateOptions(tv, model.colors as { label: string; value: string; hex?: string }[])}
-                        selected={legacyColor}
-                        label={t("color")}
-                        onChange={(v) => { setLegacyColor(v); setQty(1); }}
-                      />
-                    </div>
-                  )}
-                  {product.models!.length > 1 && (
-                    <div>
-                      <p className="text-text-base font-semibold text-sm mb-3">{t("model")}</p>
-                      <SizePills
-                        options={product.models!.map(m => ({ label: m.label, value: m.id }))}
-                        selected={modelId}
-                        label={t("model")}
-                        onChange={(v) => { handleModelChange(v); setQty(1); }}
-                      />
-                    </div>
-                  )}
-                  {isLayered && (
-                    <div className="flex flex-col gap-4">
-                      <button
-                        onClick={() => setCombo(v => !v)}
-                        role="checkbox"
-                        aria-checked={combo}
-                        className="flex items-center gap-3 text-sm text-text-muted hover:text-text-base transition-colors w-fit min-h-11"
-                      >
-                        <span aria-hidden="true" className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all duration-150 ${
-                          combo ? "bg-primary border-primary" : "border-border-strong"
-                        }`}>
-                          {combo && <Check size={11} strokeWidth={3} className="text-on-primary" />}
-                        </span>
-                        <span>{t("customCombo")}</span>
-                        <span className="text-text-subtle text-xs">
-                          {t("comboSurcharge", { extra: formatPrice(getPrice(model.comboExtra ?? 0, currency), currency) })}
-                        </span>
-                      </button>
-                      {combo && (
-                        <div className="flex flex-col gap-4 pl-8 border-l-2 border-primary/20">
-                          <div>
-                            <p className="text-text-base font-semibold text-sm mb-2">
-                              {t("bodyColor")}
-                              <span className="text-text-muted font-normal ml-2">
-                                — {variantLabel(tv, bodyValue, model.colors.find(c => c.value === bodyValue)?.label)}
-                              </span>
-                            </p>
-                            <ColorSwatch
-                              colors={translateOptions(tv, model.colors as { label: string; value: string; hex?: string }[])}
-                              selected={bodyValue}
-                              label={t("bodyColor")}
-                              onChange={setBodyValue}
-                            />
-                          </div>
-                          <div>
-                            <p className="text-text-base font-semibold text-sm mb-2">
-                              {t("capColor")}
-                              <span className="text-text-muted font-normal ml-2">
-                                — {variantLabel(tv, capValue, model.colors.find(c => c.value === capValue)?.label)}
-                              </span>
-                            </p>
-                            <ColorSwatch
-                              colors={translateOptions(tv, model.colors as { label: string; value: string; hex?: string }[])}
-                              selected={capValue}
-                              label={t("capColor")}
-                              onChange={setCapValue}
-                            />
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </>
-              )}
-
-              {/* ── LEGACY: simple variants ── */}
-              {!hasModels && hasVariants && product.variants!.map((variant) => {
-                const isColorVariant = ["Barva", "barva", "Color", "color"].includes(variant.type);
-                const selected = selectedVariants[variant.type];
-                return (
-                  <div key={variant.type}>
-                    <p className="text-text-base font-semibold text-sm mb-3">
-                      {variantAttr(tv, variant.type)}
-                      {selected && (
-                        <span className="text-text-muted font-normal ml-2">
-                          — {variantLabel(tv, selected, variant.options.find(o => o.value === selected)?.label)}
-                        </span>
-                      )}
-                    </p>
-                    {isColorVariant ? (
-                      <ColorSwatch
-                        colors={translateOptions(tv, variant.options)}
-                        selected={selected ?? ""}
-                        label={variantAttr(tv, variant.type)}
-                        onChange={(val) => setSelectedVariants(prev => ({ ...prev, [variant.type]: val }))}
-                      />
-                    ) : (
-                      <SizePills
-                        options={translateOptions(tv, variant.options)}
-                        selected={selected ?? ""}
-                        label={variantAttr(tv, variant.type)}
-                        onChange={(val) => setSelectedVariants(prev => ({ ...prev, [variant.type]: val }))}
-                      />
-                    )}
-                  </div>
-                );
-              })}
-
-              {/* ── Náhled popisku + „Číst dále" (plný text ve výsuvném panelu) ── */}
-              <div className="border-t border-border pt-4">
+              {/* ── Náhled popisku + „Číst dále" ── */}
+              <div>
                 <p className="text-text-muted text-sm leading-relaxed">
                   <span className="line-clamp-2">{descriptionText}</span>
                 </p>
@@ -1095,10 +522,8 @@ export default function ProduktClient({
                 </button>
               </div>
 
-              {/* ── Cart button v obdélníku ── */}
+              {/* ── Cart button ── */}
               <div className="rounded-2xl border border-border bg-secondary overflow-hidden">
-
-                {/* Tlačítko košíku */}
                 <div className="p-3">
                   {isOutOfStock ? (
                     <button
@@ -1110,18 +535,13 @@ export default function ProduktClient({
                     </button>
                   ) : (
                     <div className="flex items-stretch gap-2.5">
-                      {/* Počítadlo */}
-                      {/* Znaménka − / + nesdělí čtečce, co dělají — proto aria-label.
-                          aria-live na počtu ohlásí novou hodnotu po kliknutí. */}
                       <div className="flex items-center rounded-xl border border-border bg-white overflow-hidden shrink-0">
                         <button
                           onClick={() => setQty(q => Math.max(1, q - 1))}
                           disabled={qty <= 1}
                           aria-label={t("decreaseQty")}
                           className={`w-11 min-h-11 h-full flex items-center justify-center transition-colors text-base font-light ${
-                            qty <= 1
-                              ? "text-border cursor-not-allowed"
-                              : "text-text-muted hover:text-text-base hover:bg-surface"
+                            qty <= 1 ? "text-border cursor-not-allowed" : "text-text-muted hover:text-text-base hover:bg-surface"
                           }`}
                         >
                           −
@@ -1134,53 +554,36 @@ export default function ProduktClient({
                           <span className="sr-only">{t("quantity")}</span>{qty}
                         </span>
                         <button
-                          onClick={() => setQty(q => Math.min(canAddMoreQty, q + 1))}
-                          disabled={qty >= canAddMoreQty}
+                          onClick={() => setQty(q => Math.min(currentStock, q + 1))}
+                          disabled={qty >= currentStock}
                           aria-label={t("increaseQty")}
                           className={`w-11 min-h-11 h-full flex items-center justify-center transition-colors text-base font-light ${
-                            qty >= canAddMoreQty
-                              ? "text-border cursor-not-allowed"
-                              : "text-text-muted hover:text-text-base hover:bg-surface"
+                            qty >= currentStock ? "text-border cursor-not-allowed" : "text-text-muted hover:text-text-base hover:bg-surface"
                           }`}
                         >
                           +
                         </button>
                       </div>
 
-                      {/* Přidat do košíku */}
                       <button
                         key={added ? "added" : "default"}
                         onClick={handleAddToCart}
-                        disabled={added || (!isOutOfStock && !canAddToCart)}
+                        disabled={added}
                         className={`flex-1 inline-flex items-center justify-center gap-2 px-4 py-3.5 rounded-xl font-bold text-sm transition-all duration-200 ${
                           added
                             ? "bg-primary/15 text-primary-ink cursor-default"
-                            : !canAddToCart
-                            ? "bg-border text-text-subtle cursor-not-allowed"
                             : "bg-primary text-on-primary hover:brightness-105 active:scale-[0.98] shadow-md shadow-primary/20"
                         }`}
                       >
                         {added
                           ? <><Check size={15} aria-hidden="true" /><span>{t("added")}</span></>
-                          : <><ShoppingCart size={15} aria-hidden="true" /><span>{!canAddToCart ? t("selectVariant") : t("addToCart")}</span></>
+                          : <><ShoppingCart size={15} aria-hidden="true" /><span>{t("addToCart")}</span></>
                         }
                       </button>
                     </div>
                   )}
-
-                  {!canAddToCart && !isOutOfStock && hasVariants && (
-                    <p className="text-text-subtle text-xs text-center mt-2">
-                      {t("selectPrompt", {
-                        variants: product.variants!
-                          .filter(v => !selectedVariants[v.type])
-                          .map(v => variantAttr(tv, v.type).toLowerCase())
-                          .join(t("and")),
-                      })}
-                    </p>
-                  )}
                 </div>
 
-                {/* Trust — dva řádky: odeslání do 24 h + záruka vrácení peněz */}
                 <div className="border-t border-border divide-y divide-border">
                   <div className="flex items-center gap-2.5 px-4 py-3">
                     <Truck size={18} className="text-primary-ink shrink-0" aria-hidden="true" />
@@ -1191,7 +594,6 @@ export default function ProduktClient({
                     <span className="text-text-base text-sm font-semibold">{t("moneyBack14")}</span>
                   </div>
                 </div>
-
               </div>
 
             </div>
